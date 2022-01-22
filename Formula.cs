@@ -1,4 +1,4 @@
-﻿using NewMath;
+using NewMath;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -11,46 +11,9 @@ namespace Calculator
         private const double rad2deg = 180.0 / Math.PI;
 
         // Incredibly easy and simple method to find the pieces and put them into a list in order and allows less strict input formatting
-        private static Regex pieceRegex = new Regex(@"(<\S+?,\S+?,\S+?>|\+|-|\*|\/|\^|%|sin|asin|cos|acos|tan|atan|rad|deg|\(|\)|([0-9]*\.)?[0-9]+|e|pi|x|\.)");
+        private static Regex pieceRegex = new Regex(@"(<\S+?,\S+?,\S+?>|\+|-|\*|\/|\^|%|sin|asin|cos|acos|tan|atan|rad|deg|abs|floor|ceil|round|sqrt|\(|\)|([0-9]*\.)?[0-9]+|e|pi|x|\.)");
 
         public string formula = "";
-
-        private static bool IsOperator(string symbol)
-        {
-            switch (symbol)
-            {
-                default:
-                    return false;
-                case "-":
-                case "+":
-                case "*":
-                case "/":
-                case "d":
-                case "x":
-                case "^":
-                case "%":
-                case "neg":
-                    return true;
-            }
-        }
-
-        private static bool IsSingleFunc(string symbol)
-        {
-            switch (symbol)
-            {
-                default:
-                    return false;
-                case "sin":
-                case "cos":
-                case "tan":
-                case "asin":
-                case "acos":
-                case "atan":
-                case "rad":
-                case "deg":
-                    return true;
-            }
-        }
 
         public Formula (string formula)
         {
@@ -156,7 +119,7 @@ namespace Calculator
                     // Check next piece
                     Piece nextPiece = pieces[i + 1];
                     if (nextPiece.Type == "num" ||
-                        nextPiece.Type == "trig" ||
+                        nextPiece.Type == "func1" ||
                         nextPiece.Type == "vec" ||
                         nextPiece.Type == "parse vec" ||
                         nextPiece.Type == "const" ||
@@ -349,7 +312,7 @@ namespace Calculator
                         stack.Push(new List<Piece> { piece });
                     }
                 }
-                else if (piece.Type == "trig")
+                else if (piece.Type == "func1")
                 {
                     if (stack.Count != 0)
                     {
@@ -432,15 +395,16 @@ namespace Calculator
                         return null;
                     }
                 }
-                else if (piece.Type == "op" || piece.Type == "trig")
+                else if (piece.Type == "op" || piece.Type == "func1")
                 {
-                    // Operator or trig
+                    // Operator or func1
                     // Pop and output while >= precedence and not ( then push to stack
                     Piece peeked;
                     while (stack.Count > 0 &&
                         (peeked = stack.Peek()).Precedence >= piece.Precedence &&
                         !peeked.Value.Equals("(") &&
-                        peeked.Type != "trig")
+                        (peeked.Type != "func1" ||
+                        piece.Type != "func1"))
                     {
                         postfix.Add(stack.Pop());
                     }
@@ -448,7 +412,7 @@ namespace Calculator
                 }
             }
 
-            // Pop remaining operators and trig to output
+            // Pop remaining operators and func1 to output
             while (stack.Count > 0)
             {
                 Piece piece = stack.Pop();
@@ -856,7 +820,7 @@ namespace Calculator
                             }
                         }
                     }
-                    else if (piece.Type == "trig")
+                    else if (piece.Type == "func1")
                     {
                         // Trig
                         if (firstLine)
@@ -967,6 +931,56 @@ namespace Calculator
                                 else
                                 {
                                     stack.Push(new Piece(Math2.Atan((double3)num.Value) * rad2deg));
+                                }
+                                break;
+                            case "abs":
+                                if (isNum)
+                                {
+                                    stack.Push(new Piece(Math.Abs((double)num.Value)));
+                                }
+                                else
+                                {
+                                    stack.Push(new Piece(Math2.Abs((double3)num.Value)));
+                                }
+                                break;
+                            case "floor":
+                                if (isNum)
+                                {
+                                    stack.Push(new Piece(Math.Floor((double)num.Value)));
+                                }
+                                else
+                                {
+                                    stack.Push(new Piece(Math2.Floor((double3)num.Value)));
+                                }
+                                break;
+                            case "ceil":
+                                if (isNum)
+                                {
+                                    stack.Push(new Piece(Math.Ceiling((double)num.Value)));
+                                }
+                                else
+                                {
+                                    stack.Push(new Piece(Math2.Ceiling((double3)num.Value)));
+                                }
+                                break;
+                            case "round":
+                                if (isNum)
+                                {
+                                    stack.Push(new Piece(Math.Round((double)num.Value)));
+                                }
+                                else
+                                {
+                                    stack.Push(new Piece(Math2.Round((double3)num.Value)));
+                                }
+                                break;
+                            case "sqrt":
+                                if (isNum)
+                                {
+                                    stack.Push(new Piece(Math.Sqrt((double)num.Value)));
+                                }
+                                else
+                                {
+                                    stack.Push(new Piece(Math2.Sqrt((double3)num.Value)));
                                 }
                                 break;
                             case "deg":
