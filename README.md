@@ -18,7 +18,7 @@ SetWorkingDir %A_ScriptDir%
 
 Launch_App2::
     run C:\Users\jacob\source\repos\Calculator\bin\Release\Calculator.exe
-	return
+    return
 ```
 ![Basic](Screenshots/basic.png)  
   
