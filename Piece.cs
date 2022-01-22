@@ -55,43 +55,68 @@ namespace Calculator
                     Value = ")";
                     break;
                 case "sin":
-                    Type = "trig";
+                    Type = "func1";
                     Value = "sin";
                     Precedence = 7;
                     break;
                 case "asin":
-                    Type = "trig";
+                    Type = "func1";
                     Value = "asin";
                     Precedence = 7;
                     break;
                 case "cos":
-                    Type = "trig";
+                    Type = "func1";
                     Value = "cos";
                     Precedence = 7;
                     break;
                 case "acos":
-                    Type = "trig";
+                    Type = "func1";
                     Value = "acos";
                     Precedence = 7;
                     break;
                 case "tan":
-                    Type = "trig";
+                    Type = "func1";
                     Value = "tan";
                     Precedence = 7;
                     break;
                 case "atan":
-                    Type = "trig";
+                    Type = "func1";
                     Value = "atan";
                     Precedence = 7;
                     break;
                 case "deg":
-                    Type = "trig";
+                    Type = "func1";
                     Value = "deg";
                     Precedence = 7;
                     break;
                 case "rad":
-                    Type = "trig";
+                    Type = "func1";
                     Value = "rad";
+                    Precedence = 7;
+                    break;
+                case "abs":
+                    Type = "func1";
+                    Value = "abs";
+                    Precedence = 7;
+                    break;
+                case "floor":
+                    Type = "func1";
+                    Value = "floor";
+                    Precedence = 7;
+                    break;
+                case "ceil":
+                    Type = "func1";
+                    Value = "ceil";
+                    Precedence = 7;
+                    break;
+                case "round":
+                    Type = "func1";
+                    Value = "round";
+                    Precedence = 7;
+                    break;
+                case "sqrt":
+                    Type = "func1";
+                    Value = "sqrt";
                     Precedence = 7;
                     break;
                 case "+":
