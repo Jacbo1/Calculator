@@ -1,4 +1,4 @@
-﻿using NewMath;
+using NewMath;
 using System;
 using System.Text.RegularExpressions;
 
