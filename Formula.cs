@@ -32,11 +32,11 @@ namespace Calculator
             {
                 default:
                     return (string)piece.Value;
-                case "op":
-                    /*if (piece.Value == "neg")
+                case "func1":
+                    if (piece.Value == "neg")
                     {
                         return "-";
-                    }*/
+                    }
                     return (string)piece.Value;
                 case "num":
                     return ((double)piece.Value).ToString();
@@ -56,11 +56,11 @@ namespace Calculator
             {
                 default:
                     return (string)piece.Value;
-                case "op":
-                    /*if (piece.Value == "neg")
+                case "func1":
+                    if (piece.Value == "neg")
                     {
                         return "-";
-                    }*/
+                    }
                     return (string)piece.Value;
                 case "num":
                     return ((double)piece.Value).ToString();
@@ -154,6 +154,21 @@ namespace Calculator
                             piece = pieces[i];
                         }
                     }
+                    if (piece.Value.Equals("neg"))
+                    {
+                        if (pieces[i + 1].Type == "num")
+                        {
+                            pieces[i] = new Piece(-(double)pieces[i + 1].Value);
+                            piece = pieces[i];
+                            pieces.RemoveAt(i + 1);
+                        }
+                        else if (pieces[i + 1].Type == "vec")
+                        {
+                            pieces[i] = new Piece(-(double3)pieces[i + 1].Value);
+                            piece = pieces[i];
+                            pieces.RemoveAt(i + 1);
+                        }
+                    }
                 }
 
                 // Add unwritten multiplication
@@ -184,18 +199,7 @@ namespace Calculator
                         {
                             int open = i;
                             int close = i + 2;
-                            // Find open pos
-                            if (piece.Value.Equals(")"))
-                            {
-                                // Parentheses to the left
-                                // Find opening parenthesis
-                                int temp = FindOpeningParenthesis(pieces, i);
-                                if (temp != -1)
-                                {
-                                    open = temp;
-                                }
-                            }
-
+                            
                             // Find close pos
                             if (nextPiece.Type == "func1")
                             {
@@ -262,9 +266,29 @@ namespace Calculator
                                 }
                             }
 
-                            pieces.Insert(close, new Piece(")"));
-                            pieces.Insert(i + 1, new Piece("*"));
-                            pieces.Insert(open, new Piece("("));
+                            if (close < pieces.Count && pieces[close].Value.Equals("^"))
+                            {
+                                // Don't wrap in parentheses
+                                pieces.Insert(i + 1, new Piece("*"));
+                            }
+                            else
+                            {
+                                // Find open pos
+                                if (piece.Value.Equals(")"))
+                                {
+                                    // Parentheses to the left
+                                    // Find opening parenthesis
+                                    int temp = FindOpeningParenthesis(pieces, i);
+                                    if (temp != -1)
+                                    {
+                                        open = temp;
+                                    }
+                                }
+
+                                pieces.Insert(close, new Piece(")"));
+                                pieces.Insert(i + 1, new Piece("*"));
+                                pieces.Insert(open, new Piece("("));
+                            }
                         }
                     }
                 }
@@ -274,64 +298,97 @@ namespace Calculator
             return CleanupInfix(pieces);
         }
 
+        private static bool IsCommunitive(Piece piece)
+        {
+            // Check if the operator is communitive
+            if (piece.Type == "op")
+            {
+                switch ((string)piece.Value)
+                {
+                    case "+":
+                    case "*":
+                    case ".":
+                        return true;
+                }
+            }
+            return false;
+        }
+
         private static List<Piece> CleanupInfix(List<Piece> pieces)
         {
             // Remove unnecessary parentheses
-            /*int i = 0;
+            int i = 0;
             while (i < pieces.Count)
             {
                 Piece piece = pieces[i];
                 if (piece.Value.Equals("("))
                 {
-                    // Open parenthesis
-                    int openCount = 1;
-                    int maxPrecedence = 0;
-                    for (int j = i + 1; j < pieces.Count; j++)
+                    if (i > 0 && pieces[i - 1].Type == "func1" && pieces[i - 1].Value != "neg")
                     {
-                        Piece piece2 = pieces[j];
+                        // The previous piece should always preserve parentheses for following terms
+                        i++;
+                        continue;
+                    }
+
+                    // Found opening parenthesis
+                    // Now find closing parenthesis and keep track of the highest precedence
+                    int openCount = 1;
+                    int minPrecedence = 100;
+                    for (int close = i + 1; close < pieces.Count; close++)
+                    {
+                        Piece piece2 = pieces[close];
                         if (piece2.Value.Equals("("))
                         {
-                            // Inner open parenthesis
                             openCount++;
                         }
-                        else if (piece2.Value.Equals(")"))
+                        else if (piece2.Value == ")")
                         {
                             openCount--;
-                            if (openCount <= 0)
+                            if (openCount == 0)
                             {
-                                // Found partner parenthesis
-                                if (i == 0 ||
-                                    (pieces[i - 1].Precedence <= maxPrecedence &&
-                                    !pieces[i - 1].Value.Equals("/") &&
-                                    !pieces[i - 1].Value.Equals("-")))
+                                // Found closing parenthesis
+                                // Compare max precedence to the pieces before and after
+                                if (minPrecedence != 100)
                                 {
-                                    // At start or preceding piece is lower precedence
-                                    if (j + 1 == pieces.Count)
+                                    // Before
+                                    if (i > 0)
                                     {
-                                        // End
-                                        pieces.RemoveAt(j);
-                                        pieces.RemoveAt(i);
-                                        i--;
+                                        Piece prevPiece = pieces[i - 1];
+                                        if (minPrecedence < prevPiece.Precedence ||
+                                            (minPrecedence == prevPiece.Precedence && !IsCommunitive(prevPiece)))
+                                        {
+                                            // Prev piece has a higher precedence than the inners
+                                            // OR they have the same precedence but the prev piece is not a communitive operator
+                                            // Keep parentheses
+                                            break;
+                                        }
                                     }
-                                    else if (pieces[j + 1].Precedence <= maxPrecedence)
+
+                                    // After
+                                    if (close + 1 < pieces.Count && minPrecedence < pieces[close + 1].Precedence)
                                     {
-                                        // Remove parentheses
-                                        pieces.RemoveAt(j);
-                                        pieces.RemoveAt(i);
-                                        i--;
+                                        // Keep parentheses
+                                        break;
                                     }
                                 }
+
+                                // Remove these parentheses
+                                pieces.RemoveAt(close);
+                                pieces.RemoveAt(i);
+                                i--;
                                 break;
                             }
                         }
-                        else if (openCount == 1)
+                        //else if (openCount == 1 && piece2.Precedence != -1 && piece2.Type != "func1")
+                        else if (openCount == 1 && piece2.Precedence != -1 )
                         {
-                            maxPrecedence = Math.Max(maxPrecedence, piece2.Precedence);
+                            minPrecedence = Math.Min(minPrecedence, piece2.Precedence);
                         }
                     }
                 }
                 i++;
-            }*/
+            }
+
             return pieces;
         }
 
