@@ -33,10 +33,10 @@ namespace Calculator
                 default:
                     return (string)piece.Value;
                 case "op":
-                    if (piece.Value == "neg")
+                    /*if (piece.Value == "neg")
                     {
                         return "-";
-                    }
+                    }*/
                     return (string)piece.Value;
                 case "num":
                     return ((double)piece.Value).ToString();
@@ -57,10 +57,10 @@ namespace Calculator
                 default:
                     return (string)piece.Value;
                 case "op":
-                    if (piece.Value == "neg")
+                    /*if (piece.Value == "neg")
                     {
                         return "-";
-                    }
+                    }*/
                     return (string)piece.Value;
                 case "num":
                     return ((double)piece.Value).ToString();
@@ -74,6 +74,52 @@ namespace Calculator
                     return $"<{components[0]}, {components[1]}, {components[2]}>";
 
             }
+        }
+
+        private static int FindClosingParenthesis(List<Piece> pieces, int start)
+        {
+            int openCount = 0;
+            for (int i = start; i < pieces.Count; i++)
+            {
+                Piece piece2 = pieces[i];
+                if (piece2.Value.Equals("("))
+                {
+                    openCount++;
+                }
+                else if (piece2.Value.Equals(")"))
+                {
+                    openCount--;
+                    if (openCount == 0)
+                    {
+                        // Found partner parenthesis
+                        return i;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        private static int FindOpeningParenthesis(List<Piece> pieces, int start)
+        {
+            int openCount = 0;
+            for (int i = start; i >= 0; i--)
+            {
+                Piece piece2 = pieces[i];
+                if (piece2.Value.Equals(")"))
+                {
+                    openCount++;
+                }
+                else if (piece2.Value.Equals("("))
+                {
+                    openCount--;
+                    if (openCount == 0)
+                    {
+                        // Found partner parenthesis
+                        return i;
+                    }
+                }
+            }
+            return -1;
         }
 
         private static List<Piece> String2Infix(string formula)
@@ -101,7 +147,8 @@ namespace Calculator
                     {
                         Piece last = pieces[i - 1];
                         if (last.Type == "op" ||
-                            last.Value.Equals("("))
+                            last.Value.Equals("(") ||
+                            last.Type == "func1")
                         {
                             pieces[i] = new Piece("neg");
                             piece = pieces[i];
@@ -129,72 +176,95 @@ namespace Calculator
                         if (i + 2 < pieces.Count && pieces[i + 2].Value.Equals("^"))
                         {
                             // Exponent
+                            // Don't add parentheses
                             pieces.Insert(i + 1, new Piece("*"));
                             i++;
                         }
                         else
                         {
-                            // No exponent
+                            int open = i;
+                            int close = i + 2;
+                            // Find open pos
                             if (piece.Value.Equals(")"))
                             {
                                 // Parentheses to the left
-                                int openCount = 1;
-                                for (int j = i - 2; j >= 0; j--)
+                                // Find opening parenthesis
+                                int temp = FindOpeningParenthesis(pieces, i);
+                                if (temp != -1)
                                 {
-                                    Piece piece2 = pieces[j];
-                                    if (piece2.Value.Equals(")"))
+                                    open = temp;
+                                }
+                            }
+
+                            // Find close pos
+                            if (nextPiece.Type == "func1")
+                            {
+                                // Func1 to the right
+                                // Check if it has parentheses
+                                if (i + 2 < pieces.Count && pieces[i + 2].Value.Equals("("))
+                                {
+                                    // Func1 has parentheses
+                                    // Find closing parenthesis
+                                    int temp = FindClosingParenthesis(pieces, i + 2);
+                                    if (temp != -1)
                                     {
-                                        openCount++;
+                                        close = temp + 1;
                                     }
-                                    else if (piece2.Value.Equals("("))
+                                }
+                                else
+                                {
+                                    // Func1 has no parentheses
+                                    // Check for other partnered terms
+                                    // Preserve other func1s and their parentheses and groups
+                                    // Search for operators to break on
+                                    bool lastWasFunc1 = false;
+                                    close--;
+                                    while (close < pieces.Count)
                                     {
-                                        openCount--;
-                                        if (openCount == 0)
+                                        if (lastWasFunc1)
                                         {
-                                            // Found partner parenthesis
-                                            pieces.Insert(j, new Piece("("));
-                                            pieces.Insert(i + 2, new Piece("*"));
-                                            pieces.Insert(i + 4, new Piece(")"));
-                                            i += 3;
+                                            // This piece belongs to the func1
+                                            close++;
+                                            continue;
+                                        }
+                                        Piece piece2 = pieces[close];
+                                        if (piece2.Type == "op")
+                                        {
+                                            // Found close pos
                                             break;
                                         }
+                                        else if(piece2.Type == "func1")
+                                        {
+                                            lastWasFunc1 = true;
+                                        }
+                                        else if (piece2.Value.Equals("("))
+                                        {
+                                            // Find closing parenthesis
+                                            int temp = FindClosingParenthesis(pieces, close);
+                                            if (temp != -1)
+                                            {
+                                                close = temp;
+                                            }
+                                        }
+                                        close++;
                                     }
                                 }
                             }
-                            else if (i + 1 < pieces.Count && pieces[i + 1].Value.Equals("("))
+                            else if(nextPiece.Value.Equals("("))
                             {
+                                // Not a func1 to the right
                                 // Parentheses to the right
-                                int openCount = 1;
-                                for (int j = i + 2; j < pieces.Count; j++)
+                                // Find close pos
+                                int temp = FindClosingParenthesis(pieces, i + 1);
+                                if (temp != -1)
                                 {
-                                    Piece piece2 = pieces[j];
-                                    if (piece2.Value.Equals("("))
-                                    {
-                                        openCount++;
-                                    }
-                                    else if (piece2.Value.Equals(")"))
-                                    {
-                                        openCount--;
-                                        if (openCount == 0)
-                                        {
-                                            // Found partner parenthesis
-                                            pieces.Insert(i, new Piece("("));
-                                            pieces.Insert(i + 2, new Piece("*"));
-                                            pieces.Insert(j + 3, new Piece(")"));
-                                            i += 2;
-                                            break;
-                                        }
-                                    }
+                                    close = temp + 1;
                                 }
                             }
-                            else
-                            {
-                                // No parentheses
-                                pieces.Insert(i, new Piece("("));
-                                pieces.Insert(i + 2, new Piece("*"));
-                                pieces.Insert(i + 4, new Piece(")"));
-                                i += 3;
-                            }
+
+                            pieces.Insert(close, new Piece(")"));
+                            pieces.Insert(i + 1, new Piece("*"));
+                            pieces.Insert(open, new Piece("("));
                         }
                     }
                 }
@@ -207,7 +277,7 @@ namespace Calculator
         private static List<Piece> CleanupInfix(List<Piece> pieces)
         {
             // Remove unnecessary parentheses
-            int i = 0;
+            /*int i = 0;
             while (i < pieces.Count)
             {
                 Piece piece = pieces[i];
@@ -261,7 +331,7 @@ namespace Calculator
                     }
                 }
                 i++;
-            }
+            }*/
             return pieces;
         }
 
@@ -340,14 +410,7 @@ namespace Calculator
                 string s = "";
                 foreach (Piece piece in pieces)
                 {
-                    if (piece.Value == "neg")
-                    {
-                        s += "-";
-                    }
-                    else
-                    {
-                        s += ToString(piece);
-                    }
+                    s += ToString(piece);
                 }
 
                 return s;
@@ -367,6 +430,12 @@ namespace Calculator
                     // Operand
                     // Push to output
                     postfix.Add(piece);
+                }
+                else if(piece.Type == "func1")
+                {
+                    // Func1
+                    // Push to stack
+                    stack.Push(piece);
                 }
                 else if (piece.Value.Equals("("))
                 {
@@ -395,16 +464,14 @@ namespace Calculator
                         return null;
                     }
                 }
-                else if (piece.Type == "op" || piece.Type == "func1")
+                else if (piece.Type == "op")
                 {
                     // Operator or func1
                     // Pop and output while >= precedence and not ( then push to stack
                     Piece peeked;
                     while (stack.Count > 0 &&
                         (peeked = stack.Peek()).Precedence >= piece.Precedence &&
-                        !peeked.Value.Equals("(") &&
-                        (peeked.Type != "func1" ||
-                        piece.Type != "func1"))
+                        !peeked.Value.Equals("("))
                     {
                         postfix.Add(stack.Pop());
                     }
@@ -575,7 +642,7 @@ namespace Calculator
                             workOutput += $"\n{Postfix2Infix(stack, pieces, i)}";
                         }
 
-                        if ((stack.Count == 1 && piece.Value.Equals("-")) || (stack.Count >= 1 && piece.Value.Equals("neg")))
+                        if (stack.Count == 1 && piece.Value.Equals("-"))
                         {
                             // Negate
                             Piece num = stack.Pop();
@@ -822,7 +889,7 @@ namespace Calculator
                     }
                     else if (piece.Type == "func1")
                     {
-                        // Trig
+                        // Func1
                         if (firstLine)
                         {
                             firstLine = false;
@@ -1001,6 +1068,17 @@ namespace Calculator
                                 else
                                 {
                                     stack.Push(new Piece((double3)num.Value * deg2rad));
+                                }
+                                break;
+                            case "neg":
+                                // Negate
+                                if (isNum)
+                                {
+                                    stack.Push(new Piece(-(double)num.Value));
+                                }
+                                else
+                                {
+                                    stack.Push(new Piece(-(double3)num.Value));
                                 }
                                 break;
                         }

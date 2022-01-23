@@ -160,7 +160,7 @@ namespace Calculator
                     Precedence = 6;
                     break;
                 case "neg":
-                    Type = "op";
+                    Type = "func1";
                     Value = "neg";
                     Precedence = 5;
                     break;
