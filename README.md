@@ -1,4 +1,4 @@
-This depends on my [vector library](https://github.com/Jacbo1/Vector-Math)
+This depends on DecimalExtensions from [KGy SOFT](https://www.nuget.org/packages/KGySoft.CoreLibraries/6.0.1?_src=template)
 
 This isn't really a user-ready product. I made it to replace the calculator that opens when I press the calculator button on my keyboard and didn't plan on releasing it but it was requested.  
   
@@ -8,6 +8,8 @@ Supported constants are pi and e.
 Vectors work with all operators and functions.  
   
 Variables can also be used. Just type in the format of `a=1+2`. Each line is a new equation. Variable names can overwrite existing operator and constant names. Useful for if you want to use the variable name "x" and won't be needing to do cross product.  
+  
+Uses the highly precise decimal datatype instead of float or double to minimize precision loss.
   
 It also doesn't have any window controls like minimizing or closing because it was made to be used with AutoHotkey. Opening the program again while it's already running will close it. Unless you set that up you will have to close and minimize it via the taskbar.  
 Really this is just here for the source code.  
@@ -26,9 +28,9 @@ Launch_App2::
   
 ![Vectors](Screenshots/vectors.png)  
   
-![Variables](Screenshots/variables.png)
+![Variables](Screenshots/decimal%20and%20var.png)
 
 Todo list:
 * Add syntax checking beore calculating
 * <strike>Add variable support</strike>
-* Switch to using decimal type for more precision
+* <strike>Switch to using decimal type for more precision</strike>
