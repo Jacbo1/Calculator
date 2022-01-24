@@ -219,9 +219,9 @@ namespace Calculator
                     {
                         // Valid scientific notation
                         Type = "num";
-                        decimal powBase = decimal.Parse(match.Groups[1].Value);
+                        decimal num = decimal.Parse(match.Groups[1].Value);
                         decimal power = decimal.Parse(match.Groups[3].Value);
-                        Value = DecimalExtensions.Pow(powBase, power);
+                        Value = num * DecimalExtensions.Pow(10, power);
                         IsOperand = true;
                         return;
                     }
