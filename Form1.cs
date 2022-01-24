@@ -83,7 +83,8 @@ namespace Calculator
                 else
                 {
                     workerCounter = inputCounter;
-                    answer = new Formula(input).Calculate(out work);
+                    //answer = new Formula(input).Calculate(out work);
+                    answer = FormulaGroup.Calculate(input, out work);
                     outputCounter++;
                 }
             }

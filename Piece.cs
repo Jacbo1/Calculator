@@ -6,8 +6,8 @@ namespace Calculator
 {
     internal class Piece
     {
-        private static Regex vectorRegex = new Regex(@"^<(\S+?),(\S+?),(\S+?)>$");
-        private static Regex strictVectorRegex = new Regex(@"^<(-?([0-9]*\.)?[0-9]+),(-?([0-9]*\.)?[0-9]+),(-?([0-9]*\.)?[0-9]+)>$");
+        private static Regex vectorRegex = new Regex(@"^<(\S+?),\s?(\S+?),\s?(\S+?)>$");
+        private static Regex strictVectorRegex = new Regex(@"^<(-?([0-9]*\.)?[0-9]+),\s?(-?([0-9]*\.)?[0-9]+)\s?,\s?(-?([0-9]*\.)?[0-9]+)>$");
         private static Regex numberRegex = new Regex(@"^-?([0-9]*\.)?[0-9]+$");
 
         public string Type;
@@ -15,6 +15,8 @@ namespace Calculator
         public int Precedence = -1;
         public double ConstValue;
         public bool IsOperand = false;
+        public bool IsVar = false;
+        public string VarName;
 
         public Piece(double num)
         {

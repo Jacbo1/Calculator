@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FormulaGroup.cs" />
     <Compile Include="Piece.cs" />
     <Compile Include="DoubleBufferedLabel.cs">
       <SubType>Component</SubType>

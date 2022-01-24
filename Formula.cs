@@ -11,23 +11,49 @@ namespace Calculator
         private const double rad2deg = 180.0 / Math.PI;
 
         // Incredibly easy and simple method to find the pieces and put them into a list in order and allows less strict input formatting
-        private static Regex pieceRegex = new Regex(@"(<\S+?,\S+?,\S+?>|\+|-|\*|\/|\^|%|sin|asin|cos|acos|tan|atan|rad|deg|abs|floor|ceil|round|sqrt|\(|\)|([0-9]*\.)?[0-9]+|e|pi|x|\.)");
+        //private static Regex pieceRegex = new Regex(@"^(<\S+?,\S+?,\S+?>|\+|-|\*|\/|\^|%|sin|asin|cos|acos|tan|atan|rad|deg|abs|floor|ceil|round|sqrt|\(|\)|([0-9]*\.)?[0-9]+|e|pi|x|\.)+", RegexOptions.Multiline);
+        private static Regex pieceRegex;
+
+        private Dictionary<string, Piece> vars;
 
         public string formula = "";
 
         public Formula (string formula)
         {
-            this.formula = FixFormula(formula);
+            this.formula = formula.Replace(" ", "").Replace("\t", "");
+            vars = new Dictionary<string, Piece>();
+            ConstructPieceRegex();
         }
 
-        private static string FixFormula(string formula)
+        public Formula (string formula, Dictionary<string, Piece> vars)
         {
-            string value = formula.Replace(" ", "");
-            return value;
+            this.formula = formula.Replace(" ", "").Replace("\t", "");
+            this.vars = vars;
+            ConstructPieceRegex();
+        }
+
+        private void ConstructPieceRegex()
+        {
+            string regex = @"(<\S+?,\S+?,\S+?>|\+|-|\*|\/|\^|%|sin|asin|cos|acos|tan|atan|rad|deg|abs|floor|ceil|round|sqrt|\(|\)|([0-9]*\.)?[0-9]+|e|pi|x|\.";
+            foreach (string var in vars.Keys)
+            {
+                regex += $"|{var}";
+            }
+            pieceRegex = new Regex($"{regex})", RegexOptions.Multiline);
+        }
+
+        public void SetVar(string key, Piece value)
+        {
+            vars[key] = value;
+            ConstructPieceRegex();
         }
 
         private static string ToString(Piece piece)
         {
+            if (piece.IsVar)
+            {
+                return piece.VarName;
+            }
             switch (piece.Type)
             {
                 default:
@@ -122,12 +148,20 @@ namespace Calculator
             return -1;
         }
 
-        private static List<Piece> String2Infix(string formula)
+        private List<Piece> String2Infix(string formula)
         {
             List<Piece> pieces = new List<Piece>();
             foreach (Match match in pieceRegex.Matches(formula))
             {
-                pieces.Add(new Piece(match.Value));
+                string value = match.Value;
+                if (vars.ContainsKey(value))
+                {
+                    pieces.Add(vars[value]);
+                }
+                else
+                {
+                    pieces.Add(new Piece(match.Value));
+                }
             }
 
             // Post processing
@@ -172,11 +206,12 @@ namespace Calculator
                 }
 
                 // Add unwritten multiplication
-                if (piece.Value.Equals(")") ||
+                if (i + 1 < pieces.Count &&
+                    (piece.Value.Equals(")") ||
                     piece.Type == "num" ||
                     piece.Type == "vec" ||
                     piece.Type == "parse vec" ||
-                    piece.Type == "const")
+                    piece.Type == "const"))
                 {
                     // Check next piece
                     Piece nextPiece = pieces[i + 1];
@@ -618,7 +653,7 @@ namespace Calculator
                         for (int j = 0; j < 3; j++)
                         {
                             string work;
-                            string newComponent = new Formula(components[j]).Calculate(out work, true);
+                            string newComponent = new Formula(components[j], vars).Calculate(out work, true);
                             if (work.Length > 0)
                             {
                                 if (newComponent.Length > 0)
