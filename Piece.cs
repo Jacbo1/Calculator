@@ -221,7 +221,7 @@ namespace Calculator
                         Type = "num";
                         decimal num = decimal.Parse(match.Groups[1].Value);
                         decimal power = decimal.Parse(match.Groups[3].Value);
-                        Value = num * DecimalExtensions.Pow(10, power);
+                        Value = num * DecimalExtensions.Pow(10m, power);
                         IsOperand = true;
                         return;
                     }
