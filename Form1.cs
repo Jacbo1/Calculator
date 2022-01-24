@@ -16,9 +16,15 @@ namespace Calculator
         private string input = "";
         private string answer = "";
         private string work = "";
+        private string dataPath = "";
 
         public Form1()
         {
+            try
+            {
+                dataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Calculator\";
+            }
+            catch { }
             Process current = Process.GetCurrentProcess();
             string path = current.MainModule.FileName;
             string name = current.ProcessName;
@@ -44,11 +50,15 @@ namespace Calculator
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            if (File.Exists("data.txt"))
+            try
             {
-                input = TextInput.Text = File.ReadAllText("data.txt");
-                inputCounter++;
+                if (File.Exists($"{dataPath}data.txt"))
+                {
+                    input = TextInput.Text = File.ReadAllText($"{dataPath}data.txt");
+                    inputCounter++;
+                }
             }
+            catch { }
             TextInput.Focus();
             TextInput.TextChanged += new EventHandler(TextInput_TextChanged);
             worker.RunWorkerAsync();
@@ -57,13 +67,19 @@ namespace Calculator
 
         private void TextInput_TextChanged(object sender, EventArgs e)
         {
-            File.WriteAllText("data.txt", TextInput.Text);
+            try
+            {
+                Directory.CreateDirectory(dataPath);
+                File.WriteAllText($"{dataPath}data.txt", TextInput.Text);
+            }
+            catch { }
             inputCounter++;
             input = TextInput.Text;
         }
 
         private void Timer1_Tick(object sender, EventArgs e)
         {
+            Console.WriteLine("a");
             if (displayCounter != outputCounter)
             {
                 displayCounter = outputCounter;
@@ -76,17 +92,24 @@ namespace Calculator
         {
             while (true)
             {
-                if (inputCounter == workerCounter)
-                {
-                    Thread.Sleep(20);
-                }
-                else
+                if (inputCounter != workerCounter)
                 {
                     workerCounter = inputCounter;
-                    //answer = new Formula(input).Calculate(out work);
-                    answer = FormulaGroup.Calculate(input, out work);
-                    outputCounter++;
+                    try
+                    {
+                        answer = FormulaGroup.Calculate(input, out work);
+                    }
+                    catch
+                    {
+                        answer = "Unexpected error";
+                        work = "Unexpected error";
+                    }
+                    finally
+                    {
+                        outputCounter++;
+                    }
                 }
+                Thread.Sleep(20);
             }
         }
     }
