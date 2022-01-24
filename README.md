@@ -28,7 +28,7 @@ Launch_App2::
   
 ![Vectors](Screenshots/vectors.png)  
   
-![Variables](Screenshots/decimal%20and%20var.png)
+![Variables](Screenshots/decimal%20and%20var%202.png)
 
 Todo list:
 * Add syntax checking beore calculating
