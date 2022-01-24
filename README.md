@@ -7,8 +7,8 @@ Supported functions are sin, cos, tan, asin, acos, atan, deg (converts radians t
 Supported constants are pi and e.  
 Vectors work with all operators and functions.  
   
-Variables can also be used. Just type in the format of `a=1+2`. Each line is a new equation.
-
+Variables can also be used. Just type in the format of `a=1+2`. Each line is a new equation. Variable names can overwrite existing operator and constant names. Useful for if you want to use the variable name "x" and won't be needing to do cross product.  
+  
 It also doesn't have any window controls like minimizing or closing because it was made to be used with AutoHotkey. Opening the program again while it's already running will close it. Unless you set that up you will have to close and minimize it via the taskbar.  
 Really this is just here for the source code.  
 
