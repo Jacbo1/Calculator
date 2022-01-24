@@ -23,3 +23,8 @@ Launch_App2::
 ![Basic](Screenshots/basic.png)  
   
 ![Vectors](Screenshots/vectors.png)
+
+Todo list:
+* Add syntax checking beore calculating
+* Add variable support
+* Switch to using decimal type for more precision
