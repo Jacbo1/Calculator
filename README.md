@@ -26,5 +26,5 @@ Launch_App2::
 
 Todo list:
 * Add syntax checking beore calculating
-* Add variable support
+* <strike>Add variable support</strike>
 * Switch to using decimal type for more precision
