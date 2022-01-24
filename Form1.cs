@@ -79,7 +79,6 @@ namespace Calculator
 
         private void Timer1_Tick(object sender, EventArgs e)
         {
-            Console.WriteLine("a");
             if (displayCounter != outputCounter)
             {
                 displayCounter = outputCounter;
@@ -99,10 +98,10 @@ namespace Calculator
                     {
                         answer = FormulaGroup.Calculate(input, out work);
                     }
-                    catch
+                    catch(Exception error)
                     {
-                        answer = "Unexpected error";
-                        work = "Unexpected error";
+                        answer = error.Message;
+                        work = error.ToString();
                     }
                     finally
                     {

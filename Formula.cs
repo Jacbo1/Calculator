@@ -94,15 +94,15 @@ namespace Calculator
                     return ToString((decimal)piece.Value);
                 case "vec":
                     decimal3 num = (decimal3)piece.Value;
-                    return $"<{ToString(num.X)},{ToString(num.Y)},{ToString(num.Z)}>";
+                    return $"<{ToString(num.X)}, {ToString(num.Y)}, {ToString(num.Z)}>";
                 case "parse vec":
                     string[] components = (string[])piece.Value;
-                    return $"<{components[0]},{components[1]},{components[2]}>";
+                    return $"<{components[0]}, {components[1]}, {components[2]}>";
 
             }
         }
 
-        private static string AnswerToString(Piece piece)
+        private static string AnswerToString(Piece piece, bool round)
         {
             switch (piece.Type)
             {
@@ -115,12 +115,15 @@ namespace Calculator
                     }
                     return (string)piece.Value;
                 case "num":
-                    return ToString((decimal)piece.Value);
+                    return round ? ToString((decimal)piece.Value) : ((decimal)piece.Value).ToString();
                 case "const":
-                    return ToString(piece.ConstValue);
+                    return round ? ToString(piece.ConstValue) : piece.ConstValue.ToString();
                 case "vec":
                     decimal3 num = (decimal3)piece.Value;
-                    return $"<{ToString(num.X)}, {ToString(num.Y)}, {ToString(num.Z)}>";
+                    string x = round ? ToString(num.X) : num.X.ToString();
+                    string y = round ? ToString(num.Y) : num.Y.ToString();
+                    string z = round ? ToString(num.Z) : num.Z.ToString();
+                    return $"<{x}, {y}, {z}>";
                 case "parse vec":
                     string[] components = (string[])piece.Value;
                     return $"<{components[0]}, {components[1]}, {components[2]}>";
@@ -647,10 +650,10 @@ namespace Calculator
 
         public string Calculate(out string workOutput)
         {
-            return Calculate(out workOutput, false);
+            return Calculate(out workOutput, false, false);
         }
 
-        public string Calculate(out string workOutput, bool isSub)
+        public string Calculate(out string workOutput, bool isSub, bool round)
         {
             workOutput = "";
             List<Piece> pieces = String2Infix(formula);
@@ -678,7 +681,7 @@ namespace Calculator
                         for (int j = 0; j < 3; j++)
                         {
                             string work;
-                            string newComponent = new Formula(components[j], vars).Calculate(out work, true);
+                            string newComponent = new Formula(components[j], vars).Calculate(out work, true, false);
                             if (work.Length > 0)
                             {
                                 if (newComponent.Length > 0)
@@ -1293,8 +1296,8 @@ namespace Calculator
                 workOutput += $"\n{error}";
                 return error;
             }
-            
-            return AnswerToString(stack.Peek());
+
+            return AnswerToString(stack.Peek(), round);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace Calculator
@@ -6,7 +7,6 @@ namespace Calculator
     internal class FormulaGroup
     {
         private static Regex varRegex = new Regex(@"(\S+)=(\S+)", RegexOptions.Compiled);
-        private static Regex notEmpty = new Regex(@"\S", RegexOptions.Compiled);
 
         public static string Calculate(string input, out string workOutput)
         {
@@ -46,10 +46,10 @@ namespace Calculator
                         workOutput += $"\n\n{work}";
                     }
                 }
-                else if (notEmpty.IsMatch(line))
+                else if (line.Length > 0)
                 {
                     string work;
-                    answer = new Formula(line, vars).Calculate(out work);
+                    answer = new Formula(line, vars).Calculate(out work, false, true);
                     work += $"\n{answer}";
                     if (first)
                     {
