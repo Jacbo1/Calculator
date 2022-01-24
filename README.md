@@ -6,7 +6,9 @@ This calculator supports order of operations, parentheses, and vectors. Supporte
 Supported functions are sin, cos, tan, asin, acos, atan, deg (converts radians to degrees, same as \* 180 / pi), rad (converts degrees to radians, same as \* pi / 180), abs, floor, ceil, round, and sqrt (square root).  
 Supported constants are pi and e.  
 Vectors work with all operators and functions.  
-
+  
+Variables can also be used. Just type in the format of `a=1+2`. Each line is a new equation. Variable names can overwrite existing operator and constant names. Useful for if you want to use the variable name "x" and won't be needing to do cross product.  
+  
 It also doesn't have any window controls like minimizing or closing because it was made to be used with AutoHotkey. Opening the program again while it's already running will close it. Unless you set that up you will have to close and minimize it via the taskbar.  
 Really this is just here for the source code.  
 
@@ -22,9 +24,11 @@ Launch_App2::
 ```
 ![Basic](Screenshots/basic.png)  
   
-![Vectors](Screenshots/vectors.png)
+![Vectors](Screenshots/vectors.png)  
+  
+![Variables](Screenshots/variables.png)
 
 Todo list:
 * Add syntax checking beore calculating
-* Add variable support
+* <strike>Add variable support</strike>
 * Switch to using decimal type for more precision
