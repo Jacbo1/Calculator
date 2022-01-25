@@ -38,3 +38,4 @@ Todo list:
 * Add syntax checking beore calculating
 * <strike>Add variable support</strike>
 * <strike>Switch to using decimal type for more precision</strike>
+* Change again from decimal type to BigFloat since decimal is fixed-point
