@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace Calculator
@@ -7,19 +6,19 @@ namespace Calculator
     internal class FormulaGroup
     {
         private static Regex varRegex = new Regex(@"(\S+)=(\S+)", RegexOptions.Compiled);
+        private static Regex whitespace = new Regex(@"\s", RegexOptions.Compiled);
 
         public static string Calculate(string input, out string workOutput)
         {
             workOutput = "";
             string answer = "";
 
-            input = input.Replace(" ", "").Replace("\t", "");
             List<Formula> formulas = new List<Formula>();
             Dictionary<string, Piece> vars = new Dictionary<string, Piece>();
             bool first = true;
             foreach (string line2 in input.Split('\n'))
             {
-                string line = line2.Replace("\n", "");
+                string line = whitespace.Replace(line2, "");
                 Match match = varRegex.Match(line);
                 if (match.Success)
                 {
