@@ -33,6 +33,6 @@ Launch_App2::
 ![Variables](Screenshots/decimal%20and%20var%203.png)
 
 Todo list:
-* Add syntax checking beore calculating
+* <strike>Add syntax checking beore calculating</strike>
 * <strike>Add variable support</strike>
 * Switch to using a more precise floating-point type
