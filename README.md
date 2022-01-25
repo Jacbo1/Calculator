@@ -1,5 +1,3 @@
-This depends on DecimalExtensions from [KGy SOFT](https://www.nuget.org/packages/KGySoft.CoreLibraries/6.0.1?_src=template)
-
 This isn't really a user-ready product. I made it to replace the calculator that opens when I press the calculator button on my keyboard and didn't plan on releasing it but it was requested.  
   
 This calculator supports order of operations, parentheses, and vectors. Supported operators are +, -, \*, /, %, ^, x (cross product), and . (dot product). Vectors are formatted like <1,2,3> but can have equations in them too. Multiplying 2 vectors with \* will produce a new vector as <x1\*x2,y1\*y2,z1\*z2>.  
@@ -37,5 +35,4 @@ Launch_App2::
 Todo list:
 * Add syntax checking beore calculating
 * <strike>Add variable support</strike>
-* <strike>Switch to using decimal type for more precision</strike>
-* Change again from decimal type to BigFloat since decimal is fixed-point
+* Switch to using a more precise floating-point type
