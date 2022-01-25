@@ -1,16 +1,17 @@
-using KGySoft.CoreLibraries;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using System.Text.RegularExpressions;
 
 namespace Calculator
 {
     internal class Formula
     {
-        private const decimal deg2rad = DecimalExtensions.PI / 180;
-        private const decimal rad2deg = 180 / DecimalExtensions.PI;
+        private const double deg2rad = Math.PI / 180;
+        private const double rad2deg = 180 / Math.PI;
         private const int decDigitDisplay = 10;
-        private const decimal decSciThreshold = 0.00001m;
+        private const double decSciThreshold = 0.00001;
 
         // Incredibly easy and simple method to find the pieces and put them into a list in order and allows less strict input formatting
         private static Regex pieceRegex;
@@ -34,12 +35,75 @@ namespace Calculator
             ConstructPieceRegex();
         }
 
+        private static void Merge(string[] arr, int l, int m, int r)
+        {
+            int n1 = m - l + 1;
+            int n2 = r - m;
+
+            string[] L = new string[n1];
+            string[] R = new string[n2];
+
+            for (int i = 0; i < n1; i++)
+            {
+                L[i] = arr[l + i];
+                for (int j = 0; j < n2; j++)
+                {
+                    R[j] = arr[m + 1 + j];
+
+                    int k = l;
+                    int a = 0;
+                    int b = 0;
+                    while (a < n1 && b < n2)
+                    {
+                        if (L[a].Length > R[b].Length)
+                        {
+                            arr[k] = L[a];
+                            a++;
+                        }
+                        else
+                        {
+                            arr[k] = R[b];
+                            b++;
+                        }
+                        k++;
+                    }
+
+                    while (a < n1)
+                    {
+                        arr[k] = L[a];
+                        a++;
+                        k++;
+                    }
+
+                    while (b < n1)
+                    {
+                        arr[k] = R[b];
+                        b++;
+                        k++;
+                    }
+                }
+            }
+        }
+
+        private static void MergeSort(string[] arr, int l, int r)
+        {
+            if (l < r)
+            {
+                int m = l + (r - 1) / 2;
+                MergeSort(arr, l, m);
+                MergeSort(arr, m + 1, r);
+                Merge(arr, l, m, r);
+            }
+        }
+
         private void ConstructPieceRegex()
         {
             string regex = "(";
-            foreach (string var in vars.Keys)
+            string[] keys = vars.Keys.ToArray();
+            MergeSort(keys, 0, keys.Length - 1);
+            for (int i = 0; i < keys.Length; i++)
             {
-                regex += $"{var}|";
+                regex += $"{keys[i]}|";
             }
             //                        |    scientific notation e.g. -1.23E10    | |vars ||    vector    | +  - *  /  ^  % sin asin cos acos tan atan rad deg abs floor ceil round sqrt (  )  |     number    | e pi x .
             pieceRegex = new Regex($@"(-?([0-9]*\.)?[0-9]+)E(-?([0-9]*\.)?[0-9]+)|{regex}<\S+?,\S+?,\S+?>|\+|-|\*|\/|\^|%|sin|asin|cos|acos|tan|atan|rad|deg|abs|floor|ceil|round|sqrt|\(|\)|([0-9]*\.)?[0-9]+|e|pi|x|\.)", RegexOptions.Multiline);
@@ -51,9 +115,9 @@ namespace Calculator
             ConstructPieceRegex();
         }
 
-        private static decimal Abs(decimal n) => n < 0 ? -n : n;
+        private static double Abs(double n) => n < 0 ? -n : n;
 
-        private static string ToString(decimal n)
+        private static string ToString(double n)
         {
             if (n == 0)
             {
@@ -61,16 +125,16 @@ namespace Calculator
             }
             if (Abs(n) < decSciThreshold)
             {
-                int digits = (int)decimal.Floor(DecimalExtensions.Log10(Abs(n)));
-                decimal sci = decimal.Round(n * DecimalExtensions.Pow(10m, -digits), decDigitDisplay);
+                double digits = Math.Floor(Math.Log10(Abs(n)));
+                double sci = Math.Round(n * Math.Pow(10, -digits), decDigitDisplay);
                 string num = trailingZeroes.Replace(sci.ToString(), "");
                 if (num.IndexOf('.') == -1)
                 {
                     num += ".0";
                 }
-                return $"{num}E{digits}";
+                return $"{num}E{(int)digits}";
             }
-            decimal rounded = decimal.Round(n, decDigitDisplay);
+            double rounded = Math.Round(n, decDigitDisplay);
             return trailingZeroes.Replace(rounded.ToString(), "");
         }
 
@@ -91,9 +155,9 @@ namespace Calculator
                     }
                     return (string)piece.Value;
                 case "num":
-                    return ToString((decimal)piece.Value);
+                    return ToString((double)piece.Value);
                 case "vec":
-                    decimal3 num = (decimal3)piece.Value;
+                    Vector num = (Vector)piece.Value;
                     return $"<{ToString(num.X)}, {ToString(num.Y)}, {ToString(num.Z)}>";
                 case "parse vec":
                     string[] components = (string[])piece.Value;
@@ -115,11 +179,11 @@ namespace Calculator
                     }
                     return (string)piece.Value;
                 case "num":
-                    return round ? ToString((decimal)piece.Value) : ((decimal)piece.Value).ToString();
+                    return round ? ToString((double)piece.Value) : ((double)piece.Value).ToString();
                 case "const":
                     return round ? ToString(piece.ConstValue) : piece.ConstValue.ToString();
                 case "vec":
-                    decimal3 num = (decimal3)piece.Value;
+                    Vector num = (Vector)piece.Value;
                     string x = round ? ToString(num.X) : num.X.ToString();
                     string y = round ? ToString(num.Y) : num.Y.ToString();
                     string z = round ? ToString(num.Z) : num.Z.ToString();
@@ -221,13 +285,13 @@ namespace Calculator
                     {
                         if (pieces[i + 1].Type == "num")
                         {
-                            pieces[i] = new Piece(-(decimal)pieces[i + 1].Value);
+                            pieces[i] = new Piece(-(double)pieces[i + 1].Value);
                             piece = pieces[i];
                             pieces.RemoveAt(i + 1);
                         }
                         else if (pieces[i + 1].Type == "vec")
                         {
-                            pieces[i] = new Piece(-(decimal3)pieces[i + 1].Value);
+                            pieces[i] = new Piece(-(Vector)pieces[i + 1].Value);
                             piece = pieces[i];
                             pieces.RemoveAt(i + 1);
                         }
@@ -677,7 +741,7 @@ namespace Calculator
                     {
                         bool shownVec = false;
                         string[] components = (string[])pieces[i].Value;
-                        decimal[] newComponents = new decimal[3];
+                        double[] newComponents = new double[3];
                         for (int j = 0; j < 3; j++)
                         {
                             string work;
@@ -697,8 +761,8 @@ namespace Calculator
                                 workOutput += $"{components[j]}\n";
                                 workOutput += $"{work}\n\n";
                             }
-                            decimal num;
-                            if (decimal.TryParse(newComponent, out num))
+                            double num;
+                            if (double.TryParse(newComponent, out num))
                             {
                                 newComponents[j] = num;
                             }
@@ -708,7 +772,7 @@ namespace Calculator
                                 return "Error: Unparsable vector component";
                             }
                         }
-                        pieces[i] = new Piece(new decimal3(newComponents[0], newComponents[1], newComponents[2]));
+                        pieces[i] = new Piece(new Vector(newComponents[0], newComponents[1], newComponents[2]));
                     }
                 }
 
@@ -768,11 +832,11 @@ namespace Calculator
                             Piece num = stack.Pop();
                             if (num.Type == "num")
                             {
-                                stack.Push(new Piece(-(decimal)num.Value));
+                                stack.Push(new Piece(-(double)num.Value));
                             }
                             else if (num.Type == "vec")
                             {
-                                stack.Push(new Piece(-(decimal3)num.Value));
+                                stack.Push(new Piece(-(Vector)num.Value));
                             }
                             else if (num.Type == "const")
                             {
@@ -859,61 +923,61 @@ namespace Calculator
                                 case "+":
                                     if (isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((decimal)num1.Value + (decimal)num2.Value));
+                                        stack.Push(new Piece((double)num1.Value + (double)num2.Value));
                                     }
                                     else if (isNum1 && !isNum2)
                                     {
-                                        stack.Push(new Piece((decimal)num1.Value + (decimal3)num2.Value));
+                                        stack.Push(new Piece((double)num1.Value + (Vector)num2.Value));
                                     }
                                     else if (!isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((decimal3)num1.Value + (decimal)num2.Value));
+                                        stack.Push(new Piece((Vector)num1.Value + (double)num2.Value));
                                     }
                                     else
                                     {
-                                        stack.Push(new Piece((decimal3)num1.Value + (decimal3)num2.Value));
+                                        stack.Push(new Piece((Vector)num1.Value + (Vector)num2.Value));
                                     }
                                     break;
                                 case "-":
                                     if (isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((decimal)num1.Value - (decimal)num2.Value));
+                                        stack.Push(new Piece((double)num1.Value - (double)num2.Value));
                                     }
                                     else if (isNum1 && !isNum2)
                                     {
-                                        stack.Push(new Piece((decimal)num1.Value - (decimal3)num2.Value));
+                                        stack.Push(new Piece((double)num1.Value - (Vector)num2.Value));
                                     }
                                     else if (!isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((decimal3)num1.Value - (decimal)num2.Value));
+                                        stack.Push(new Piece((Vector)num1.Value - (double)num2.Value));
                                     }
                                     else
                                     {
-                                        stack.Push(new Piece((decimal3)num1.Value - (decimal3)num2.Value));
+                                        stack.Push(new Piece((Vector)num1.Value - (Vector)num2.Value));
                                     }
                                     break;
                                 case "*":
                                     if (isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((decimal)num1.Value * (decimal)num2.Value));
+                                        stack.Push(new Piece((double)num1.Value * (double)num2.Value));
                                     }
                                     else if (isNum1 && !isNum2)
                                     {
-                                        stack.Push(new Piece((decimal)num1.Value * (decimal3)num2.Value));
+                                        stack.Push(new Piece((double)num1.Value * (Vector)num2.Value));
                                     }
                                     else if (!isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((decimal3)num1.Value * (decimal)num2.Value));
+                                        stack.Push(new Piece((Vector)num1.Value * (double)num2.Value));
                                     }
                                     else
                                     {
-                                        stack.Push(new Piece((decimal3)num1.Value * (decimal3)num2.Value));
+                                        stack.Push(new Piece((Vector)num1.Value * (Vector)num2.Value));
                                     }
                                     break;
                                 case "/":
                                     if (isNum2)
                                     {
-                                        if ((decimal)num2.Value == 0)
+                                        if ((double)num2.Value == 0)
                                         {
                                             string error = $"Error: Division by 0";
                                             if (firstLine)
@@ -930,7 +994,7 @@ namespace Calculator
                                     }
                                     else
                                     {
-                                        decimal3 vec = (decimal3)num2.Value;
+                                        Vector vec = (Vector)num2.Value;
                                         if (vec.X == 0 || vec.Y == 0 || vec.Z == 0)
                                         {
                                             string error = $"Error: Division by 0";
@@ -948,25 +1012,25 @@ namespace Calculator
                                     }
                                     if (isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((decimal)num1.Value / (decimal)num2.Value));
+                                        stack.Push(new Piece((double)num1.Value / (double)num2.Value));
                                     }
                                     else if (isNum1 && !isNum2)
                                     {
-                                        stack.Push(new Piece((decimal)num1.Value / (decimal3)num2.Value));
+                                        stack.Push(new Piece((double)num1.Value / (Vector)num2.Value));
                                     }
                                     else if (!isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((decimal3)num1.Value / (decimal)num2.Value));
+                                        stack.Push(new Piece((Vector)num1.Value / (double)num2.Value));
                                     }
                                     else
                                     {
-                                        stack.Push(new Piece((decimal3)num1.Value / (decimal3)num2.Value));
+                                        stack.Push(new Piece((Vector)num1.Value / (Vector)num2.Value));
                                     }
                                     break;
                                 case "x":
                                     if (!isNum1 && !isNum2)
                                     {
-                                        stack.Push(new Piece(((decimal3)num1.Value).Cross((decimal3)num2.Value)));
+                                        stack.Push(new Piece(((Vector)num1.Value).Cross((Vector)num2.Value)));
                                     }
                                     else
                                     {
@@ -986,7 +1050,7 @@ namespace Calculator
                                 case ".":
                                     if (!isNum1 && !isNum2)
                                     {
-                                        stack.Push(new Piece(((decimal3)num1.Value).Dot((decimal3)num2.Value)));
+                                        stack.Push(new Piece(((Vector)num1.Value).Dot((Vector)num2.Value)));
                                     }
                                     else
                                     {
@@ -1006,19 +1070,19 @@ namespace Calculator
                                 case "%":
                                     if (isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((decimal)num1.Value % (decimal)num2.Value));
+                                        stack.Push(new Piece((double)num1.Value % (double)num2.Value));
                                     }
                                     else if (isNum1 && !isNum2)
                                     {
-                                        stack.Push(new Piece((decimal)num1.Value % (decimal3)num2.Value));
+                                        stack.Push(new Piece((double)num1.Value % (Vector)num2.Value));
                                     }
                                     else if (!isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((decimal3)num1.Value % (decimal)num2.Value));
+                                        stack.Push(new Piece((Vector)num1.Value % (double)num2.Value));
                                     }
                                     else
                                     {
-                                        stack.Push(new Piece((decimal3)num1.Value % (decimal3)num2.Value));
+                                        stack.Push(new Piece((Vector)num1.Value % (Vector)num2.Value));
                                     }
                                     break;
                                 case "^":
@@ -1026,19 +1090,19 @@ namespace Calculator
                                     {
                                         if (isNum1 && isNum2)
                                         {
-                                            stack.Push(new Piece(DecimalExtensions.Pow((decimal)num1.Value, (decimal)num2.Value)));
+                                            stack.Push(new Piece(Math.Pow((double)num1.Value, (double)num2.Value)));
                                         }
                                         else if (isNum1 && !isNum2)
                                         {
-                                            stack.Push(new Piece(decimal3.Pow((decimal)num1.Value, (decimal3)num2.Value)));
+                                            stack.Push(new Piece(Vector.Pow((double)num1.Value, (Vector)num2.Value)));
                                         }
                                         else if (!isNum1 && isNum2)
                                         {
-                                            stack.Push(new Piece(decimal3.Pow((decimal3)num1.Value, (decimal)num2.Value)));
+                                            stack.Push(new Piece(Vector.Pow((Vector)num1.Value, (double)num2.Value)));
                                         }
                                         else
                                         {
-                                            stack.Push(new Piece(decimal3.Pow((decimal3)num1.Value, (decimal3)num2.Value)));
+                                            stack.Push(new Piece(Vector.Pow((Vector)num1.Value, (Vector)num2.Value)));
                                         }
                                     }
                                     catch
@@ -1115,67 +1179,67 @@ namespace Calculator
                             case "sin":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece(Math.Sin((double)((decimal)num.Value * deg2rad))));
+                                    stack.Push(new Piece(Math.Sin((double)num.Value * deg2rad)));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece(decimal3.Sin((decimal3)num.Value * deg2rad)));
+                                    stack.Push(new Piece(Vector.Sin((Vector)num.Value * deg2rad)));
                                 }
                                 break;
                             case "asin":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece((decimal)Math.Asin((double)(decimal)num.Value) * rad2deg));
+                                    stack.Push(new Piece(Math.Asin((double)num.Value) * rad2deg));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece(decimal3.Asin((decimal3)num.Value) * rad2deg));
+                                    stack.Push(new Piece(Vector.Asin((Vector)num.Value) * rad2deg));
                                 }
                                 break;
                             case "cos":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece((decimal)Math.Cos((double)((decimal)num.Value * deg2rad))));
+                                    stack.Push(new Piece(Math.Cos((double)num.Value * deg2rad)));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece(decimal3.Cos((decimal3)num.Value * deg2rad)));
+                                    stack.Push(new Piece(Vector.Cos((Vector)num.Value * deg2rad)));
                                 }
                                 break;
                             case "acos":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece((decimal)Math.Acos((double)(decimal)num.Value) * rad2deg));
+                                    stack.Push(new Piece(Math.Acos((double)num.Value) * rad2deg));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece(decimal3.Acos((decimal3)num.Value) * rad2deg));
+                                    stack.Push(new Piece(Vector.Acos((Vector)num.Value) * rad2deg));
                                 }
                                 break;
                             case "tan":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece((decimal)Math.Tan((double)((decimal)num.Value * deg2rad))));
+                                    stack.Push(new Piece(Math.Tan((double)num.Value * deg2rad)));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece(decimal3.Tan((decimal3)num.Value * deg2rad)));
+                                    stack.Push(new Piece(Vector.Tan((Vector)num.Value * deg2rad)));
                                 }
                                 break;
                             case "atan":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece((decimal)Math.Atan((double)(decimal)num.Value) * rad2deg));
+                                    stack.Push(new Piece(Math.Atan((double)num.Value) * rad2deg));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece(decimal3.Atan((decimal3)num.Value) * rad2deg));
+                                    stack.Push(new Piece(Vector.Atan((Vector)num.Value) * rad2deg));
                                 }
                                 break;
                             case "abs":
                                 if (isNum)
                                 {
-                                    decimal temp = (decimal)num.Value;
+                                    double temp = (double)num.Value;
                                     if (temp < 0)
                                     {
                                         stack.Push(new Piece(-temp));
@@ -1187,37 +1251,37 @@ namespace Calculator
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece(decimal3.Abs((decimal3)num.Value)));
+                                    stack.Push(new Piece(Vector.Abs((Vector)num.Value)));
                                 }
                                 break;
                             case "floor":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece(decimal.Floor((decimal)num.Value)));
+                                    stack.Push(new Piece(Math.Floor((double)num.Value)));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece(decimal3.Floor((decimal3)num.Value)));
+                                    stack.Push(new Piece(Vector.Floor((Vector)num.Value)));
                                 }
                                 break;
                             case "ceil":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece(decimal.Ceiling((decimal)num.Value)));
+                                    stack.Push(new Piece(Math.Ceiling((double)num.Value)));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece(decimal3.Ceiling((decimal3)num.Value)));
+                                    stack.Push(new Piece(Vector.Ceiling((Vector)num.Value)));
                                 }
                                 break;
                             case "round":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece(decimal.Round((decimal)num.Value)));
+                                    stack.Push(new Piece(Math.Round((double)num.Value)));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece(decimal3.Round((decimal3)num.Value)));
+                                    stack.Push(new Piece(Vector.Round((Vector)num.Value)));
                                 }
                                 break;
                             case "sqrt":
@@ -1225,11 +1289,11 @@ namespace Calculator
                                 {
                                     if (isNum)
                                     {
-                                        stack.Push(new Piece(DecimalExtensions.Pow((decimal)num.Value, 0.5m)));
+                                        stack.Push(new Piece(Math.Pow((double)num.Value, 0.5)));
                                     }
                                     else
                                     {
-                                        stack.Push(new Piece(decimal3.Sqrt((decimal3)num.Value)));
+                                        stack.Push(new Piece(Vector.Sqrt((Vector)num.Value)));
                                     }
                                 }
                                 catch
@@ -1250,32 +1314,32 @@ namespace Calculator
                             case "deg":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece((decimal)num.Value * rad2deg));
+                                    stack.Push(new Piece((double)num.Value * rad2deg));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece((decimal3)num.Value * rad2deg));
+                                    stack.Push(new Piece((Vector)num.Value * rad2deg));
                                 }
                                 break;
                             case "rad":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece((decimal)num.Value * deg2rad));
+                                    stack.Push(new Piece((double)num.Value * deg2rad));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece((decimal3)num.Value * deg2rad));
+                                    stack.Push(new Piece((Vector)num.Value * deg2rad));
                                 }
                                 break;
                             case "neg":
                                 // Negate
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece(-(decimal)num.Value));
+                                    stack.Push(new Piece(-(double)num.Value));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece(-(decimal3)num.Value));
+                                    stack.Push(new Piece(-(Vector)num.Value));
                                 }
                                 break;
                         }

@@ -1,4 +1,4 @@
-using KGySoft.CoreLibraries;
+using System;
 using System.Text.RegularExpressions;
 
 namespace Calculator
@@ -13,26 +13,19 @@ namespace Calculator
         public string Type;
         public object Value;
         public int Precedence = -1;
-        public decimal ConstValue;
+        public double ConstValue;
         public bool IsOperand = false;
         public bool IsVar = false;
         public string VarName;
 
-        public Piece(decimal num)
+        public Piece(double num)
         {
             Type = "num";
             Value = num;
             IsOperand = true;
         }
 
-        public Piece(double num)
-        {
-            Type = "num";
-            Value = (decimal)num;
-            IsOperand = true;
-        }
-
-        public Piece(decimal3 vec)
+        public Piece(Vector vec)
         {
             Type = "vec";
             Value = vec;
@@ -46,13 +39,13 @@ namespace Calculator
                 case "e":
                     Type = "const";
                     Value = "e";
-                    ConstValue = DecimalExtensions.E;
+                    ConstValue = Math.E;
                     IsOperand = true;
                     break;
                 case "pi":
                     Type = "const";
                     Value = "pi";
-                    ConstValue = DecimalExtensions.PI;
+                    ConstValue = Math.PI;
                     IsOperand = true;
                     break;
                 case "(":
@@ -183,10 +176,10 @@ namespace Calculator
                         {
                             // Valid vector
                             Type = "vec";
-                            Value = new decimal3(
-                                decimal.Parse(vec.Groups[1].Value),
-                                decimal.Parse(vec.Groups[3].Value),
-                                decimal.Parse(vec.Groups[5].Value));
+                            Value = new Vector(
+                                double.Parse(vec.Groups[1].Value),
+                                double.Parse(vec.Groups[3].Value),
+                                double.Parse(vec.Groups[5].Value));
                         }
                         else
                         {
@@ -208,7 +201,7 @@ namespace Calculator
                     {
                         // Valid number
                         Type = "num";
-                        Value = decimal.Parse(match.Value);
+                        Value = double.Parse(match.Value);
                         IsOperand = true;
                         return;
                     }
@@ -219,9 +212,9 @@ namespace Calculator
                     {
                         // Valid scientific notation
                         Type = "num";
-                        decimal num = decimal.Parse(match.Groups[1].Value);
-                        decimal power = decimal.Parse(match.Groups[3].Value);
-                        Value = num * DecimalExtensions.Pow(10m, power);
+                        double num = double.Parse(match.Groups[1].Value);
+                        double power = double.Parse(match.Groups[3].Value);
+                        Value = num * Math.Pow(10, power);
                         IsOperand = true;
                         return;
                     }
