@@ -17,8 +17,9 @@ namespace Calculator
             List<Formula> formulas = new List<Formula>();
             Dictionary<string, Piece> vars = new Dictionary<string, Piece>();
             bool first = true;
-            foreach (string line in input.Split('\n'))
+            foreach (string line2 in input.Split('\n'))
             {
+                string line = line2.Replace("\n", "");
                 Match match = varRegex.Match(line);
                 if (match.Success)
                 {
@@ -46,10 +47,10 @@ namespace Calculator
                         workOutput += $"\n\n{work}";
                     }
                 }
-                else if (line.Length > 1)
+                else if (line.Length > 0)
                 {
                     string work;
-                    answer = new Formula(line.Substring(0, line.Length - 1), vars).Calculate(out work, false, true);
+                    answer = new Formula(line, vars).Calculate(out work, false, true);
                     work += $"\n{answer}";
                     if (first)
                     {
