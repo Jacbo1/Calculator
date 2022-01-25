@@ -115,17 +115,15 @@ namespace Calculator
             ConstructPieceRegex();
         }
 
-        private static double Abs(double n) => n < 0 ? -n : n;
-
         private static string ToString(double n)
         {
             if (n == 0)
             {
                 return "0";
             }
-            if (Abs(n) < decSciThreshold)
+            if (Math.Abs(n) < decSciThreshold)
             {
-                double digits = Math.Floor(Math.Log10(Abs(n)));
+                double digits = Math.Floor(Math.Log10(Math.Abs(n)));
                 double sci = Math.Round(n * Math.Pow(10, -digits), decDigitDisplay);
                 string num = trailingZeroes.Replace(sci.ToString(), "");
                 if (num.IndexOf('.') == -1)
