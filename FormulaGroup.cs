@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace Calculator
@@ -45,10 +46,10 @@ namespace Calculator
                         workOutput += $"\n\n{work}";
                     }
                 }
-                else if (line.Length > 0)
+                else if (line.Length > 1)
                 {
                     string work;
-                    answer = new Formula(line, vars).Calculate(out work, false, true);
+                    answer = new Formula(line.Substring(0, line.Length - 1), vars).Calculate(out work, false, true);
                     work += $"\n{answer}";
                     if (first)
                     {
