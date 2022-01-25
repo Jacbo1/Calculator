@@ -239,11 +239,19 @@ namespace Calculator
             return -1;
         }
 
-        private List<Piece> String2Infix(string formula)
+        private List<Piece> String2Infix(string formula, out string error)
         {
+            error = "";
             List<Piece> pieces = new List<Piece>();
+            int lastIndex = 0;
             foreach (Match match in pieceRegex.Matches(formula))
             {
+                if (match.Index != lastIndex)
+                {
+                    error = $"Error: Unexpected term \"{formula.Substring(lastIndex, match.Index - lastIndex)}\"";
+                    return pieces;
+                }
+                lastIndex += match.Length;
                 string value = match.Value;
                 if (vars.ContainsKey(value))
                 {
@@ -253,6 +261,11 @@ namespace Calculator
                 {
                     pieces.Add(new Piece(match.Value));
                 }
+            }
+            if (lastIndex != formula.Length)
+            {
+                error = $"Error: Unexpected term \"{formula.Substring(lastIndex)}\"";
+                return pieces;
             }
 
             // Post processing
@@ -718,7 +731,16 @@ namespace Calculator
         public string Calculate(out string workOutput, bool isSub, bool round)
         {
             workOutput = "";
-            List<Piece> pieces = String2Infix(formula);
+            List<Piece> pieces;
+            {
+                string error;
+                pieces = String2Infix(formula, out error);
+                if (error.Length > 0)
+                {
+                    workOutput += error;
+                    return error;
+                }
+            }
 
             if (!isSub)
             {
