@@ -396,32 +396,32 @@ namespace Calculator
         // Trig
         public static Fraction Sin(Fraction frac)
         {
-            return Math.Sin((double)(frac % 360) * rad2deg);
+            return Math.Sin((double)(frac % 360) * deg2rad);
         }
 
         public static Fraction Cos(Fraction frac)
         {
-            return Math.Cos((double)(frac % 360) * rad2deg);
+            return Math.Cos((double)(frac % 360) * deg2rad);
         }
 
         public static Fraction Tan(Fraction frac)
         {
-            return Math.Tan((double)(frac % 360) * rad2deg);
+            return Math.Tan((double)(frac % 360) * deg2rad);
         }
 
         public static Fraction Asin(Fraction frac)
         {
-            return Math.Asin((double)frac) * deg2rad;
+            return Math.Asin((double)frac) * rad2deg;
         }
 
         public static Fraction Acos(Fraction frac)
         {
-            return Math.Acos((double)frac) * deg2rad;
+            return Math.Acos((double)frac) * rad2deg;
         }
 
         public static Fraction Atan(Fraction frac)
         {
-            return Math.Atan((double)frac) * deg2rad;
+            return Math.Atan((double)frac) * rad2deg;
         }
 
         // Explicits
