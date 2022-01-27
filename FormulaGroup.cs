@@ -72,10 +72,9 @@ namespace Calculator
                 Match match = Regexes.RE_VectorFraction.Match(answer);
                 if (match.Success)
                 {
-                    Fraction x, y, z;
-                    if (!Fraction.TryParse(match.Groups[1].Value, out x)) { return answer; }
-                    if (!Fraction.TryParse(match.Groups[10].Value, out y)) { return answer; }
-                    if (!Fraction.TryParse(match.Groups[19].Value, out z)) { return answer; }
+                    if (!Fraction.TryParse(match.Groups[1].Value, out Fraction x)) { return answer; }
+                    if (!Fraction.TryParse(match.Groups[10].Value, out Fraction y)) { return answer; }
+                    if (!Fraction.TryParse(match.Groups[19].Value, out Fraction z)) { return answer; }
                     return $"<{x}, {y}, {z}>";
                 }
             }

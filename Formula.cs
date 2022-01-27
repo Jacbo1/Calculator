@@ -323,7 +323,7 @@ namespace Calculator
                     {
                         pieces.Add(new Piece(match.Value));
                     }
-                    catch(FractionDoubleParsingException excep)
+                    catch (FractionDoubleParsingException)
                     {
                         error = $"Error: {match.Value} is too small or large.";
                         return pieces;
@@ -406,7 +406,7 @@ namespace Calculator
                         {
                             int open = i;
                             int close = i + 2;
-                            
+
                             // Find close pos
                             if (nextPiece.Type == "func1")
                             {
@@ -444,7 +444,7 @@ namespace Calculator
                                             // Found close pos
                                             break;
                                         }
-                                        else if(piece2.Type == "func1")
+                                        else if (piece2.Type == "func1")
                                         {
                                             lastWasFunc1 = true;
                                         }
@@ -461,7 +461,7 @@ namespace Calculator
                                     }
                                 }
                             }
-                            else if(nextPiece.Value.Equals("("))
+                            else if (nextPiece.Value.Equals("("))
                             {
                                 // Not a func1 to the right
                                 // Parentheses to the right
@@ -601,7 +601,7 @@ namespace Calculator
         private static string Postfix2Infix(List<Piece> postfix)
         {
             //PieceGroup pieces = new PieceGroup();
-            Stack<List<Piece>> stack = new Stack<List<Piece>> ();
+            Stack<List<Piece>> stack = new Stack<List<Piece>>();
             foreach (Piece piece in postfix)
             {
                 if (piece.Type == "op")
@@ -694,7 +694,7 @@ namespace Calculator
                     // Push to output
                     postfix.Add(piece);
                 }
-                else if(piece.Type == "func1")
+                else if (piece.Type == "func1")
                 {
                     // Func1
                     // Push to stack
@@ -818,7 +818,7 @@ namespace Calculator
                     {
                         workOutput += ToString(piece);
                     }
-                    catch (FractionDoubleParsingException excep)
+                    catch (FractionDoubleParsingException)
                     {
                         string error = $"Error: {ToStringException(piece)} is too small or large.";
                         workOutput += error;
@@ -938,15 +938,7 @@ namespace Calculator
                             else
                             {
                                 string error = $"Error: Cannot negate {ToString(num)}";
-                                if (firstLine)
-                                {
-                                    firstLine = false;
-                                    workOutput += error;
-                                }
-                                else
-                                {
-                                    workOutput += $"\n{error}";
-                                }
+                                workOutput += $"\n{error}";
                                 return error;
                             }
                         }
@@ -955,15 +947,8 @@ namespace Calculator
                             if (stack.Count < 2)
                             {
                                 string error = $"Error: Not enough operands for {ToString(piece)}";
-                                if (firstLine)
-                                {
-                                    firstLine = false;
-                                    workOutput += error;
-                                }
-                                else
-                                {
-                                    workOutput += $"\n{error}";
-                                }
+                                workOutput += error;
+                                workOutput += $"\n{error}";
                                 return error;
                             }
 
@@ -985,29 +970,13 @@ namespace Calculator
                             if (!isNum1 && num1.Type != "vec")
                             {
                                 string error = $"Error: Cannot perform arithmetic on {ToString(num1)}";
-                                if (firstLine)
-                                {
-                                    firstLine = false;
-                                    workOutput += error;
-                                }
-                                else
-                                {
-                                    workOutput += $"\n{error}";
-                                }
+                                workOutput += $"\n{error}";
                                 return error;
                             }
                             if (!isNum2 && num2.Type != "vec")
                             {
                                 string error = $"Error: Cannot perform arithmetic on {ToString(num2)}";
-                                if (firstLine)
-                                {
-                                    firstLine = false;
-                                    workOutput += error;
-                                }
-                                else
-                                {
-                                    workOutput += $"\n{error}";
-                                }
+                                workOutput += $"\n{error}";
                                 return error;
                             }
 
@@ -1073,15 +1042,7 @@ namespace Calculator
                                         if ((Fraction)num2.Value == 0)
                                         {
                                             string error = $"Error: Division by 0";
-                                            if (firstLine)
-                                            {
-                                                firstLine = false;
-                                                workOutput += error;
-                                            }
-                                            else
-                                            {
-                                                workOutput += $"\n{error}";
-                                            }
+                                            workOutput += $"\n{error}";
                                             return error;
                                         }
                                     }
@@ -1091,15 +1052,7 @@ namespace Calculator
                                         if (vec.X == 0 || vec.Y == 0 || vec.Z == 0)
                                         {
                                             string error = $"Error: Division by 0";
-                                            if (firstLine)
-                                            {
-                                                firstLine = false;
-                                                workOutput += error;
-                                            }
-                                            else
-                                            {
-                                                workOutput += $"\n{error}";
-                                            }
+                                            workOutput += $"\n{error}";
                                             return error;
                                         }
                                     }
@@ -1128,15 +1081,7 @@ namespace Calculator
                                     else
                                     {
                                         string error = $"Error: Cannot get cross product of {ToString(num1)} and {ToString(num2)}";
-                                        if (firstLine)
-                                        {
-                                            firstLine = false;
-                                            workOutput += error;
-                                        }
-                                        else
-                                        {
-                                            workOutput += $"\n{error}";
-                                        }
+                                        workOutput += $"\n{error}";
                                         return error;
                                     }
                                     break;
@@ -1148,15 +1093,7 @@ namespace Calculator
                                     else
                                     {
                                         string error = $"Error: Cannot get dot product of {ToString(num1)} and {ToString(num2)}";
-                                        if (firstLine)
-                                        {
-                                            firstLine = false;
-                                            workOutput += error;
-                                        }
-                                        else
-                                        {
-                                            workOutput += $"\n{error}";
-                                        }
+                                        workOutput += $"\n{error}";
                                         return error;
                                     }
                                     break;
@@ -1201,15 +1138,7 @@ namespace Calculator
                                     catch
                                     {
                                         string error = $"Error: Cannot raise {ToString(num1)} to the {ToString(num2)} power";
-                                        if (firstLine)
-                                        {
-                                            firstLine = false;
-                                            workOutput += error;
-                                        }
-                                        else
-                                        {
-                                            workOutput += $"\n{error}";
-                                        }
+                                        workOutput += $"\n{error}";
                                         return error;
                                     }
                                     break;
@@ -1232,15 +1161,8 @@ namespace Calculator
                         if (stack.Count == 0)
                         {
                             string error = $"Error: Not enough operands for {ToString(piece)}";
-                            if (firstLine)
-                            {
-                                firstLine = false;
-                                workOutput += error;
-                            }
-                            else
-                            {
-                                workOutput += $"\n{error}";
-                            }
+
+                            workOutput += $"\n{error}";
                             return error;
                         }
 
@@ -1255,15 +1177,7 @@ namespace Calculator
                         if (!isNum && num.Type != "vec")
                         {
                             string error = $"Error: Cannot perform {ToString(piece)} on {ToString(num)}";
-                            if (firstLine)
-                            {
-                                firstLine = false;
-                                workOutput += error;
-                            }
-                            else
-                            {
-                                workOutput += $"\n{error}";
-                            }
+                            workOutput += $"\n{error}";
                             return error;
                         }
 
@@ -1392,15 +1306,7 @@ namespace Calculator
                                 catch
                                 {
                                     string error = $"Error: Cannot square root {num}";
-                                    if (firstLine)
-                                    {
-                                        firstLine = false;
-                                        workOutput += error;
-                                    }
-                                    else
-                                    {
-                                        workOutput += $"\n{error}";
-                                    }
+                                    workOutput += $"\n{error}";
                                     return error;
                                 }
                                 break;
@@ -1446,7 +1352,7 @@ namespace Calculator
                 workOutput += $"\n{error}";
                 return error;
             }
-            
+
             if (stack.Count == 0)
             {
                 string error = "Error: No results";
