@@ -1,3 +1,4 @@
+using System;
 using System.Text.RegularExpressions;
 
 namespace Calculator
@@ -190,6 +191,9 @@ namespace Calculator
                     {
                         // Vector that needs parsing
                         Type = "parse vec";
+                        Console.WriteLine(match.Groups[1].Value);
+                        Console.WriteLine(match.Groups[2].Value);
+                        Console.WriteLine(match.Groups[3].Value);
                         Value = new string[] {
                                 match.Groups[1].Value,
                                 match.Groups[2].Value,
