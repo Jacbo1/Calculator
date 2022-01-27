@@ -5,8 +5,8 @@ namespace Calculator
 {
     internal class FormulaGroup
     {
-        private static Regex varRegex = new Regex(@"(\S+)=(\S+)", RegexOptions.Compiled);
-        private static Regex whitespace = new Regex(@"\s", RegexOptions.Compiled);
+        private static readonly Regex varRegex = new Regex(@"(\S+)=(\S+)", RegexOptions.Compiled);
+        private static readonly Regex whitespace = new Regex(@"\s", RegexOptions.Compiled);
 
         public static string Calculate(string input, out string workOutput)
         {
@@ -23,13 +23,14 @@ namespace Calculator
                 if (match.Success)
                 {
                     // This line is a variable assignment
-                    string work;
                     string varName = match.Groups[1].Value;
-                    answer = new Formula(match.Groups[2].Value, vars).Calculate(out work);
+                    answer = new Formula(match.Groups[2].Value, vars).Calculate(out string work);
                     work += $"\n{answer}";
-                    Piece varPiece = new Piece(answer);
-                    varPiece.IsVar = true;
-                    varPiece.VarName = varName;
+                    Piece varPiece = new Piece(answer)
+                    {
+                        IsVar = true,
+                        VarName = varName
+                    };
                     vars[varName] = varPiece;
 
                     foreach (Formula formula in formulas)
@@ -48,8 +49,7 @@ namespace Calculator
                 }
                 else if (line.Length > 0)
                 {
-                    string work;
-                    answer = new Formula(line, vars).Calculate(out work, false, true);
+                    answer = new Formula(line, vars).Calculate(out string work, false, true);
                     work += $"\n{answer}";
                     if (first)
                     {
@@ -62,6 +62,12 @@ namespace Calculator
                     }
                 }
             }
+
+            if (Regexes.RE_Fraction.IsMatch(answer) && Fraction.TryParse(answer, out Fraction frac))
+            {
+                return frac.ToString();
+            }
+
             return answer;
         }
     }

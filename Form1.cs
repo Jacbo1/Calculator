@@ -98,7 +98,7 @@ namespace Calculator
                     {
                         answer = FormulaGroup.Calculate(input, out work);
                     }
-                    catch(Exception error)
+                    catch (Exception error)
                     {
                         answer = error.Message;
                         work = error.ToString();

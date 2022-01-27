@@ -1,24 +1,18 @@
-using System;
 using System.Text.RegularExpressions;
 
 namespace Calculator
 {
     internal class Piece
     {
-        private static Regex vectorRegex = new Regex(@"^<(\S+?),\s?(\S+?),\s?(\S+?)>$");
-        private static Regex strictVectorRegex = new Regex(@"^<(-?([0-9]*\.)?[0-9]+),\s?(-?([0-9]*\.)?[0-9]+)\s?,\s?(-?([0-9]*\.)?[0-9]+)>$");
-        private static Regex numberRegex = new Regex(@"^-?([0-9]*\.)?[0-9]+$");
-        private static Regex sciNotRegex = new Regex(@"^(-?([0-9]*\.)?[0-9]+)E(-?([0-9]*\.)?[0-9]+)$");
-
         public string Type;
         public object Value;
         public int Precedence = -1;
-        public double ConstValue;
+        public Fraction ConstValue;
         public bool IsOperand = false;
         public bool IsVar = false;
         public string VarName;
 
-        public Piece(double num)
+        public Piece(Fraction num)
         {
             Type = "num";
             Value = num;
@@ -39,13 +33,13 @@ namespace Calculator
                 case "e":
                     Type = "const";
                     Value = "e";
-                    ConstValue = Math.E;
+                    ConstValue = Fraction.E;
                     IsOperand = true;
                     break;
                 case "pi":
                     Type = "const";
                     Value = "pi";
-                    ConstValue = Math.PI;
+                    ConstValue = Fraction.PI;
                     IsOperand = true;
                     break;
                 case "(":
@@ -167,54 +161,40 @@ namespace Calculator
                     Precedence = 5;
                     break;
                 default:
+                    // Check if it is a number
+                    Fraction frac;
+                    if (Fraction.TryParse(piece, out frac))
+                    {
+                        Type = "num";
+                        Value = frac;
+                        IsOperand = true;
+                        return;
+                    }
+
                     // Check if it is a vector
-                    Match match = vectorRegex.Match(piece);
+                    Match match = Regexes.RE_Vector.Match(piece);
                     if (match.Success)
                     {
-                        Match vec = strictVectorRegex.Match(piece);
-                        if (vec.Success)
-                        {
-                            // Valid vector
-                            Type = "vec";
-                            Value = new Vector(
-                                double.Parse(vec.Groups[1].Value),
-                                double.Parse(vec.Groups[3].Value),
-                                double.Parse(vec.Groups[5].Value));
-                        }
-                        else
-                        {
-                            // Vector that needs parsing
-                            Type = "parse vec";
-                            Value = new string[] {
+                        Type = "vec";
+                        Value = new Vector(
+                            Fraction.Parse(match.Groups[1].Value),
+                            Fraction.Parse(match.Groups[13].Value),
+                            Fraction.Parse(match.Groups[25].Value));
+                        IsOperand = true;
+                        return;
+                    }
+
+                    // Check if it is an unprocessed vector
+                    match = Regexes.RE_VectorLoose.Match(piece);
+                    if (match.Success)
+                    {
+                        // Vector that needs parsing
+                        Type = "parse vec";
+                        Value = new string[] {
                                 match.Groups[1].Value,
                                 match.Groups[2].Value,
                                 match.Groups[3].Value
                             };
-                        }
-                        IsOperand = true;
-                        return;
-                    }
-
-                    // Check if it is a number
-                    match = numberRegex.Match(piece);
-                    if (match.Success)
-                    {
-                        // Valid number
-                        Type = "num";
-                        Value = double.Parse(match.Value);
-                        IsOperand = true;
-                        return;
-                    }
-
-                    // Check if it is scientific notation
-                    match = sciNotRegex.Match(piece);
-                    if (match.Success)
-                    {
-                        // Valid scientific notation
-                        Type = "num";
-                        double num = double.Parse(match.Groups[1].Value);
-                        double power = double.Parse(match.Groups[3].Value);
-                        Value = num * Math.Pow(10, power);
                         IsOperand = true;
                         return;
                     }

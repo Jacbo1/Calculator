@@ -34,9 +34,9 @@
             this.worker = new System.ComponentModel.BackgroundWorker();
             this.TextInput = new System.Windows.Forms.TextBox();
             this.AnswerOutput = new System.Windows.Forms.TextBox();
-            this.WorkOutput = new Calculator.DoubleBufferedLabel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+            this.WorkOutput = new Calculator.DoubleBufferedLabel();
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             this.SuspendLayout();
@@ -59,9 +59,10 @@
             this.TextInput.Font = new System.Drawing.Font("Bahnschrift Light", 27.75F);
             this.TextInput.ForeColor = System.Drawing.Color.White;
             this.TextInput.Location = new System.Drawing.Point(0, 0);
-            this.TextInput.Margin = new System.Windows.Forms.Padding(0, 0, 0, 0);
+            this.TextInput.Margin = new System.Windows.Forms.Padding(0);
             this.TextInput.Multiline = true;
             this.TextInput.Name = "TextInput";
+            this.TextInput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.TextInput.Size = new System.Drawing.Size(960, 540);
             this.TextInput.TabIndex = 5;
             // 
@@ -73,24 +74,12 @@
             this.AnswerOutput.Font = new System.Drawing.Font("Bahnschrift Light", 27.75F);
             this.AnswerOutput.ForeColor = System.Drawing.Color.White;
             this.AnswerOutput.Location = new System.Drawing.Point(0, 540);
-            this.AnswerOutput.Margin = new System.Windows.Forms.Padding(0, 0, 0, 0);
+            this.AnswerOutput.Margin = new System.Windows.Forms.Padding(0);
             this.AnswerOutput.Name = "AnswerOutput";
             this.AnswerOutput.ReadOnly = true;
+            this.AnswerOutput.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal;
             this.AnswerOutput.Size = new System.Drawing.Size(960, 52);
             this.AnswerOutput.TabIndex = 6;
-            // 
-            // WorkOutput
-            // 
-            this.WorkOutput.AutoSize = true;
-            this.WorkOutput.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(1)))), ((int)(((byte)(1)))), ((int)(((byte)(1)))));
-            this.WorkOutput.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.WorkOutput.Font = new System.Drawing.Font("Bahnschrift Light", 17F);
-            this.WorkOutput.Location = new System.Drawing.Point(960, 0);
-            this.WorkOutput.Margin = new System.Windows.Forms.Padding(0, 0, 0, 0);
-            this.WorkOutput.Name = "WorkOutput";
-            this.WorkOutput.Size = new System.Drawing.Size(29, 30);
-            this.WorkOutput.TabIndex = 4;
-            this.WorkOutput.Text = "...";
             // 
             // tableLayoutPanel1
             // 
@@ -103,7 +92,7 @@
             this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel2, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.WorkOutput, 1, 0);
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(0, 0, 0, 0);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 1;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
@@ -120,13 +109,26 @@
             this.tableLayoutPanel2.Controls.Add(this.AnswerOutput, 0, 1);
             this.tableLayoutPanel2.Controls.Add(this.TextInput, 0, 0);
             this.tableLayoutPanel2.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(0, 0, 0, 0);
+            this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 2;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel2.Size = new System.Drawing.Size(960, 1080);
             this.tableLayoutPanel2.TabIndex = 5;
+            // 
+            // WorkOutput
+            // 
+            this.WorkOutput.AutoSize = true;
+            this.WorkOutput.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(1)))), ((int)(((byte)(1)))), ((int)(((byte)(1)))));
+            this.WorkOutput.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.WorkOutput.Font = new System.Drawing.Font("Bahnschrift Light", 17F);
+            this.WorkOutput.Location = new System.Drawing.Point(960, 0);
+            this.WorkOutput.Margin = new System.Windows.Forms.Padding(0);
+            this.WorkOutput.Name = "WorkOutput";
+            this.WorkOutput.Size = new System.Drawing.Size(29, 30);
+            this.WorkOutput.TabIndex = 4;
+            this.WorkOutput.Text = "...";
             // 
             // Form1
             // 

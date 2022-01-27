@@ -8,27 +8,26 @@ namespace Calculator
 {
     internal class Formula
     {
-        private const double deg2rad = Math.PI / 180;
-        private const double rad2deg = 180 / Math.PI;
-        private const int decDigitDisplay = 10;
-        private const double decSciThreshold = 0.00001;
-
-        // Incredibly easy and simple method to find the pieces and put them into a list in order and allows less strict input formatting
-        private static Regex pieceRegex;
-        private static Regex trailingZeroes = new Regex(@"(?<=[0-9]+)(\.|(?<=\.[0-9]+))0+($|[^0-9])", RegexOptions.Compiled);
-
-        private Dictionary<string, Piece> vars;
-
         public string formula = "";
 
-        public Formula (string formula)
+        private static readonly Fraction
+            deg2rad = Fraction.PI / 180,
+            rad2deg = 180 / Fraction.PI,
+            sciNotMinThreshold = new Fraction(1, 1000000),
+            sciNotMaxThreshold = new Fraction(1000000000000000, 1);
+        private const int decDigitDisplay = 10;
+        private static Regex pieceRegex;
+        private Dictionary<string, Piece> vars;
+
+
+        public Formula(string formula)
         {
             this.formula = formula.Replace(" ", "").Replace("\t", "");
             vars = new Dictionary<string, Piece>();
             ConstructPieceRegex();
         }
 
-        public Formula (string formula, Dictionary<string, Piece> vars)
+        public Formula(string formula, Dictionary<string, Piece> vars)
         {
             this.formula = formula.Replace(" ", "").Replace("\t", "");
             this.vars = vars;
@@ -37,50 +36,35 @@ namespace Calculator
 
         private static void Merge(string[] arr, int l, int m, int r)
         {
-            int n1 = m - l + 1;
-            int n2 = r - m;
+            string[] leftArr = new string[m - l + 1];
+            string[] rightArr = new string[r - m];
 
-            string[] L = new string[n1];
-            string[] R = new string[n2];
+            Array.Copy(arr, l, leftArr, 0, m - l + 1);
+            Array.Copy(arr, m + 1, rightArr, 0, r - m);
 
-            for (int i = 0; i < n1; i++)
+            int i = 0;
+            int j = 0;
+            for (int k = l; k < r + 1; k++)
             {
-                L[i] = arr[l + i];
-                for (int j = 0; j < n2; j++)
+                if (i == leftArr.Length)
                 {
-                    R[j] = arr[m + 1 + j];
-
-                    int k = l;
-                    int a = 0;
-                    int b = 0;
-                    while (a < n1 && b < n2)
-                    {
-                        if (L[a].Length > R[b].Length)
-                        {
-                            arr[k] = L[a];
-                            a++;
-                        }
-                        else
-                        {
-                            arr[k] = R[b];
-                            b++;
-                        }
-                        k++;
-                    }
-
-                    while (a < n1)
-                    {
-                        arr[k] = L[a];
-                        a++;
-                        k++;
-                    }
-
-                    while (b < n1)
-                    {
-                        arr[k] = R[b];
-                        b++;
-                        k++;
-                    }
+                    arr[k] = rightArr[j];
+                    j++;
+                }
+                else if (j == rightArr.Length)
+                {
+                    arr[k] = leftArr[i];
+                    i++;
+                }
+                else if (leftArr[i].Length >= rightArr[j].Length)
+                {
+                    arr[k] = leftArr[i];
+                    i++;
+                }
+                else
+                {
+                    arr[k] = rightArr[j];
+                    j++;
                 }
             }
         }
@@ -89,7 +73,7 @@ namespace Calculator
         {
             if (l < r)
             {
-                int m = l + (r - 1) / 2;
+                int m = (l + r) / 2;
                 MergeSort(arr, l, m);
                 MergeSort(arr, m + 1, r);
                 Merge(arr, l, m, r);
@@ -99,14 +83,16 @@ namespace Calculator
         private void ConstructPieceRegex()
         {
             string regex = "(";
-            string[] keys = vars.Keys.ToArray();
-            MergeSort(keys, 0, keys.Length - 1);
-            for (int i = 0; i < keys.Length; i++)
+            if (vars.Any())
             {
-                regex += $"{keys[i]}|";
+                string[] keys = vars.Keys.ToArray();
+                MergeSort(keys, 0, keys.Length - 1);
+                for (int i = 0; i < keys.Length; i++)
+                {
+                    regex += $"{keys[i]}|";
+                }
             }
-            //                        |    scientific notation e.g. -1.23E10    | |vars ||    vector    | +  - *  /  ^  % sin asin cos acos tan atan rad deg abs floor ceil round sqrt (  )  |     number    | e pi x .
-            pieceRegex = new Regex($@"(-?([0-9]*\.)?[0-9]+)E(-?([0-9]*\.)?[0-9]+)|{regex}<\S+?,\S+?,\S+?>|\+|-|\*|\/|\^|%|sin|asin|cos|acos|tan|atan|rad|deg|abs|floor|ceil|round|sqrt|\(|\)|([0-9]*\.)?[0-9]+|e|pi|x|\.)", RegexOptions.Multiline);
+            pieceRegex = new Regex(regex + Regexes.PIECES_RIGHT, RegexOptions.Multiline);
         }
 
         public void SetVar(string key, Piece value)
@@ -115,25 +101,99 @@ namespace Calculator
             ConstructPieceRegex();
         }
 
-        private static string ToString(double n)
+        private static string ToStringException(Piece piece)
         {
-            if (n == 0)
+            switch (piece.Type)
             {
-                return "0";
+                default:
+                    return (string)piece.Value;
+                case "func1":
+                    return (string)piece.Value;
+                case "num":
+                    return ((Fraction)piece.Value).ToFracString();
+                case "vec":
+                    Vector vec = (Vector)piece.Value;
+                    string x = vec.X.ToFracString();
+                    string y = vec.Y.ToFracString();
+                    string z = vec.Z.ToFracString();
+                    return $"<{x}, {y}, {z}>";
+                case "parse vec":
+                    string[] components = (string[])piece.Value;
+                    return $"<{components[0]}, {components[1]}, {components[2]}>";
+
             }
-            if (Math.Abs(n) < decSciThreshold)
+        }
+
+        private static string ToString(Fraction n, bool round, bool deci)
+        {
+            if (deci)
             {
-                double digits = Math.Floor(Math.Log10(Math.Abs(n)));
-                double sci = Math.Round(n * Math.Pow(10, -digits), decDigitDisplay);
-                string num = trailingZeroes.Replace(sci.ToString(), "");
-                if (num.IndexOf('.') == -1)
+                // Output decimal
+                if (n.Numerator == 0)
                 {
-                    num += ".0";
+                    return "0";
                 }
-                return $"{num}E{(int)digits}";
+
+                if (Fraction.Abs(n) < sciNotMinThreshold || Fraction.Abs(n) >= sciNotMaxThreshold)
+                {
+                    // Convert to scientific notation
+                    // Decimal
+                    int digits;
+                    if (n.Numerator >= n.Denominator)
+                    {
+                        digits = (int)Math.Floor(0.000005 + BigInteger.Log10(BigInteger.Abs(n.Numerator / n.Denominator)));
+                    }
+                    else
+                    {
+                        const int DIGIT_SHIFT = 1000;
+                        BigInteger mult = BigInteger.Pow(10, DIGIT_SHIFT);
+                        Fraction big = n * mult;
+                        digits = (int)Math.Floor(0.000005 + BigInteger.Log10(BigInteger.Abs(big.Numerator / big.Denominator))) - DIGIT_SHIFT;
+                    }
+
+                    Fraction sci = n * Fraction.Pow(10, -digits);
+                    sci = Fraction.Round(sci, decDigitDisplay);
+                    string s = sci.ToString(decDigitDisplay);
+                    if (s.IndexOf('.') == -1)
+                    {
+                        s += ".0";
+                    }
+
+                    return s + "E" + digits;
+                }
+
+                // Output as is
+                if (round)
+                {
+                    return Fraction.Round(n, decDigitDisplay).ToString(decDigitDisplay);
+                }
+                return n.ToString();
             }
-            double rounded = Math.Round(n, decDigitDisplay);
-            return trailingZeroes.Replace(rounded.ToString(), "");
+
+            // Output fraction
+            if (round)
+            {
+                return Fraction.Round(n, decDigitDisplay).ToFracString();
+            }
+            return n.ToFracString();
+            //if (n == 0)
+            //{
+            //    return "0";
+            //}
+            //if (Fraction.Abs(n) < decSciThreshold)
+            //{
+            //    string s = n.ToString();
+            //    //Fraction digits = Fraction.Floor(Fraction.Log10(Fraction.Abs(n)));
+            //    //Fraction sci = Fraction.Round(n * Fraction.Pow(10, -digits), decDigitDisplay);
+            //    //string num = trailingZeroes.Replace(sci.ToString(), "");
+            //    //if (num.IndexOf('.') == -1)
+            //    //{
+            //    //    num += ".0";
+            //    //}
+            //    //return $"{num}E{(int)digits}";
+            //}
+            //Fraction rounded = Fraction.Round(n, decDigitDisplay);
+            //return trailingZeroes.Replace(rounded.ToString(), "");
         }
 
         private static string ToString(Piece piece)
@@ -153,10 +213,10 @@ namespace Calculator
                     }
                     return (string)piece.Value;
                 case "num":
-                    return ToString((double)piece.Value);
+                    return ToString((Fraction)piece.Value, true, true);
                 case "vec":
-                    Vector num = (Vector)piece.Value;
-                    return $"<{ToString(num.X)}, {ToString(num.Y)}, {ToString(num.Z)}>";
+                    Vector vec = (Vector)piece.Value;
+                    return $"<{ToString(vec.X, true, true)}, {ToString(vec.Y, true, true)}, {ToString(vec.Z, true, true)}>";
                 case "parse vec":
                     string[] components = (string[])piece.Value;
                     return $"<{components[0]}, {components[1]}, {components[2]}>";
@@ -164,7 +224,7 @@ namespace Calculator
             }
         }
 
-        private static string AnswerToString(Piece piece, bool round)
+        private static string AnswerToString(Piece piece, bool final)
         {
             switch (piece.Type)
             {
@@ -177,14 +237,14 @@ namespace Calculator
                     }
                     return (string)piece.Value;
                 case "num":
-                    return round ? ToString((double)piece.Value) : ((double)piece.Value).ToString();
+                    return ToString((Fraction)piece.Value, final, final);
                 case "const":
-                    return round ? ToString(piece.ConstValue) : piece.ConstValue.ToString();
+                    return ToString(piece.ConstValue, final, final);
                 case "vec":
-                    Vector num = (Vector)piece.Value;
-                    string x = round ? ToString(num.X) : num.X.ToString();
-                    string y = round ? ToString(num.Y) : num.Y.ToString();
-                    string z = round ? ToString(num.Z) : num.Z.ToString();
+                    Vector vec = (Vector)piece.Value;
+                    string x = ToString(vec.X, final, final);
+                    string y = ToString(vec.Y, final, final);
+                    string z = ToString(vec.Z, final, final);
                     return $"<{x}, {y}, {z}>";
                 case "parse vec":
                     string[] components = (string[])piece.Value;
@@ -259,7 +319,15 @@ namespace Calculator
                 }
                 else
                 {
-                    pieces.Add(new Piece(match.Value));
+                    try
+                    {
+                        pieces.Add(new Piece(match.Value));
+                    }
+                    catch(FractionDoubleParsingException excep)
+                    {
+                        error = $"Error: {match.Value} is too small or large.";
+                        return pieces;
+                    }
                 }
             }
             if (lastIndex != formula.Length)
@@ -296,7 +364,7 @@ namespace Calculator
                     {
                         if (pieces[i + 1].Type == "num")
                         {
-                            pieces[i] = new Piece(-(double)pieces[i + 1].Value);
+                            pieces[i] = new Piece(-(Fraction)pieces[i + 1].Value);
                             piece = pieces[i];
                             pieces.RemoveAt(i + 1);
                         }
@@ -518,7 +586,7 @@ namespace Calculator
                                 break;
                             }
                         }
-                        else if (openCount == 1 && piece2.Precedence != -1 )
+                        else if (openCount == 1 && piece2.Precedence != -1)
                         {
                             minPrecedence = Math.Min(minPrecedence, piece2.Precedence);
                         }
@@ -728,13 +796,12 @@ namespace Calculator
             return Calculate(out workOutput, false, false);
         }
 
-        public string Calculate(out string workOutput, bool isSub, bool round)
+        public string Calculate(out string workOutput, bool isSub, bool final)
         {
             workOutput = "";
             List<Piece> pieces;
             {
-                string error;
-                pieces = String2Infix(formula, out error);
+                pieces = String2Infix(formula, out string error);
                 if (error.Length > 0)
                 {
                     workOutput += error;
@@ -747,7 +814,16 @@ namespace Calculator
                 workOutput += "Adjusted: ";
                 foreach (Piece piece in pieces)
                 {
-                    workOutput += ToString(piece);
+                    try
+                    {
+                        workOutput += ToString(piece);
+                    }
+                    catch (FractionDoubleParsingException excep)
+                    {
+                        string error = $"Error: {ToStringException(piece)} is too small or large.";
+                        workOutput += error;
+                        return error;
+                    }
                 }
                 workOutput += "\n";
             }
@@ -761,11 +837,10 @@ namespace Calculator
                     {
                         bool shownVec = false;
                         string[] components = (string[])pieces[i].Value;
-                        double[] newComponents = new double[3];
+                        Fraction[] newComponents = new Fraction[3];
                         for (int j = 0; j < 3; j++)
                         {
-                            string work;
-                            string newComponent = new Formula(components[j], vars).Calculate(out work, true, false);
+                            string newComponent = new Formula(components[j], vars).Calculate(out string work, true, false);
                             if (work.Length > 0)
                             {
                                 if (newComponent.Length > 0)
@@ -781,8 +856,7 @@ namespace Calculator
                                 workOutput += $"{components[j]}\n";
                                 workOutput += $"{work}\n\n";
                             }
-                            double num;
-                            if (double.TryParse(newComponent, out num))
+                            if (Fraction.TryParse(newComponent, out Fraction num))
                             {
                                 newComponents[j] = num;
                             }
@@ -804,8 +878,7 @@ namespace Calculator
 
             // Convert from infix to postfix
             {
-                string error;
-                pieces = Infix2Postfix(pieces, out error);
+                pieces = Infix2Postfix(pieces, out string error);
                 if (error.Length > 0)
                 {
                     workOutput += $"{error}\n";
@@ -852,7 +925,7 @@ namespace Calculator
                             Piece num = stack.Pop();
                             if (num.Type == "num")
                             {
-                                stack.Push(new Piece(-(double)num.Value));
+                                stack.Push(new Piece(-(Fraction)num.Value));
                             }
                             else if (num.Type == "vec")
                             {
@@ -943,15 +1016,15 @@ namespace Calculator
                                 case "+":
                                     if (isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((double)num1.Value + (double)num2.Value));
+                                        stack.Push(new Piece((Fraction)num1.Value + (Fraction)num2.Value));
                                     }
                                     else if (isNum1 && !isNum2)
                                     {
-                                        stack.Push(new Piece((double)num1.Value + (Vector)num2.Value));
+                                        stack.Push(new Piece((Fraction)num1.Value + (Vector)num2.Value));
                                     }
                                     else if (!isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((Vector)num1.Value + (double)num2.Value));
+                                        stack.Push(new Piece((Vector)num1.Value + (Fraction)num2.Value));
                                     }
                                     else
                                     {
@@ -961,15 +1034,15 @@ namespace Calculator
                                 case "-":
                                     if (isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((double)num1.Value - (double)num2.Value));
+                                        stack.Push(new Piece((Fraction)num1.Value - (Fraction)num2.Value));
                                     }
                                     else if (isNum1 && !isNum2)
                                     {
-                                        stack.Push(new Piece((double)num1.Value - (Vector)num2.Value));
+                                        stack.Push(new Piece((Fraction)num1.Value - (Vector)num2.Value));
                                     }
                                     else if (!isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((Vector)num1.Value - (double)num2.Value));
+                                        stack.Push(new Piece((Vector)num1.Value - (Fraction)num2.Value));
                                     }
                                     else
                                     {
@@ -979,15 +1052,15 @@ namespace Calculator
                                 case "*":
                                     if (isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((double)num1.Value * (double)num2.Value));
+                                        stack.Push(new Piece((Fraction)num1.Value * (Fraction)num2.Value));
                                     }
                                     else if (isNum1 && !isNum2)
                                     {
-                                        stack.Push(new Piece((double)num1.Value * (Vector)num2.Value));
+                                        stack.Push(new Piece((Fraction)num1.Value * (Vector)num2.Value));
                                     }
                                     else if (!isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((Vector)num1.Value * (double)num2.Value));
+                                        stack.Push(new Piece((Vector)num1.Value * (Fraction)num2.Value));
                                     }
                                     else
                                     {
@@ -997,7 +1070,7 @@ namespace Calculator
                                 case "/":
                                     if (isNum2)
                                     {
-                                        if ((double)num2.Value == 0)
+                                        if ((Fraction)num2.Value == 0)
                                         {
                                             string error = $"Error: Division by 0";
                                             if (firstLine)
@@ -1032,15 +1105,15 @@ namespace Calculator
                                     }
                                     if (isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((double)num1.Value / (double)num2.Value));
+                                        stack.Push(new Piece((Fraction)num1.Value / (Fraction)num2.Value));
                                     }
                                     else if (isNum1 && !isNum2)
                                     {
-                                        stack.Push(new Piece((double)num1.Value / (Vector)num2.Value));
+                                        stack.Push(new Piece((Fraction)num1.Value / (Vector)num2.Value));
                                     }
                                     else if (!isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((Vector)num1.Value / (double)num2.Value));
+                                        stack.Push(new Piece((Vector)num1.Value / (Fraction)num2.Value));
                                     }
                                     else
                                     {
@@ -1090,15 +1163,15 @@ namespace Calculator
                                 case "%":
                                     if (isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((double)num1.Value % (double)num2.Value));
+                                        stack.Push(new Piece((Fraction)num1.Value % (Fraction)num2.Value));
                                     }
                                     else if (isNum1 && !isNum2)
                                     {
-                                        stack.Push(new Piece((double)num1.Value % (Vector)num2.Value));
+                                        stack.Push(new Piece((Fraction)num1.Value % (Vector)num2.Value));
                                     }
                                     else if (!isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((Vector)num1.Value % (double)num2.Value));
+                                        stack.Push(new Piece((Vector)num1.Value % (Fraction)num2.Value));
                                     }
                                     else
                                     {
@@ -1110,15 +1183,15 @@ namespace Calculator
                                     {
                                         if (isNum1 && isNum2)
                                         {
-                                            stack.Push(new Piece(Math.Pow((double)num1.Value, (double)num2.Value)));
+                                            stack.Push(new Piece(Fraction.Pow((Fraction)num1.Value, (Fraction)num2.Value)));
                                         }
                                         else if (isNum1 && !isNum2)
                                         {
-                                            stack.Push(new Piece(Vector.Pow((double)num1.Value, (Vector)num2.Value)));
+                                            stack.Push(new Piece(Vector.Pow((Fraction)num1.Value, (Vector)num2.Value)));
                                         }
                                         else if (!isNum1 && isNum2)
                                         {
-                                            stack.Push(new Piece(Vector.Pow((Vector)num1.Value, (double)num2.Value)));
+                                            stack.Push(new Piece(Vector.Pow((Vector)num1.Value, (Fraction)num2.Value)));
                                         }
                                         else
                                         {
@@ -1199,67 +1272,67 @@ namespace Calculator
                             case "sin":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece(Math.Sin((double)num.Value * deg2rad)));
+                                    stack.Push(new Piece(Fraction.Sin((Fraction)num.Value)));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece(Vector.Sin((Vector)num.Value * deg2rad)));
+                                    stack.Push(new Piece(Vector.Sin((Vector)num.Value)));
                                 }
                                 break;
                             case "asin":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece(Math.Asin((double)num.Value) * rad2deg));
+                                    stack.Push(new Piece(Fraction.Asin((Fraction)num.Value)));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece(Vector.Asin((Vector)num.Value) * rad2deg));
+                                    stack.Push(new Piece(Vector.Asin((Vector)num.Value)));
                                 }
                                 break;
                             case "cos":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece(Math.Cos((double)num.Value * deg2rad)));
+                                    stack.Push(new Piece(Fraction.Cos((Fraction)num.Value)));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece(Vector.Cos((Vector)num.Value * deg2rad)));
+                                    stack.Push(new Piece(Vector.Cos((Vector)num.Value)));
                                 }
                                 break;
                             case "acos":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece(Math.Acos((double)num.Value) * rad2deg));
+                                    stack.Push(new Piece(Fraction.Acos((Fraction)num.Value)));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece(Vector.Acos((Vector)num.Value) * rad2deg));
+                                    stack.Push(new Piece(Vector.Acos((Vector)num.Value)));
                                 }
                                 break;
                             case "tan":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece(Math.Tan((double)num.Value * deg2rad)));
+                                    stack.Push(new Piece(Fraction.Tan((Fraction)num.Value)));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece(Vector.Tan((Vector)num.Value * deg2rad)));
+                                    stack.Push(new Piece(Vector.Tan((Vector)num.Value)));
                                 }
                                 break;
                             case "atan":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece(Math.Atan((double)num.Value) * rad2deg));
+                                    stack.Push(new Piece(Fraction.Atan((Fraction)num.Value)));
                                 }
                                 else
                                 {
-                                    stack.Push(new Piece(Vector.Atan((Vector)num.Value) * rad2deg));
+                                    stack.Push(new Piece(Vector.Atan((Vector)num.Value)));
                                 }
                                 break;
                             case "abs":
                                 if (isNum)
                                 {
-                                    double temp = (double)num.Value;
+                                    Fraction temp = (Fraction)num.Value;
                                     if (temp < 0)
                                     {
                                         stack.Push(new Piece(-temp));
@@ -1277,7 +1350,7 @@ namespace Calculator
                             case "floor":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece(Math.Floor((double)num.Value)));
+                                    stack.Push(new Piece(Fraction.Floor((Fraction)num.Value)));
                                 }
                                 else
                                 {
@@ -1287,7 +1360,7 @@ namespace Calculator
                             case "ceil":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece(Math.Ceiling((double)num.Value)));
+                                    stack.Push(new Piece(Fraction.Ceiling((Fraction)num.Value)));
                                 }
                                 else
                                 {
@@ -1297,7 +1370,7 @@ namespace Calculator
                             case "round":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece(Math.Round((double)num.Value)));
+                                    stack.Push(new Piece(Fraction.Round((Fraction)num.Value)));
                                 }
                                 else
                                 {
@@ -1309,11 +1382,11 @@ namespace Calculator
                                 {
                                     if (isNum)
                                     {
-                                        stack.Push(new Piece(Math.Pow((double)num.Value, 0.5)));
+                                        stack.Push(new Piece(Fraction.Pow((Fraction)num.Value, new Fraction(1, 2))));
                                     }
                                     else
                                     {
-                                        stack.Push(new Piece(Vector.Sqrt((Vector)num.Value)));
+                                        stack.Push(new Piece(Vector.Pow((Vector)num.Value, new Fraction(1, 2))));
                                     }
                                 }
                                 catch
@@ -1334,7 +1407,7 @@ namespace Calculator
                             case "deg":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece((double)num.Value * rad2deg));
+                                    stack.Push(new Piece((Fraction)num.Value * rad2deg));
                                 }
                                 else
                                 {
@@ -1344,7 +1417,7 @@ namespace Calculator
                             case "rad":
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece((double)num.Value * deg2rad));
+                                    stack.Push(new Piece((Fraction)num.Value * deg2rad));
                                 }
                                 else
                                 {
@@ -1355,7 +1428,7 @@ namespace Calculator
                                 // Negate
                                 if (isNum)
                                 {
-                                    stack.Push(new Piece(-(double)num.Value));
+                                    stack.Push(new Piece(-(Fraction)num.Value));
                                 }
                                 else
                                 {
@@ -1381,7 +1454,7 @@ namespace Calculator
                 return error;
             }
 
-            return AnswerToString(stack.Peek(), round);
+            return AnswerToString(stack.Peek(), final);
         }
     }
 }

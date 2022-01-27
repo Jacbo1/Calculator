@@ -52,6 +52,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FractionDoubleParsingException.cs" />
+    <Compile Include="Regexes.cs" />
+    <Compile Include="Fraction.cs" />
     <Compile Include="Vector.cs" />
     <Compile Include="FormulaGroup.cs" />
     <Compile Include="Piece.cs" />
