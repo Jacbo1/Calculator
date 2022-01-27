@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace Calculator
@@ -19,13 +20,18 @@ namespace Calculator
             foreach (string line2 in input.Split('\n'))
             {
                 string line = whitespace.Replace(line2, "");
+                if (line.Length > 0 && line[0] == ';')
+                {
+                    // Skip commented line
+                    continue;
+                }
                 Match match = varRegex.Match(line);
                 if (match.Success)
                 {
                     // This line is a variable assignment
                     string varName = match.Groups[1].Value;
-                    answer = new Formula(match.Groups[2].Value, vars).Calculate(out string work);
-                    work += $"\n{answer}";
+                    string right = match.Groups[2].Value;
+                    answer = new Formula(right, vars).Calculate(out string work);
                     Piece varPiece = new Piece(answer)
                     {
                         IsVar = true,
@@ -37,14 +43,26 @@ namespace Calculator
                     {
                         formula.SetVar(varName, varPiece);
                     }
-                    if (first)
-                    {
-                        first = false;
-                        workOutput += work;
-                    }
-                    else
-                    {
-                        workOutput += $"\n\n{work}";
+
+                    if (!Regexes.RE_GenericNum.IsMatch(right)) {
+                        if (work.EndsWith("\n"))
+                        {
+                            work += answer;
+                        }
+                        else
+                        {
+                            work += $"\n{answer}";
+                        }
+
+                        if (first)
+                        {
+                            first = false;
+                            workOutput += work;
+                        }
+                        else
+                        {
+                            workOutput += $"\n\n{work}";
+                        }
                     }
                 }
                 else if (line.Length > 0)

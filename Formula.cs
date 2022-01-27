@@ -34,65 +34,17 @@ namespace Calculator
             ConstructPieceRegex();
         }
 
-        private static void Merge(string[] arr, int l, int m, int r)
-        {
-            string[] leftArr = new string[m - l + 1];
-            string[] rightArr = new string[r - m];
-
-            Array.Copy(arr, l, leftArr, 0, m - l + 1);
-            Array.Copy(arr, m + 1, rightArr, 0, r - m);
-
-            int i = 0;
-            int j = 0;
-            for (int k = l; k < r + 1; k++)
-            {
-                if (i == leftArr.Length)
-                {
-                    arr[k] = rightArr[j];
-                    j++;
-                }
-                else if (j == rightArr.Length)
-                {
-                    arr[k] = leftArr[i];
-                    i++;
-                }
-                else if (leftArr[i].Length >= rightArr[j].Length)
-                {
-                    arr[k] = leftArr[i];
-                    i++;
-                }
-                else
-                {
-                    arr[k] = rightArr[j];
-                    j++;
-                }
-            }
-        }
-
-        private static void MergeSort(string[] arr, int l, int r)
-        {
-            if (l < r)
-            {
-                int m = (l + r) / 2;
-                MergeSort(arr, l, m);
-                MergeSort(arr, m + 1, r);
-                Merge(arr, l, m, r);
-            }
-        }
-
         private void ConstructPieceRegex()
         {
-            string regex = "(";
             if (vars.Any())
             {
-                string[] keys = vars.Keys.ToArray();
-                MergeSort(keys, 0, keys.Length - 1);
-                for (int i = 0; i < keys.Length; i++)
-                {
-                    regex += $"{keys[i]}|";
-                }
+                string regex = Regexes.ConstructPieceRegex(vars.Keys.ToArray());
+                pieceRegex = new Regex(regex, RegexOptions.Multiline);
             }
-            pieceRegex = new Regex(regex + Regexes.PIECES_RIGHT, RegexOptions.Multiline);
+            else
+            {
+                pieceRegex = Regexes.RE_DefaultPieces;
+            }
         }
 
         public void SetVar(string key, Piece value)
@@ -1339,6 +1291,61 @@ namespace Calculator
                                 else
                                 {
                                     stack.Push(new Piece(-(Vector)num.Value));
+                                }
+                                break;
+                            case "sign":
+                                // Sign
+                                if (isNum)
+                                {
+                                    stack.Push(new Piece(Fraction.Sign((Fraction)num.Value)));
+                                }
+                                else
+                                {
+                                    Vector vec = (Vector)num.Value;
+                                    stack.Push(new Piece(new Vector(
+                                        Fraction.Sign(vec.X),
+                                        Fraction.Sign(vec.Y),
+                                        Fraction.Sign(vec.Z))));
+                                }
+                                break;
+                            case "sigfig4":
+                                // Round to 4 sigfigs
+                                Func<Fraction, Fraction> sigfig = n =>
+                                {
+                                    if (n == 0)
+                                    {
+                                        return 0;
+                                    }
+
+                                    int digits;
+                                    if (n.Numerator >= n.Denominator)
+                                    {
+                                        digits = (int)Math.Floor(0.000005 + BigInteger.Log10(BigInteger.Abs(n.Numerator / n.Denominator)));
+                                    }
+                                    else
+                                    {
+                                        const int DIGIT_SHIFT = 1000;
+                                        BigInteger mult = BigInteger.Pow(10, DIGIT_SHIFT);
+                                        Fraction big = n * mult;
+                                        digits = (int)Math.Floor(0.000005 + BigInteger.Log10(BigInteger.Abs(big.Numerator / big.Denominator))) - DIGIT_SHIFT;
+                                    }
+
+                                    Fraction mult2 = Fraction.Pow(10, -digits - 1);
+                                    Fraction sci = n * mult2;
+                                    return Fraction.Round(sci, 4) / mult2;
+                                };
+
+                                if (isNum)
+                                {
+                                    stack.Push(new Piece(sigfig((Fraction)num.Value)));
+                                }
+                                else
+                                {
+                                    Vector vec = (Vector)num.Value;
+                                    stack.Push(new Piece(new Vector(
+                                        sigfig(vec.X),
+                                        sigfig(vec.Y),
+                                        sigfig(vec.Z))));
                                 }
                                 break;
                         }

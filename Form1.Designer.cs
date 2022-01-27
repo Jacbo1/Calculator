@@ -56,7 +56,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.TextInput.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(1)))), ((int)(((byte)(1)))), ((int)(((byte)(1)))));
-            this.TextInput.Font = new System.Drawing.Font("Bahnschrift Light", 27.75F);
+            this.TextInput.Font = new System.Drawing.Font("Bahnschrift Light", 26F);
             this.TextInput.ForeColor = System.Drawing.Color.White;
             this.TextInput.Location = new System.Drawing.Point(0, 0);
             this.TextInput.Margin = new System.Windows.Forms.Padding(0);
@@ -71,14 +71,14 @@
             this.AnswerOutput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.AnswerOutput.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(1)))), ((int)(((byte)(1)))), ((int)(((byte)(1)))));
-            this.AnswerOutput.Font = new System.Drawing.Font("Bahnschrift Light", 27.75F);
+            this.AnswerOutput.Font = new System.Drawing.Font("Bahnschrift Light", 26F);
             this.AnswerOutput.ForeColor = System.Drawing.Color.White;
             this.AnswerOutput.Location = new System.Drawing.Point(0, 540);
             this.AnswerOutput.Margin = new System.Windows.Forms.Padding(0);
             this.AnswerOutput.Name = "AnswerOutput";
             this.AnswerOutput.ReadOnly = true;
             this.AnswerOutput.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal;
-            this.AnswerOutput.Size = new System.Drawing.Size(960, 52);
+            this.AnswerOutput.Size = new System.Drawing.Size(960, 49);
             this.AnswerOutput.TabIndex = 6;
             // 
             // tableLayoutPanel1

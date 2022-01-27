@@ -30,6 +30,16 @@ namespace Calculator
         {
             switch (piece)
             {
+                case "sigfig4":
+                    Type = "func1";
+                    Value = "sigfig4";
+                    Precedence = 7;
+                    break;
+                case "sign":
+                    Type = "func1";
+                    Value = "sign";
+                    Precedence = 7;
+                    break;
                 case "e":
                     Type = "const";
                     Value = "e";

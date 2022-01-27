@@ -1,29 +1,109 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 
 namespace Calculator
 {
     internal static class Regexes
     {
-        private const string  NUMBER        = "[+-]?(\\d*\\.)?\\d+";
-        private const string  UNSIGNED_NUMBER = "(\\d*\\.)?\\d+";
-        private const string  SCI_NOTATION  = NUMBER + "E" + NUMBER;
-        private const string  UNSIGNED_SCI_NOTATION  = UNSIGNED_NUMBER + "E" + NUMBER;
-        private const string  NUM_OR_SCI    = "(" + NUMBER + "|" + SCI_NOTATION + ")";
-        private const string  UNSIGNED_NUM_OR_SCI    = "(" + UNSIGNED_NUMBER + "|" + UNSIGNED_SCI_NOTATION + ")";
-        private const string  FRACTION      = NUM_OR_SCI + " \\/ " + NUM_OR_SCI;
-        private const string  UNSIGNED_FRACTION      = UNSIGNED_NUM_OR_SCI + " \\/ " + NUM_OR_SCI;
-        private const string  GENERIC_NUM   = "(" + NUMBER + "|" + SCI_NOTATION + "|" + FRACTION + ")";
-        private const string  VECTOR        = "<" + GENERIC_NUM + ", ?" + GENERIC_NUM + ", ?" + GENERIC_NUM + ">";
-        private const string  VECTOR_LOOSE  = "<[\\S ]*?, ?[\\S ]*?, ?[\\S ]*?>";
-        internal const string PIECES_RIGHT  = VECTOR_LOOSE + "|" + UNSIGNED_FRACTION + "|" + UNSIGNED_SCI_NOTATION + "|" + UNSIGNED_NUMBER + "|asin|sin|acos|cos|atan|tan|rad|deg|abs|floor|ceil|round|sqrt|e|pi|[+%*/x.^()-])";
+        private const string UNSIGNED_NUMBER       = @"(\d*\.)?\d+";
+        private const string NUMBER                = "[+-]?" + UNSIGNED_NUMBER;
+        private const string SCI_NOTATION          = NUMBER + "E" + NUMBER;
+        private const string UNSIGNED_SCI_NOTATION = UNSIGNED_NUMBER + "E" + NUMBER;
+        private const string NUM_OR_SCI            = "(" + NUMBER + "|" + SCI_NOTATION + ")";
+        private const string UNSIGNED_NUM_OR_SCI   = "(" + UNSIGNED_NUMBER + "|" + UNSIGNED_SCI_NOTATION + ")";
+        private const string FRACTION              = NUM_OR_SCI + @" \/ " + NUM_OR_SCI;
+        private const string UNSIGNED_FRACTION     = UNSIGNED_NUM_OR_SCI + @" \/ " + NUM_OR_SCI;
+        private const string GENERIC_NUM           = "(" + NUMBER + "|" + SCI_NOTATION + "|" + FRACTION + ")";
+        private const string VECTOR                = "<" + GENERIC_NUM + ", ?" + GENERIC_NUM + ", ?" + GENERIC_NUM + ">";
+        private const string VECTOR_LOOSE          = @"<[\S ]*?, ?[\S ]*?, ?[\S ]*?>";
+        private const string PIECE_REGEX_RIGHT     = VECTOR_LOOSE + "|" + UNSIGNED_FRACTION + "|" + UNSIGNED_SCI_NOTATION + "|" + UNSIGNED_NUMBER + @"|[+%*/x.^()-])";
+        private const string PIECES                = "(sigfig4|round|floor|ceil|sign|sqrt|asin|acos|atan|sin|cos|tan|rad|deg|abs|pi|e|" + PIECE_REGEX_RIGHT;
+        
         internal static readonly Regex
-            RE_TrailingZeroes = new Regex(@"(?<=\d+)(\.|(?<=\.\d+))0+($|[^\d])", RegexOptions.Compiled),
-            RE_Number = new Regex("^" + NUMBER + "$", RegexOptions.Compiled),
-            RE_SciNotation = new Regex("^(" + NUMBER + ")E(" + NUMBER + ")$", RegexOptions.Compiled),   // num1 = groups[1], num2 = groups[3]
-            RE_Fraction = new Regex("^" + FRACTION + "$", RegexOptions.Compiled),                       // num1 = groups[1], num2 = groups[5]
-            RE_GenericNum = new Regex("^" + GENERIC_NUM + "$", RegexOptions.Compiled),
-            RE_Vector = new Regex("^" + VECTOR + "$", RegexOptions.Compiled),                           // num1 = groups[1], num2 = groups[13], num3 = groups[25]
-            RE_VectorLoose = new Regex(@"^<([\S ]*?), ?([\S ]*?), ?([\S ]*?)>$", RegexOptions.Compiled),// num1 = groups[1], num2 = groups[2],  num3 = groups[3]
-            RE_VectorFraction = new Regex(@"^<(" + FRACTION + "), ?(" + FRACTION + "), ?(" + FRACTION + ")>$", RegexOptions.Compiled);  // num1 = groups[1], num2 = groups[10], num3 = groups[19]
+            RE_TrailingZeroes   = new Regex(@"(?<=\d+)(\.|(?<=\.\d+))0+($|[^\d])", RegexOptions.Compiled),
+            RE_Number           = new Regex("^" + NUMBER + "$", RegexOptions.Compiled),
+            RE_SciNotation      = new Regex("^(" + NUMBER + ")E(" + NUMBER + ")$", RegexOptions.Compiled),   // num1 = groups[1], num2 = groups[3]
+            RE_Fraction         = new Regex("^" + FRACTION + "$", RegexOptions.Compiled),                    // num1 = groups[1], num2 = groups[5]
+            RE_GenericNum       = new Regex("^" + GENERIC_NUM + "$", RegexOptions.Compiled),
+            RE_Vector           = new Regex("^" + VECTOR + "$", RegexOptions.Compiled),                      // num1 = groups[1], num2 = groups[13], num3 = groups[25]
+            RE_VectorLoose      = new Regex(@"^<([\S ]*?), ?([\S ]*?), ?([\S ]*?)>$", RegexOptions.Compiled),// num1 = groups[1], num2 = groups[2],  num3 = groups[3]
+            RE_VectorFraction   = new Regex(@"^<(" + FRACTION + "), ?(" + FRACTION + "), ?(" + FRACTION + ")>$", RegexOptions.Compiled),  // num1 = groups[1], num2 = groups[10], num3 = groups[19]
+            RE_DefaultPieces    = new Regex(PIECES, RegexOptions.Compiled);
+
+        private static readonly string[] defaultPieces = new string[] { "sigfig4", "round", "floor", "ceil", "sign", "sqrt", "asin", "acos", "atan", "sin", "cos", "tan", "rad", "deg", "abs", "pi", "e" };
+
+        // Construct the regex for matching pieces in strings
+        internal static string ConstructPieceRegex(Array newPieces)
+        {
+            string[] pieces;
+            if (newPieces.Length > 0)
+            {
+                // Add and sort largest to smallest
+                pieces = new string[defaultPieces.Length + newPieces.Length];
+                Array.Copy(defaultPieces, pieces, defaultPieces.Length);
+                Array.Copy(newPieces, 0, pieces, defaultPieces.Length, newPieces.Length);
+                MergeSort(pieces, 0, pieces.Length - 1);
+            }
+            else
+            {
+                // Default pieces are already sorted
+                pieces = defaultPieces;
+            }
+
+            // Concatenate
+            string regex = "(";
+            foreach (string piece in pieces)
+            {
+                regex += piece + "|";
+            }
+
+            return regex + PIECE_REGEX_RIGHT;
+        }
+
+        private static void Merge(string[] arr, int l, int m, int r)
+        {
+            string[] leftArr = new string[m - l + 1];
+            string[] rightArr = new string[r - m];
+
+            Array.Copy(arr, l, leftArr, 0, m - l + 1);
+            Array.Copy(arr, m + 1, rightArr, 0, r - m);
+
+            int i = 0;
+            int j = 0;
+            for (int k = l; k < r + 1; k++)
+            {
+                if (i == leftArr.Length)
+                {
+                    arr[k] = rightArr[j];
+                    j++;
+                }
+                else if (j == rightArr.Length)
+                {
+                    arr[k] = leftArr[i];
+                    i++;
+                }
+                else if (leftArr[i].Length >= rightArr[j].Length)
+                {
+                    arr[k] = leftArr[i];
+                    i++;
+                }
+                else
+                {
+                    arr[k] = rightArr[j];
+                    j++;
+                }
+            }
+        }
+
+        private static void MergeSort(string[] arr, int l, int r)
+        {
+            if (l < r)
+            {
+                int m = (l + r) / 2;
+                MergeSort(arr, l, m);
+                MergeSort(arr, m + 1, r);
+                Merge(arr, l, m, r);
+            }
+        }
     }
 }

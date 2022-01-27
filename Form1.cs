@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Threading;
 using System.Windows.Forms;
@@ -17,6 +18,8 @@ namespace Calculator
         private string answer = "";
         private string work = "";
         private string dataPath = "";
+        private float ogWorkOutputFontSize;
+        private const double WORK_OUTPUT_HEIGHT_MULT = 1030.0 / 1080.0;
 
         public Form1()
         {
@@ -50,6 +53,7 @@ namespace Calculator
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            ogWorkOutputFontSize = WorkOutput.Font.Size;
             try
             {
                 if (File.Exists($"{dataPath}data.txt"))
@@ -77,6 +81,17 @@ namespace Calculator
             input = TextInput.Text;
         }
 
+        private void ScaleFont(Label label)
+        {
+            Font font = new Font(label.Font.FontFamily, ogWorkOutputFontSize, label.Font.Style);
+            double maxHeight = Height * WORK_OUTPUT_HEIGHT_MULT;
+            while (maxHeight < TextRenderer.MeasureText(label.Text, font).Height)
+            {
+                font = new Font(font.FontFamily, font.Size - 0.5f, font.Style);
+            }
+            label.Font = font;
+        }
+
         private void Timer1_Tick(object sender, EventArgs e)
         {
             if (displayCounter != outputCounter)
@@ -84,6 +99,7 @@ namespace Calculator
                 displayCounter = outputCounter;
                 AnswerOutput.Text = answer;
                 WorkOutput.Text = work;
+                ScaleFont(WorkOutput);
             }
         }
 

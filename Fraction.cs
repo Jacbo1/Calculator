@@ -356,6 +356,10 @@ namespace Calculator
             return floored + 1;
         }
 
+        public static int Sign(Fraction frac) => frac.Numerator.Sign;
+
+
+        // ToString
         public string ToFracString()
         {
             return $"{Numerator} / {Denominator}";
