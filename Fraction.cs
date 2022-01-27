@@ -268,7 +268,7 @@ namespace Calculator
                     return Math.Pow((double)frac, (double)exponent);
                 }
 
-                int remi = (int)rem;
+                int remi = (int)BigInteger.Abs(rem);
                 BigInteger numPow = BigInteger.Pow(frac.Numerator, remi);
                 BigInteger denomPow = BigInteger.Pow(frac.Denominator, remi);
                 Fraction numRoot = NthRoot(numPow, exponent.Denominator);
