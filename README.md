@@ -3,7 +3,7 @@ This isn't really a user-ready product. I made it to replace the calculator that
 This calculator uses a custom fraction class for numbers which allows it to accurately store and perform arithmetic on numbers ranging from x\*10^-1000 to x\*10^5000 with no precision loss. It also allows outputs to be displayed in extreme accuracy. For example, you can output the square root of 2 that is accurate to 100 decimal places (this precision is controlled by the readonly `POW_EPSILON` variable).  
   
 This calculator supports order of operations, parentheses, and vectors. Supported operators are +, -, \*, /, %, ^, x (cross product), and . (dot product). Vectors are formatted like <1,2,3> but can have equations in them too. Multiplying 2 vectors with \* will produce a new vector as <x1\*x2,y1\*y2,z1\*z2>.  
-Supported functions are sin, cos, tan, asin, acos, atan, deg (converts radians to degrees, same as \* 180 / pi), rad (converts degrees to radians, same as \* pi / 180), abs, floor, ceil, round, and sqrt (square root).  
+Supported functions are sin, cos, tan, asin, acos, atan, deg (converts radians to degrees, same as \* 180 / pi), rad (converts degrees to radians, same as \* pi / 180), abs, floor, ceil, round, sqrt (square root), sign (returns 1 if positive, 0 if 0, -1 if negative), and sigfig4 (very niche, added it because I needed numbers with only 4 significant figures for something).  
 Supported constants are pi and e.  
 Variables are also supported.  
 Vectors work with all operators and functions.  
