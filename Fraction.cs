@@ -57,7 +57,7 @@ namespace Calculator
 
         public Fraction(double x)
         {
-            if (TryParse(x.ToString("F99").Trim('0'), out Fraction frac))
+            if (TryParse(x.ToString("F99"), out Fraction frac))
             {
                 Numerator = frac.Numerator;
                 Denominator = frac.Denominator;
@@ -271,6 +271,13 @@ namespace Calculator
                 int remi = (int)BigInteger.Abs(rem);
                 BigInteger numPow = BigInteger.Pow(frac.Numerator, remi);
                 BigInteger denomPow = BigInteger.Pow(frac.Denominator, remi);
+
+                if (!CheckPowDigits(numPow, exponent.Denominator) || !CheckPowDigits(denomPow, exponent.Denominator))
+                {
+                    // Too big
+                    return Math.Pow((double)frac, (double)exponent);
+                }
+
                 Fraction numRoot = NthRoot(numPow, exponent.Denominator);
                 Fraction denomRoot = NthRoot(denomPow, exponent.Denominator);
 
