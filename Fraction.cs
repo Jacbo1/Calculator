@@ -293,7 +293,6 @@ namespace Calculator
 
         public static Fraction Round(Fraction frac)
         {
-            // This rounds up 0.5 because that's how rounding actually works even though C#'s Math.Round() does not
             if (frac.Denominator == 1)
             {
                 // Whole number
@@ -301,12 +300,16 @@ namespace Calculator
             }
 
             // Not whole number
+            if (frac.Numerator < 0)
+            {
+                // Negative
+                return Fraction.Ceiling(frac - HALF);
+            }
             return Fraction.Floor(frac + HALF);
         }
 
         public static Fraction Round(Fraction frac, int digits)
         {
-            // This rounds up 0.5 because that's how rounding actually works even though C#'s Math.Round() does not
             if (frac.Denominator == 1)
             {
                 // Whole number
@@ -315,6 +318,11 @@ namespace Calculator
 
             // Not whole number
             BigInteger mult = BigInteger.Pow(10, digits);
+            if (frac.Numerator < 0)
+            {
+                // Negative
+                return Fraction.Ceiling(frac * mult - HALF) / mult;
+            }
             return Fraction.Floor(frac * mult + HALF) / mult;
         }
 
