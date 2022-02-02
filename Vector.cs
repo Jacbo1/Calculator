@@ -32,7 +32,7 @@
 
         public static Vector operator +(Fraction n1, Vector n2) => new Vector(n1 + n2.X, n1 + n2.Y, n1 + n2.Z);
 
-        public static Vector operator +(Vector n1, Vector n2) => new Vector(n1.X + n2.X, n2.Y + n2.Y, n1.Z + n2.Z);
+        public static Vector operator +(Vector n1, Vector n2) => new Vector(n1.X + n2.X, n1.Y + n2.Y, n1.Z + n2.Z);
 
         public static Vector operator -(Vector n1) => new Vector(-n1.X, -n1.Y, -n1.Z);
 
