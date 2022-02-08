@@ -116,8 +116,10 @@
             this.AnswerOutput.ForeColor = System.Drawing.Color.White;
             this.AnswerOutput.Location = new System.Drawing.Point(0, 715);
             this.AnswerOutput.Margin = new System.Windows.Forms.Padding(0);
+            this.AnswerOutput.Multiline = false;
             this.AnswerOutput.Name = "AnswerOutput";
-            this.AnswerOutput.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical;
+            this.AnswerOutput.ReadOnly = true;
+            this.AnswerOutput.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Horizontal;
             this.AnswerOutput.Size = new System.Drawing.Size(984, 36);
             this.AnswerOutput.TabIndex = 9;
             this.AnswerOutput.Text = "";
