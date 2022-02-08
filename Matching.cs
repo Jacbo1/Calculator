@@ -18,7 +18,7 @@ namespace Calculator
         private const string VECTOR                = "<" + GENERIC_NUM + ", ?" + GENERIC_NUM + ", ?" + GENERIC_NUM + ">";
         private const string VECTOR_LOOSE          = @"<[\S ]*?, ?[\S ]*?, ?[\S ]*?>";
         private const string PIECE_REGEX_RIGHT     = VECTOR_LOOSE + "|" + UNSIGNED_FRACTION + "|" + UNSIGNED_SCI_NOTATION + "|" + UNSIGNED_NUMBER + @"|[+%*/x.^()-])";
-        private const string PIECES                = @"(sigfig4|length\(|prod\(|getx\(|gety\(|getz\(|clamp\(|round\(|floor|norm\(|min\(|max\(|sum\(|log\(|ceil|sign|sqrt|asin|acos|atan|sin|cos|tan|rad|deg|abs|pi|e|" + PIECE_REGEX_RIGHT;
+        private const string PIECES                = @"(sigfig4|length\(|atan2\(|prod\(|getx\(|gety\(|getz\(|clamp\(|round\(|floor|norm\(|min\(|max\(|sum\(|log\(|ceil|sign|sqrt|asin|acos|atan|sin|cos|tan|rad|deg|abs|pi|e|" + PIECE_REGEX_RIGHT;
         
         internal static readonly Regex
             RE_TrailingZeroes   = new Regex(@"(?<=\d+)(\.|(?<=\.\d+))0+($|[^\d])", RegexOptions.Compiled),
@@ -31,7 +31,7 @@ namespace Calculator
             RE_VectorFraction   = new Regex(@"^<(" + FRACTION + "), ?(" + FRACTION + "), ?(" + FRACTION + ")>$", RegexOptions.Compiled),  // num1 = groups[1], num2 = groups[10], num3 = groups[19]
             RE_DefaultPieces    = new Regex(PIECES, RegexOptions.Compiled);
         
-        private static readonly string[] defaultPieces = new string[] { "sigfig4", @"length\(", @"prod\(", @"getx\(", @"gety\(", @"getz\(", @"clamp\(", @"round\(", "floor", @"norm\(", @"min\(", @"max\(", @"sum\(", @"log\(", "ceil", "sign", "sqrt", "asin", "acos", "atan", "sin", "cos", "tan", "rad", "deg", "abs", "pi", "e" };
+        private static readonly string[] defaultPieces = new string[] { "sigfig4", @"length\(", @"atan2\(", @"prod\(", @"getx\(", @"gety\(", @"getz\(", @"clamp\(", @"round\(", "floor", @"norm\(", @"min\(", @"max\(", @"sum\(", @"log\(", "ceil", "sign", "sqrt", "asin", "acos", "atan", "sin", "cos", "tan", "rad", "deg", "abs", "pi", "e" };
 
         
         internal static bool IsOperator(string s)
@@ -66,6 +66,7 @@ namespace Calculator
                 case "getz(":
                 case "length(":
                 case "norm(":
+                case "atan2(":
                     return true;
             }
             return false;

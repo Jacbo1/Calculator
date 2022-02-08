@@ -447,6 +447,11 @@ namespace Calculator
             return Math.Atan((double)frac) * rad2deg;
         }
 
+        public static Fraction Atan2(Fraction y, Fraction x)
+        {
+            return Math.Atan2((double)y, (double)x) * rad2deg;
+        }
+
         // Explicits
         public static explicit operator double(Fraction x) => double.Parse(x.ToString(DEFAULT_DECIMAL_COUNT)); // Higher accuracy since it won't be dividing 2 doubles
 

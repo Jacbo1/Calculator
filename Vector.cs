@@ -154,6 +154,21 @@
             Fraction.Atan(n.Y),
             Fraction.Atan(n.Z));
 
+        public static Vector Atan2(Vector y, Vector x) => new Vector(
+            Fraction.Atan2(y.X, x.X),
+            Fraction.Atan2(y.Y, x.Y),
+            Fraction.Atan2(y.Z, x.Z));
+
+        public static Vector Atan2(Fraction y, Vector x) => new Vector(
+            Fraction.Atan2(y, x.X),
+            Fraction.Atan2(y, x.Y),
+            Fraction.Atan2(y, x.Z));
+
+        public static Vector Atan2(Vector y, Fraction x) => new Vector(
+            Fraction.Atan2(y.X, x),
+            Fraction.Atan2(y.Y, x),
+            Fraction.Atan2(y.Z, x));
+
         public static Vector Abs(Vector n) => new Vector(
             Fraction.Abs(n.X),
             Fraction.Abs(n.Y),

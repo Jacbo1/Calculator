@@ -144,7 +144,27 @@ namespace Calculator
                             case "getz":
                             case "length":
                             case "norm":
+                                if (sections.Count < 1)
+                                {
+                                    throw new FunctionException(funcName, "Not enough arguments.");
+                                }
+                                if (sections.Count > 1)
+                                {
+                                    throw new FunctionException(funcName, "Too many arguments.");
+                                }
                                 formulas.Add(new Formula(sections[0], vars));
+                                return;
+                            case "atan2":
+                                if (sections.Count < 2)
+                                {
+                                    throw new FunctionException(funcName, "Not enough arguments.");
+                                }
+                                if (sections.Count > 2)
+                                {
+                                    throw new FunctionException(funcName, "Too many arguments.");
+                                }
+                                formulas.Add(new Formula(sections[0], vars));
+                                formulas.Add(new Formula(sections[1], vars));
                                 return;
                         }
                     }
@@ -738,6 +758,29 @@ namespace Calculator
                                 return new Piece(vec / length);
                             }
                             throw new FunctionException(funcName, "Attempted to normalize non-vector.");
+                        }
+
+                    case "atan2":
+                        {
+                            workOutput += CalcFormula(0, out Piece y);
+                            workOutput += CalcFormula(1, out Piece x);
+
+                            bool isNum1 = y.Type == "num";
+                            bool isNum2 = x.Type == "num";
+
+                            if (isNum1 && isNum2)
+                            {
+                                return new Piece(Fraction.Atan2((Fraction)y.Value, (Fraction)x.Value));
+                            }
+                            else if (isNum1 && !isNum2)
+                            {
+                                return new Piece(Vector.Atan2((Fraction)y.Value, (Vector)x.Value));
+                            }
+                            else if (!isNum1 && isNum2)
+                            {
+                                return new Piece(Vector.Atan2((Vector)y.Value, (Fraction)x.Value));
+                            }
+                            return new Piece(Vector.Atan2((Vector)y.Value, (Vector)x.Value));
                         }
                 }
                 return null;
