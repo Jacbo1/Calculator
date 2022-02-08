@@ -37,6 +37,9 @@
   <PropertyGroup>
     <ApplicationIcon>calculator.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>false</SignManifests>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -52,8 +55,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FunctionException.cs" />
+    <Compile Include="Function.cs" />
     <Compile Include="FractionDoubleParsingException.cs" />
-    <Compile Include="Regexes.cs" />
+    <Compile Include="Matching.cs" />
     <Compile Include="Fraction.cs" />
     <Compile Include="Vector.cs" />
     <Compile Include="FormulaGroup.cs" />

@@ -15,9 +15,9 @@ namespace Calculator
             rad2deg = 180 / Fraction.PI,
             sciNotMinThreshold = new Fraction(1, 1000000),
             sciNotMaxThreshold = new Fraction(1000000000000000, 1);
-        private const int decDigitDisplay = 10;
+        internal const int DEC_DIGIT_DISPLAY = 10;
         private static Regex pieceRegex;
-        private Dictionary<string, Piece> vars;
+        internal Dictionary<string, Piece> vars;
 
 
         public Formula(string formula)
@@ -38,12 +38,12 @@ namespace Calculator
         {
             if (vars.Any())
             {
-                string regex = Regexes.ConstructPieceRegex(vars.Keys.ToArray());
+                string regex = Matching.ConstructPieceRegex(vars.Keys.ToArray());
                 pieceRegex = new Regex(regex, RegexOptions.Multiline);
             }
             else
             {
-                pieceRegex = Regexes.RE_DefaultPieces;
+                pieceRegex = Matching.RE_DefaultPieces;
             }
         }
 
@@ -72,11 +72,12 @@ namespace Calculator
                 case "parse vec":
                     string[] components = (string[])piece.Value;
                     return $"<{components[0]}, {components[1]}, {components[2]}>";
-
+                case "func":
+                    return ((Function)piece.Value).ToString();
             }
         }
 
-        private static string ToString(Fraction n, bool round, bool deci)
+        internal static string ToString(Fraction n, bool round, bool deci)
         {
             if (deci)
             {
@@ -104,8 +105,8 @@ namespace Calculator
                     }
 
                     Fraction sci = n * Fraction.Pow(10, -digits);
-                    sci = Fraction.Round(sci, decDigitDisplay);
-                    string s = sci.ToString(decDigitDisplay);
+                    sci = Fraction.Round(sci, DEC_DIGIT_DISPLAY);
+                    string s = sci.ToString(DEC_DIGIT_DISPLAY);
                     if (s.IndexOf('.') == -1)
                     {
                         s += ".0";
@@ -117,7 +118,7 @@ namespace Calculator
                 // Output as is
                 if (round)
                 {
-                    return Fraction.Round(n, decDigitDisplay).ToString(decDigitDisplay);
+                    return Fraction.Round(n, DEC_DIGIT_DISPLAY).ToString(DEC_DIGIT_DISPLAY);
                 }
                 return n.ToString();
             }
@@ -125,7 +126,7 @@ namespace Calculator
             // Output fraction
             if (round)
             {
-                return Fraction.Round(n, decDigitDisplay).ToFracString();
+                return Fraction.Round(n, DEC_DIGIT_DISPLAY).ToFracString();
             }
             return n.ToFracString();
             //if (n == 0)
@@ -172,7 +173,8 @@ namespace Calculator
                 case "parse vec":
                     string[] components = (string[])piece.Value;
                     return $"<{components[0]}, {components[1]}, {components[2]}>";
-
+                case "func":
+                    return ((Function)piece.Value).ToString();
             }
         }
 
@@ -201,54 +203,9 @@ namespace Calculator
                 case "parse vec":
                     string[] components = (string[])piece.Value;
                     return $"<{components[0]}, {components[1]}, {components[2]}>";
-
+                case "func":
+                    return ((Function)piece.Value).ToString();
             }
-        }
-
-        private static int FindClosingParenthesis(List<Piece> pieces, int start)
-        {
-            int openCount = 0;
-            for (int i = start; i < pieces.Count; i++)
-            {
-                Piece piece2 = pieces[i];
-                if (piece2.Value.Equals("("))
-                {
-                    openCount++;
-                }
-                else if (piece2.Value.Equals(")"))
-                {
-                    openCount--;
-                    if (openCount == 0)
-                    {
-                        // Found partner parenthesis
-                        return i;
-                    }
-                }
-            }
-            return -1;
-        }
-
-        private static int FindOpeningParenthesis(List<Piece> pieces, int start)
-        {
-            int openCount = 0;
-            for (int i = start; i >= 0; i--)
-            {
-                Piece piece2 = pieces[i];
-                if (piece2.Value.Equals(")"))
-                {
-                    openCount++;
-                }
-                else if (piece2.Value.Equals("("))
-                {
-                    openCount--;
-                    if (openCount == 0)
-                    {
-                        // Found partner parenthesis
-                        return i;
-                    }
-                }
-            }
-            return -1;
         }
 
         private List<Piece> String2Infix(string formula, out string error)
@@ -258,11 +215,33 @@ namespace Calculator
             int lastIndex = 0;
             foreach (Match match in pieceRegex.Matches(formula))
             {
+                if (match.Index < lastIndex)
+                {
+                    continue;
+                }
+
                 if (match.Index != lastIndex)
                 {
                     error = $"Error: Unexpected term \"{formula.Substring(lastIndex, match.Index - lastIndex)}\"";
                     return pieces;
                 }
+
+                if (Matching.IsFunc(match.Value))
+                {
+                    // This is a function
+                    try
+                    {
+                        pieces.Add(new Piece(new Function(formula.Substring(match.Index), vars, out int stop)));
+                        lastIndex = stop + match.Index;
+                        continue;
+                    }
+                    catch (FunctionException ex)
+                    {
+                        error = $"Error parsing {ex.FunctionName}: {ex.Message}";
+                        return pieces;
+                    }
+                }
+
                 lastIndex += match.Length;
                 string value = match.Value;
                 if (vars.ContainsKey(value))
@@ -335,7 +314,8 @@ namespace Calculator
                     piece.Type == "num" ||
                     piece.Type == "vec" ||
                     piece.Type == "parse vec" ||
-                    piece.Type == "const"))
+                    piece.Type == "const" ||
+                    piece.Type == "func"))
                 {
                     // Check next piece
                     Piece nextPiece = pieces[i + 1];
@@ -344,6 +324,7 @@ namespace Calculator
                         nextPiece.Type == "vec" ||
                         nextPiece.Type == "parse vec" ||
                         nextPiece.Type == "const" ||
+                        nextPiece.Type == "func" ||
                         nextPiece.Value.Equals("("))
                     {
                         // Insert multiplication
@@ -368,7 +349,7 @@ namespace Calculator
                                 {
                                     // Func1 has parentheses
                                     // Find closing parenthesis
-                                    int temp = FindClosingParenthesis(pieces, i + 2);
+                                    int temp = Matching.FindClosingParenthesis(pieces, i + 2);
                                     if (temp != -1)
                                     {
                                         close = temp + 1;
@@ -403,7 +384,7 @@ namespace Calculator
                                         else if (piece2.Value.Equals("("))
                                         {
                                             // Find closing parenthesis
-                                            int temp = FindClosingParenthesis(pieces, close);
+                                            int temp = Matching.FindClosingParenthesis(pieces, close);
                                             if (temp != -1)
                                             {
                                                 close = temp;
@@ -418,7 +399,7 @@ namespace Calculator
                                 // Not a func1 to the right
                                 // Parentheses to the right
                                 // Find close pos
-                                int temp = FindClosingParenthesis(pieces, i + 1);
+                                int temp = Matching.FindClosingParenthesis(pieces, i + 1);
                                 if (temp != -1)
                                 {
                                     close = temp + 1;
@@ -437,7 +418,7 @@ namespace Calculator
                                 {
                                     // Parentheses to the left
                                     // Find opening parenthesis
-                                    int temp = FindOpeningParenthesis(pieces, i);
+                                    int temp = Matching.FindOpeningParenthesis(pieces, i);
                                     if (temp != -1)
                                     {
                                         open = temp;
@@ -475,7 +456,7 @@ namespace Calculator
 
         private static List<Piece> CleanupInfix(List<Piece> pieces)
         {
-            // Remove unnecessary parentheses
+            //Remove unnecessary parentheses
             int i = 0;
             while (i < pieces.Count)
             {
@@ -640,7 +621,7 @@ namespace Calculator
             for (int i = 0; i < infix.Count; i++)
             {
                 Piece piece = infix[i];
-                if (piece.IsOperand)
+                if (piece.IsOperand || piece.Type == "func")
                 {
                     // Operand
                     // Push to output
@@ -743,12 +724,17 @@ namespace Calculator
             return s;
         }
 
-        public string Calculate(out string workOutput)
+        public string Calculate()
         {
-            return Calculate(out workOutput, false, false);
+            return Calculate(out _, false, false, false);
         }
 
-        public string Calculate(out string workOutput, bool isSub, bool final)
+        public string Calculate(out string workOutput)
+        {
+            return Calculate(out workOutput, false, false, false);
+        }
+
+        public string Calculate(out string workOutput, bool isSub, bool final, bool minWork)
         {
             workOutput = "";
             List<Piece> pieces;
@@ -756,12 +742,12 @@ namespace Calculator
                 pieces = String2Infix(formula, out string error);
                 if (error.Length > 0)
                 {
-                    workOutput += error;
+                    workOutput += $"{error}\n";
                     return error;
                 }
             }
 
-            if (!isSub)
+            if (!isSub && !minWork)
             {
                 workOutput += "Adjusted: ";
                 foreach (Piece piece in pieces)
@@ -773,7 +759,7 @@ namespace Calculator
                     catch (FractionDoubleParsingException)
                     {
                         string error = $"Error: {ToStringException(piece)} is too small or large.";
-                        workOutput += error;
+                        workOutput += $"{error}\n";
                         return error;
                     }
                 }
@@ -782,31 +768,19 @@ namespace Calculator
 
             // Parse vectors
             {
-                bool parsed = false;
                 for (int i = 0; i < pieces.Count; i++)
                 {
                     if (pieces[i].Type == "parse vec")
                     {
-                        bool shownVec = false;
                         string[] components = (string[])pieces[i].Value;
                         Fraction[] newComponents = new Fraction[3];
                         for (int j = 0; j < 3; j++)
                         {
-                            string newComponent = new Formula(components[j], vars).Calculate(out string work, true, false);
-                            if (work.Length > 0)
+                            string newComponent = new Formula(components[j], vars).Calculate(out string work, true, false, true);
+                            work = work.Trim();
+                            if (work.Length > 0 && !Matching.RE_GenericNum.IsMatch(components[j]))
                             {
-                                if (newComponent.Length > 0)
-                                {
-                                    work += $"\n{newComponent}";
-                                }
-                                if (!shownVec)
-                                {
-                                    workOutput += $"Vector steps: {ToString(pieces[i])}\n";
-                                    parsed = true;
-                                    shownVec = true;
-                                }
-                                workOutput += $"{components[j]}\n";
-                                workOutput += $"{work}\n\n";
+                                workOutput += $"{components[j]}\n{work}\n{newComponent}\n";
                             }
                             if (Fraction.TryParse(newComponent, out Fraction num))
                             {
@@ -820,11 +794,6 @@ namespace Calculator
                         }
                         pieces[i] = new Piece(new Vector(newComponents[0], newComponents[1], newComponents[2]));
                     }
-                }
-
-                if (parsed)
-                {
-                    workOutput += "Steps:\n";
                 }
             }
 
@@ -861,241 +830,207 @@ namespace Calculator
                     else if (piece.Type == "op")
                     {
                         // Operator
-                        if (firstLine)
+                        workOutput += Postfix2Infix(stack, pieces, i) + '\n';
+
+                        if (stack.Count < 2)
                         {
-                            firstLine = false;
-                            workOutput += Postfix2Infix(stack, pieces, i);
+                            string error = $"Error: Not enough operands for {ToString(piece)}";
+                            workOutput += error + '\n';
+                            return error;
                         }
-                        else
+
+                        Piece num2 = stack.Pop();
+                        Piece num1 = stack.Pop();
+
+                        if (num1.Type == "const")
                         {
-                            workOutput += $"\n{Postfix2Infix(stack, pieces, i)}";
+                            num1 = new Piece(num1.ConstValue);
+                        }
+                        if (num2.Type == "const")
+                        {
+                            num2 = new Piece(num2.ConstValue);
                         }
 
-                        if (stack.Count == 1 && piece.Value.Equals("-"))
+                        bool isNum1 = num1.Type == "num";
+                        bool isNum2 = num2.Type == "num";
+
+                        if (!isNum1 && num1.Type != "vec")
                         {
-                            // Negate
-                            Piece num = stack.Pop();
-                            if (num.Type == "num")
-                            {
-                                stack.Push(new Piece(-(Fraction)num.Value));
-                            }
-                            else if (num.Type == "vec")
-                            {
-                                stack.Push(new Piece(-(Vector)num.Value));
-                            }
-                            else if (num.Type == "const")
-                            {
-                                stack.Push(new Piece(-num.ConstValue));
-                            }
-                            else
-                            {
-                                string error = $"Error: Cannot negate {ToString(num)}";
-                                workOutput += $"\n{error}";
-                                return error;
-                            }
+                            string error = $"Error: Cannot perform arithmetic on {ToString(num1)}";
+                            workOutput += error + '\n';
+                            return error;
                         }
-                        else
+                        if (!isNum2 && num2.Type != "vec")
                         {
-                            if (stack.Count < 2)
-                            {
-                                string error = $"Error: Not enough operands for {ToString(piece)}";
-                                workOutput += error;
-                                workOutput += $"\n{error}";
-                                return error;
-                            }
+                            string error = $"Error: Cannot perform arithmetic on {ToString(num2)}";
+                            workOutput += error + '\n';
+                            return error;
+                        }
 
-                            Piece num2 = stack.Pop();
-                            Piece num1 = stack.Pop();
-
-                            if (num1.Type == "const")
-                            {
-                                num1 = new Piece(num1.ConstValue);
-                            }
-                            if (num2.Type == "const")
-                            {
-                                num2 = new Piece(num2.ConstValue);
-                            }
-
-                            bool isNum1 = num1.Type == "num";
-                            bool isNum2 = num2.Type == "num";
-
-                            if (!isNum1 && num1.Type != "vec")
-                            {
-                                string error = $"Error: Cannot perform arithmetic on {ToString(num1)}";
-                                workOutput += $"\n{error}";
-                                return error;
-                            }
-                            if (!isNum2 && num2.Type != "vec")
-                            {
-                                string error = $"Error: Cannot perform arithmetic on {ToString(num2)}";
-                                workOutput += $"\n{error}";
-                                return error;
-                            }
-
-                            switch ((string)piece.Value)
-                            {
-                                case "+":
-                                    if (isNum1 && isNum2)
+                        switch ((string)piece.Value)
+                        {
+                            case "+":
+                                if (isNum1 && isNum2)
+                                {
+                                    stack.Push(new Piece((Fraction)num1.Value + (Fraction)num2.Value));
+                                }
+                                else if (isNum1 && !isNum2)
+                                {
+                                    stack.Push(new Piece((Fraction)num1.Value + (Vector)num2.Value));
+                                }
+                                else if (!isNum1 && isNum2)
+                                {
+                                    stack.Push(new Piece((Vector)num1.Value + (Fraction)num2.Value));
+                                }
+                                else
+                                {
+                                    stack.Push(new Piece((Vector)num1.Value + (Vector)num2.Value));
+                                }
+                                break;
+                            case "-":
+                                if (isNum1 && isNum2)
+                                {
+                                    stack.Push(new Piece((Fraction)num1.Value - (Fraction)num2.Value));
+                                }
+                                else if (isNum1 && !isNum2)
+                                {
+                                    stack.Push(new Piece((Fraction)num1.Value - (Vector)num2.Value));
+                                }
+                                else if (!isNum1 && isNum2)
+                                {
+                                    stack.Push(new Piece((Vector)num1.Value - (Fraction)num2.Value));
+                                }
+                                else
+                                {
+                                    stack.Push(new Piece((Vector)num1.Value - (Vector)num2.Value));
+                                }
+                                break;
+                            case "*":
+                                if (isNum1 && isNum2)
+                                {
+                                    stack.Push(new Piece((Fraction)num1.Value * (Fraction)num2.Value));
+                                }
+                                else if (isNum1 && !isNum2)
+                                {
+                                    stack.Push(new Piece((Fraction)num1.Value * (Vector)num2.Value));
+                                }
+                                else if (!isNum1 && isNum2)
+                                {
+                                    stack.Push(new Piece((Vector)num1.Value * (Fraction)num2.Value));
+                                }
+                                else
+                                {
+                                    stack.Push(new Piece((Vector)num1.Value * (Vector)num2.Value));
+                                }
+                                break;
+                            case "/":
+                                if (isNum2)
+                                {
+                                    if ((Fraction)num2.Value == 0)
                                     {
-                                        stack.Push(new Piece((Fraction)num1.Value + (Fraction)num2.Value));
-                                    }
-                                    else if (isNum1 && !isNum2)
-                                    {
-                                        stack.Push(new Piece((Fraction)num1.Value + (Vector)num2.Value));
-                                    }
-                                    else if (!isNum1 && isNum2)
-                                    {
-                                        stack.Push(new Piece((Vector)num1.Value + (Fraction)num2.Value));
-                                    }
-                                    else
-                                    {
-                                        stack.Push(new Piece((Vector)num1.Value + (Vector)num2.Value));
-                                    }
-                                    break;
-                                case "-":
-                                    if (isNum1 && isNum2)
-                                    {
-                                        stack.Push(new Piece((Fraction)num1.Value - (Fraction)num2.Value));
-                                    }
-                                    else if (isNum1 && !isNum2)
-                                    {
-                                        stack.Push(new Piece((Fraction)num1.Value - (Vector)num2.Value));
-                                    }
-                                    else if (!isNum1 && isNum2)
-                                    {
-                                        stack.Push(new Piece((Vector)num1.Value - (Fraction)num2.Value));
-                                    }
-                                    else
-                                    {
-                                        stack.Push(new Piece((Vector)num1.Value - (Vector)num2.Value));
-                                    }
-                                    break;
-                                case "*":
-                                    if (isNum1 && isNum2)
-                                    {
-                                        stack.Push(new Piece((Fraction)num1.Value * (Fraction)num2.Value));
-                                    }
-                                    else if (isNum1 && !isNum2)
-                                    {
-                                        stack.Push(new Piece((Fraction)num1.Value * (Vector)num2.Value));
-                                    }
-                                    else if (!isNum1 && isNum2)
-                                    {
-                                        stack.Push(new Piece((Vector)num1.Value * (Fraction)num2.Value));
-                                    }
-                                    else
-                                    {
-                                        stack.Push(new Piece((Vector)num1.Value * (Vector)num2.Value));
-                                    }
-                                    break;
-                                case "/":
-                                    if (isNum2)
-                                    {
-                                        if ((Fraction)num2.Value == 0)
-                                        {
-                                            string error = $"Error: Division by 0";
-                                            workOutput += $"\n{error}";
-                                            return error;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        Vector vec = (Vector)num2.Value;
-                                        if (vec.X == 0 || vec.Y == 0 || vec.Z == 0)
-                                        {
-                                            string error = $"Error: Division by 0";
-                                            workOutput += $"\n{error}";
-                                            return error;
-                                        }
-                                    }
-                                    if (isNum1 && isNum2)
-                                    {
-                                        stack.Push(new Piece((Fraction)num1.Value / (Fraction)num2.Value));
-                                    }
-                                    else if (isNum1 && !isNum2)
-                                    {
-                                        stack.Push(new Piece((Fraction)num1.Value / (Vector)num2.Value));
-                                    }
-                                    else if (!isNum1 && isNum2)
-                                    {
-                                        stack.Push(new Piece((Vector)num1.Value / (Fraction)num2.Value));
-                                    }
-                                    else
-                                    {
-                                        stack.Push(new Piece((Vector)num1.Value / (Vector)num2.Value));
-                                    }
-                                    break;
-                                case "x":
-                                    if (!isNum1 && !isNum2)
-                                    {
-                                        stack.Push(new Piece(((Vector)num1.Value).Cross((Vector)num2.Value)));
-                                    }
-                                    else
-                                    {
-                                        string error = $"Error: Cannot get cross product of {ToString(num1)} and {ToString(num2)}";
-                                        workOutput += $"\n{error}";
+                                        string error = $"Error: Division by 0";
+                                        workOutput += error + '\n';
                                         return error;
                                     }
-                                    break;
-                                case ".":
-                                    if (!isNum1 && !isNum2)
+                                }
+                                else
+                                {
+                                    Vector vec = (Vector)num2.Value;
+                                    if (vec.X == 0 || vec.Y == 0 || vec.Z == 0)
                                     {
-                                        stack.Push(new Piece(((Vector)num1.Value).Dot((Vector)num2.Value)));
-                                    }
-                                    else
-                                    {
-                                        string error = $"Error: Cannot get dot product of {ToString(num1)} and {ToString(num2)}";
-                                        workOutput += $"\n{error}";
+                                        string error = $"Error: Division by 0";
+                                        workOutput += error + '\n';
                                         return error;
                                     }
-                                    break;
-                                case "%":
+                                }
+                                if (isNum1 && isNum2)
+                                {
+                                    stack.Push(new Piece((Fraction)num1.Value / (Fraction)num2.Value));
+                                }
+                                else if (isNum1 && !isNum2)
+                                {
+                                    stack.Push(new Piece((Fraction)num1.Value / (Vector)num2.Value));
+                                }
+                                else if (!isNum1 && isNum2)
+                                {
+                                    stack.Push(new Piece((Vector)num1.Value / (Fraction)num2.Value));
+                                }
+                                else
+                                {
+                                    stack.Push(new Piece((Vector)num1.Value / (Vector)num2.Value));
+                                }
+                                break;
+                            case "x":
+                                if (!isNum1 && !isNum2)
+                                {
+                                    stack.Push(new Piece(((Vector)num1.Value).Cross((Vector)num2.Value)));
+                                }
+                                else
+                                {
+                                    string error = $"Error: Cannot get cross product of {ToString(num1)} and {ToString(num2)}";
+                                    workOutput += error + '\n';
+                                    return error;
+                                }
+                                break;
+                            case ".":
+                                if (!isNum1 && !isNum2)
+                                {
+                                    stack.Push(new Piece(((Vector)num1.Value).Dot((Vector)num2.Value)));
+                                }
+                                else
+                                {
+                                    string error = $"Error: Cannot get dot product of {ToString(num1)} and {ToString(num2)}";
+                                    workOutput += error + '\n';
+                                    return error;
+                                }
+                                break;
+                            case "%":
+                                if (isNum1 && isNum2)
+                                {
+                                    stack.Push(new Piece((Fraction)num1.Value % (Fraction)num2.Value));
+                                }
+                                else if (isNum1 && !isNum2)
+                                {
+                                    stack.Push(new Piece((Fraction)num1.Value % (Vector)num2.Value));
+                                }
+                                else if (!isNum1 && isNum2)
+                                {
+                                    stack.Push(new Piece((Vector)num1.Value % (Fraction)num2.Value));
+                                }
+                                else
+                                {
+                                    stack.Push(new Piece((Vector)num1.Value % (Vector)num2.Value));
+                                }
+                                break;
+                            case "^":
+                                try
+                                {
                                     if (isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((Fraction)num1.Value % (Fraction)num2.Value));
+                                        stack.Push(new Piece(Fraction.Pow((Fraction)num1.Value, (Fraction)num2.Value)));
                                     }
                                     else if (isNum1 && !isNum2)
                                     {
-                                        stack.Push(new Piece((Fraction)num1.Value % (Vector)num2.Value));
+                                        stack.Push(new Piece(Vector.Pow((Fraction)num1.Value, (Vector)num2.Value)));
                                     }
                                     else if (!isNum1 && isNum2)
                                     {
-                                        stack.Push(new Piece((Vector)num1.Value % (Fraction)num2.Value));
+                                        stack.Push(new Piece(Vector.Pow((Vector)num1.Value, (Fraction)num2.Value)));
                                     }
                                     else
                                     {
-                                        stack.Push(new Piece((Vector)num1.Value % (Vector)num2.Value));
+                                        stack.Push(new Piece(Vector.Pow((Vector)num1.Value, (Vector)num2.Value)));
                                     }
-                                    break;
-                                case "^":
-                                    try
-                                    {
-                                        if (isNum1 && isNum2)
-                                        {
-                                            stack.Push(new Piece(Fraction.Pow((Fraction)num1.Value, (Fraction)num2.Value)));
-                                        }
-                                        else if (isNum1 && !isNum2)
-                                        {
-                                            stack.Push(new Piece(Vector.Pow((Fraction)num1.Value, (Vector)num2.Value)));
-                                        }
-                                        else if (!isNum1 && isNum2)
-                                        {
-                                            stack.Push(new Piece(Vector.Pow((Vector)num1.Value, (Fraction)num2.Value)));
-                                        }
-                                        else
-                                        {
-                                            stack.Push(new Piece(Vector.Pow((Vector)num1.Value, (Vector)num2.Value)));
-                                        }
-                                    }
-                                    catch
-                                    {
-                                        string error = $"Error: Cannot raise {ToString(num1)} to the {ToString(num2)} power";
-                                        workOutput += $"\n{error}";
-                                        return error;
-                                    }
-                                    break;
-                            }
+                                }
+                                catch
+                                {
+                                    string error = $"Error: Cannot raise {ToString(num1)} to the {ToString(num2)} power";
+                                    workOutput += error + '\n';
+                                    return error;
+                                }
+                                break;
                         }
+                        //}
                     }
                     else if (piece.Type == "func1")
                     {
@@ -1107,14 +1042,14 @@ namespace Calculator
                         }
                         else
                         {
-                            workOutput += $"\n{Postfix2Infix(stack, pieces, i)}";
+                            workOutput += Postfix2Infix(stack, pieces, i) + '\n';
                         }
 
                         if (stack.Count == 0)
                         {
                             string error = $"Error: Not enough operands for {ToString(piece)}";
 
-                            workOutput += $"\n{error}";
+                            workOutput += error + '\n';
                             return error;
                         }
 
@@ -1129,7 +1064,7 @@ namespace Calculator
                         if (!isNum && num.Type != "vec")
                         {
                             string error = $"Error: Cannot perform {ToString(piece)} on {ToString(num)}";
-                            workOutput += $"\n{error}";
+                            workOutput += error + '\n';
                             return error;
                         }
 
@@ -1258,7 +1193,7 @@ namespace Calculator
                                 catch
                                 {
                                     string error = $"Error: Cannot square root {num}";
-                                    workOutput += $"\n{error}";
+                                    workOutput += error + '\n';
                                     return error;
                                 }
                                 break;
@@ -1350,20 +1285,39 @@ namespace Calculator
                                 break;
                         }
                     }
+                    else if (piece.Type == "func")
+                    {
+                        // Function
+                        try
+                        {
+                            stack.Push(((Function)piece.Value).Calculate(out string work));
+                            work = work.Trim();
+                            if (work.Length > 0)
+                            {
+                                workOutput += work.Trim() + '\n';
+                            }
+                        }
+                        catch (FunctionException e)
+                        {
+                            string error = $"Error in {e.FunctionName}: {e.Message}";
+                            workOutput += error + '\n';
+                            return error;
+                        }
+                    }
                 }
             }
 
             if (stack.Count > 1)
             {
                 string error = "Error: Too many results";
-                workOutput += $"\n{error}";
+                workOutput += error + '\n';
                 return error;
             }
 
             if (stack.Count == 0)
             {
                 string error = "Error: No results";
-                workOutput += $"\n{error}";
+                workOutput += error + '\n';
                 return error;
             }
 

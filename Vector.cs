@@ -174,11 +174,51 @@
             Fraction.Round(n.Y),
             Fraction.Round(n.Z));
 
+        public static Vector Round(Vector n, int digits) => new Vector(
+            Fraction.Round(n.X, digits),
+            Fraction.Round(n.Y, digits),
+            Fraction.Round(n.Z, digits));
+
+        public static Vector Round(Vector n, Vector digits) => new Vector(
+            Fraction.Round(n.X, (int)digits.X),
+            Fraction.Round(n.Y, (int)digits.Y),
+            Fraction.Round(n.Z, (int)digits.Z));
+
         public Vector Cross(Vector n) => new Vector(
             Y * n.Z - Z * n.Y,
             Z * n.X - X * n.Z,
             X * n.Y - Y * n.X);
 
         public Fraction Dot(Vector n) => X * n.X + Y * n.Y + Z * n.Z;
+
+        public static Vector Min(Vector a, Vector b) => new Vector(
+            Fraction.Min(a.X, b.X),
+            Fraction.Min(a.Y, b.Y),
+            Fraction.Min(a.Z, b.Z));
+
+        public static Vector Min(Vector a, Fraction b) => new Vector(
+            Fraction.Min(a.X, b),
+            Fraction.Min(a.Y, b),
+            Fraction.Min(a.Z, b));
+
+        public static Vector Min(Fraction a, Vector b) => new Vector(
+            Fraction.Min(a, b.X),
+            Fraction.Min(a, b.Y),
+            Fraction.Min(a, b.Z));
+
+        public static Vector Max(Vector a, Vector b) => new Vector(
+            Fraction.Max(a.X, b.X),
+            Fraction.Max(a.Y, b.Y),
+            Fraction.Max(a.Z, b.Z));
+
+        public static Vector Max(Vector a, Fraction b) => new Vector(
+            Fraction.Max(a.X, b),
+            Fraction.Max(a.Y, b),
+            Fraction.Max(a.Z, b));
+
+        public static Vector Max(Fraction a, Vector b) => new Vector(
+            Fraction.Max(a, b.X),
+            Fraction.Max(a, b.Y),
+            Fraction.Max(a, b.Z));
     }
 }

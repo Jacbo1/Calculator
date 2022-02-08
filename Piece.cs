@@ -26,6 +26,14 @@ namespace Calculator
             IsOperand = true;
         }
 
+        public Piece(Function func)
+        {
+            Type = "func";
+            Value = func;
+            //IsOperand = true;
+            Precedence = 8;
+        }
+
         public Piece(string piece)
         {
             switch (piece)
@@ -182,7 +190,7 @@ namespace Calculator
                     }
 
                     // Check if it is a vector
-                    Match match = Regexes.RE_Vector.Match(piece);
+                    Match match = Matching.RE_Vector.Match(piece);
                     if (match.Success)
                     {
                         Type = "vec";
@@ -195,7 +203,7 @@ namespace Calculator
                     }
 
                     // Check if it is an unprocessed vector
-                    match = Regexes.RE_VectorLoose.Match(piece);
+                    match = Matching.RE_VectorLoose.Match(piece);
                     if (match.Success)
                     {
                         // Vector that needs parsing

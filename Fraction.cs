@@ -17,7 +17,7 @@ namespace Calculator
             rad2deg = 180 / Math.PI;
         private const int DEFAULT_DECIMAL_COUNT = 100,
             POWER_STEPS = int.MaxValue,
-            POW_MAX_DIGITS = 10000;
+            POW_MAX_DIGITS = 5000;
         private readonly static Fraction HALF = new Fraction(1, 2);
 
         // Constructors
@@ -64,7 +64,7 @@ namespace Calculator
             }
             else
             {
-                throw new FractionDoubleParsingException();
+                throw new FractionDoubleParsingException($"{x} is too small or large.");
             }
         }
 
@@ -100,7 +100,7 @@ namespace Calculator
         // Methods
         public static Fraction Parse(string s)
         {
-            Match match = Regexes.RE_Number.Match(s);
+            Match match = Matching.RE_Number.Match(s);
             if (match.Success)
             {
                 // In the form of 12.34
@@ -119,14 +119,14 @@ namespace Calculator
                 }
             }
 
-            match = Regexes.RE_SciNotation.Match(s);
+            match = Matching.RE_SciNotation.Match(s);
             if (match.Success)
             {
                 // In the form of 1.2E34
                 return Parse(match.Groups[1].Value) * Pow(10, Parse(match.Groups[3].Value));
             }
 
-            match = Regexes.RE_Fraction.Match(s);
+            match = Matching.RE_Fraction.Match(s);
             if (match.Success)
             {
                 // In the form of 1.2 / 3.4
@@ -215,6 +215,17 @@ namespace Calculator
             {
                 // 0
                 return new Fraction(1, 1);
+            }
+
+            // 2 common exponents to avoid the digit check resulting in precision loss
+            if (exponent == 2)
+            {
+                return frac * frac;
+            }
+
+            if (exponent == 3)
+            {
+                return frac * frac * frac;
             }
 
             if (!CheckPowDigits(frac.Numerator, exponent) || !CheckPowDigits(frac.Denominator, exponent))
@@ -384,7 +395,7 @@ namespace Calculator
             if (decimalCount == 0)
             {
                 // No decimals
-                return Regexes.RE_TrailingZeroes.Replace((Numerator / Denominator).ToString(), "");
+                return Matching.RE_TrailingZeroes.Replace((Numerator / Denominator).ToString(), "");
             }
 
             // Decimal
@@ -400,7 +411,7 @@ namespace Calculator
             }
             s = s.Substring(0, s.Length - decimalCount) + "." + s.Substring(s.Length - decimalCount);
 
-            return Regexes.RE_TrailingZeroes.Replace(s, "");
+            return Matching.RE_TrailingZeroes.Replace(s, "");
         }
 
         public override string ToString() => ToString(DEFAULT_DECIMAL_COUNT);
