@@ -780,7 +780,29 @@ namespace Calculator
                             work = work.Trim();
                             if (work.Length > 0 && !Matching.RE_GenericNum.IsMatch(components[j]))
                             {
-                                workOutput += $"{components[j]}\n{work}\n{newComponent}\n";
+                                string pre = "";
+                                switch (j)
+                                {
+                                    case 0:
+                                        pre = "x: ";
+                                        break;
+                                    case 1:
+                                        pre = "y: ";
+                                        break;
+                                    case 2:
+                                        pre = "z: ";
+                                        break;
+                                }
+
+                                work = $"{components[j]}\n{work}\n{Matching.Answer2Decimal(newComponent)}";
+                                foreach (string line in work.Split('\n'))
+                                {
+                                    if (line.Length > 0)
+                                    {
+                                        workOutput += pre + line + '\n';
+                                    }
+                                }
+                                workOutput += '\n';
                             }
                             if (Fraction.TryParse(newComponent, out Fraction num))
                             {
