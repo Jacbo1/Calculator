@@ -50,6 +50,8 @@ namespace Calculator
                 }
             }
 
+            workOutput = workOutput.Trim();
+
             return answer;
         }
     }
