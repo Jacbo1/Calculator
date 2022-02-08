@@ -35,7 +35,7 @@ namespace Calculator
                 {
                     if (process.Id != id && process.MainModule.FileName == path)
                     {
-                        process.Kill();
+                        process.CloseMainWindow();
                         found = true;
                     }
                 }
