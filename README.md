@@ -1,3 +1,5 @@
+There is a [wiki](https://github.com/Jacbo1/Calculator/wiki) for this calculator because it is too much to describe well here.  
+  
 This calculator uses a custom fraction class for numbers which allows it to accurately store and perform arithmetic on huge or miniscule numbers with no precision loss for most things. Exceptions are sin, cos, tan, asin, acos, atan, and ^ (only fractions with extremely large numerators or denominators will lose precision). It also allows outputs to be displayed in extreme accuracy. For example, you can output the square root of 2 that is accurate to 100 decimal places (this precision is controlled by the readonly `POW_EPSILON` variable).  
   
 This calculator supports order of operations, parentheses, and vectors. Supported operators are +, -, \*, /, %, ^, x (cross product), and . (dot product). Vectors are formatted like <1,2,3> but can have equations in them too. Multiplying 2 vectors with \* will produce a new vector as <x1\*x2,y1\*y2,z1\*z2>.  
