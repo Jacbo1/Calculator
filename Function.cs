@@ -144,6 +144,7 @@ namespace Calculator
                             case "getz":
                             case "length":
                             case "norm":
+                            case "ln":
                                 if (sections.Count < 1)
                                 {
                                     throw new FunctionException(funcName, "Not enough arguments.");
@@ -485,15 +486,17 @@ namespace Calculator
 
                             // Find sub formulas
                             {
+                                bool xIsVar = argVars[0] == "x" || formulas[2].vars.ContainsKey("x");
                                 string formula = formulas[2].formula;
                                 int start = formula.IndexOf("_");
                                 int stop = 0;
                                 while (start != -1)
                                 {
                                     substrings.Add(formula.Substring(stop, start - stop));
-                                    stop = FindBreakoff(formula, start + 1);
-                                    subFormulas.Add(new Formula(formula.Substring(start + 1, stop - start - 2), vars));
+                                    stop = FindBreakoff(formula, start + 1, xIsVar);
+                                    subFormulas.Add(new Formula(formula.Substring(start + 1, stop - start), vars));
                                     start = formula.IndexOf("_", start + 1);
+                                    stop++;
                                 }
                                 if (stop < formula.Length)
                                 {
@@ -517,21 +520,20 @@ namespace Calculator
                                 formulas[2].SetVar(indexVarName, newIndexPiece);
 
                                 // Replace sub formulas
-                                string formula = substrings[0];
+                                formulas[2].formula = substrings[0];
                                 for (int i = 0; i < subFormulas.Count; i++)
                                 {
                                     subFormulas[i].SetVar(indexVarName, newIndexPiece);
                                     string subanswer = subFormulas[i].Calculate();
                                     if (Fraction.TryParse(subanswer, out Fraction subindex))
                                     {
-                                        formula += (int)subindex + substrings[i + 1];
+                                        formulas[2].formula += (int)subindex + substrings[i + 1];
                                     }
                                     else
                                     {
                                         throw new FunctionException(funcName, subanswer);
                                     }
                                 }
-                                formulas[2].formula = formula.Replace("_" + indexVarName, index.ToString());
 
                                 // Calculate
                                 string answer = formulas[2].Calculate();
@@ -606,15 +608,17 @@ namespace Calculator
 
                             // Find sub formulas
                             {
+                                bool xIsVar = argVars[0] == "x" || formulas[2].vars.ContainsKey("x");
                                 string formula = formulas[2].formula;
                                 int start = formula.IndexOf("_");
                                 int stop = 0;
                                 while (start != -1)
                                 {
                                     substrings.Add(formula.Substring(stop, start - stop));
-                                    stop = FindBreakoff(formula, start + 1);
-                                    subFormulas.Add(new Formula(formula.Substring(start + 1, stop - start - 2), vars));
+                                    stop = FindBreakoff(formula, start + 1, xIsVar);
+                                    subFormulas.Add(new Formula(formula.Substring(start + 1, stop - start), vars));
                                     start = formula.IndexOf("_", start + 1);
+                                    stop++;
                                 }
                                 if (stop < formula.Length)
                                 {
@@ -638,21 +642,20 @@ namespace Calculator
                                 formulas[2].SetVar(indexVarName, newIndexPiece);
 
                                 // Replace sub formulas
-                                string formula = substrings[0];
+                                formulas[2].formula = substrings[0];
                                 for (int i = 0; i < subFormulas.Count; i++)
                                 {
                                     subFormulas[i].SetVar(indexVarName, newIndexPiece);
                                     string subanswer = subFormulas[i].Calculate();
                                     if (Fraction.TryParse(subanswer, out Fraction subindex))
                                     {
-                                        formula += (int)subindex + substrings[i + 1];
+                                        formulas[2].formula += (int)subindex + substrings[i + 1];
                                     }
                                     else
                                     {
                                         throw new FunctionException(funcName, subanswer);
                                     }
                                 }
-                                formulas[2].formula = formula.Replace("_" + indexVarName, index.ToString());
 
                                 // Calculate
                                 string answer = formulas[2].Calculate();
@@ -782,6 +785,24 @@ namespace Calculator
                             }
                             return new Piece(Vector.Atan2((Vector)y.Value, (Vector)x.Value));
                         }
+
+                    case "ln":
+                        {
+                            workOutput += CalcFormula(0, out Piece n);
+                            
+                            if (n.Type == "num")
+                            {
+                                return new Piece(Math.Log((double)(Fraction)n.Value));
+                            }
+                            else
+                            {
+                                Vector v = (Vector)n.Value;
+                                return new Piece(new Vector(
+                                    Math.Log((double)v.X),
+                                    Math.Log((double)v.Y),
+                                    Math.Log((double)v.Z)));
+                            }
+                        }
                 }
                 return null;
             }
@@ -791,27 +812,48 @@ namespace Calculator
             }
         }
 
-        private static int FindBreakoff(string input, int index)
+        private static int FindBreakoff(string input, int index, bool xIsVar)
         {
             int openCount = 0;
-            foreach (Match match in Matching.RE_DefaultPieces.Matches(input, index))
+            for (int i = index; i < input.Length; i++)
             {
-                if (match.Value == "(")
+                char c = input[i];
+                switch (c)
                 {
-                    openCount++;
-                    continue;
-                }
-                if (match.Value == ")")
-                {
-                    openCount--;
-                    continue;
-                }
-                if (openCount <= 0 && Matching.IsOperator(match.Value))
-                {
-                    return match.Index;
+                    case '(': openCount++; break;
+                    case ')':
+                        openCount--;
+                        if (openCount < 0)
+                        {
+                            return i - 1;
+                        }
+                        break;
+                    default: 
+                        if ((!xIsVar || c != 'x') && Matching.IsOperator(c.ToString()) && openCount <= 0)
+                        {
+                            return i - 1;
+                        }
+                        break;
                 }
             }
-            return input.Length + 1;
+            //foreach (Match match in Matching.RE_DefaultPieces.Matches(input, index))
+            //{
+            //    if (match.Value == "(")
+            //    {
+            //        openCount++;
+            //        continue;
+            //    }
+            //    if (match.Value == ")")
+            //    {
+            //        openCount--;
+            //        continue;
+            //    }
+            //    if (openCount <= 0 && Matching.IsOperator(match.Value))
+            //    {
+            //        return match.Index;
+            //    }
+            //}
+            return input.Length - 1;
         }
 
         public override string ToString()

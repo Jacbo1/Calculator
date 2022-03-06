@@ -129,24 +129,6 @@ namespace Calculator
                 return Fraction.Round(n, DEC_DIGIT_DISPLAY).ToFracString();
             }
             return n.ToFracString();
-            //if (n == 0)
-            //{
-            //    return "0";
-            //}
-            //if (Fraction.Abs(n) < decSciThreshold)
-            //{
-            //    string s = n.ToString();
-            //    //Fraction digits = Fraction.Floor(Fraction.Log10(Fraction.Abs(n)));
-            //    //Fraction sci = Fraction.Round(n * Fraction.Pow(10, -digits), decDigitDisplay);
-            //    //string num = trailingZeroes.Replace(sci.ToString(), "");
-            //    //if (num.IndexOf('.') == -1)
-            //    //{
-            //    //    num += ".0";
-            //    //}
-            //    //return $"{num}E{(int)digits}";
-            //}
-            //Fraction rounded = Fraction.Round(n, decDigitDisplay);
-            //return trailingZeroes.Replace(rounded.ToString(), "");
         }
 
         private static string ToString(Piece piece)
@@ -533,7 +515,6 @@ namespace Calculator
 
         private static string Postfix2Infix(List<Piece> postfix)
         {
-            //PieceGroup pieces = new PieceGroup();
             Stack<List<Piece>> stack = new Stack<List<Piece>>();
             foreach (Piece piece in postfix)
             {
@@ -627,15 +608,9 @@ namespace Calculator
                     // Push to output
                     postfix.Add(piece);
                 }
-                else if (piece.Type == "func1")
+                else if (piece.Type == "func1" || piece.Value.Equals("("))
                 {
-                    // Func1
-                    // Push to stack
-                    stack.Push(piece);
-                }
-                else if (piece.Value.Equals("("))
-                {
-                    // Open parenthesis
+                    // Func1 or open parenthesis
                     // Push to stack
                     stack.Push(piece);
                 }
@@ -1052,7 +1027,6 @@ namespace Calculator
                                 }
                                 break;
                         }
-                        //}
                     }
                     else if (piece.Type == "func1")
                     {
