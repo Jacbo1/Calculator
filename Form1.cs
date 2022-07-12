@@ -78,6 +78,8 @@ namespace Calculator
             Menu1Instance.Checked = oneInstance;
 
             //
+            AnswerOutput.Click += AnswerOutput_Click;
+            TextInput.KeyDown += TextInput_KeyDown;
             TextInput.Focus();
             worker.RunWorkerAsync();
             timer.Start();
@@ -91,9 +93,24 @@ namespace Calculator
             SizeComponents();
         }
 
+        private void AnswerOutput_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetText(AnswerOutput.Text);
+        }
+
+        private void TextInput_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.V)
+            {
+                TextInput.Text += (string)Clipboard.GetData("Text");
+                e.Handled = true;
+            }
+        }
+
         private void TextInput_TextChanged(object sender, EventArgs e)
         {
             inputCounter++;
+            Font x = TextInput.Font;
             input = TextInput.Text;
         }
 
@@ -184,6 +201,11 @@ namespace Calculator
             Properties.Settings.Default.ShowWork = showWork;
             MenuToggleWork.Checked = showWork;
             SizeComponents();
+        }
+
+        private void menuItem2_Click(object sender, EventArgs e)
+        {
+
         }
 
         private void MenuButtonPressed_1Instance(object sender, EventArgs e)

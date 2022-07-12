@@ -36,6 +36,7 @@
             this.menuItem1 = new System.Windows.Forms.MenuItem();
             this.MenuToggleWork = new System.Windows.Forms.MenuItem();
             this.Menu1Instance = new System.Windows.Forms.MenuItem();
+            this.menuItem2 = new System.Windows.Forms.MenuItem();
             this.TextInput = new System.Windows.Forms.RichTextBox();
             this.WorkOutput = new System.Windows.Forms.RichTextBox();
             this.AnswerOutput = new System.Windows.Forms.RichTextBox();
@@ -60,7 +61,8 @@
             this.menuItem1.Index = 0;
             this.menuItem1.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
             this.MenuToggleWork,
-            this.Menu1Instance});
+            this.Menu1Instance,
+            this.menuItem2});
             this.menuItem1.Text = "Settings";
             // 
             // MenuToggleWork
@@ -73,6 +75,12 @@
             // 
             this.Menu1Instance.Index = 1;
             this.Menu1Instance.Text = "Only 1 instance";
+            // 
+            // menuItem2
+            // 
+            this.menuItem2.Index = 2;
+            this.menuItem2.Text = "Scientific";
+            this.menuItem2.Click += new System.EventHandler(this.menuItem2_Click);
             // 
             // TextInput
             // 
@@ -154,6 +162,7 @@
         private System.Windows.Forms.RichTextBox TextInput;
         private System.Windows.Forms.RichTextBox WorkOutput;
         private System.Windows.Forms.RichTextBox AnswerOutput;
+        private System.Windows.Forms.MenuItem menuItem2;
     }
 }
 

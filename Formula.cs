@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -57,8 +57,6 @@ namespace Calculator
         {
             switch (piece.Type)
             {
-                default:
-                    return (string)piece.Value;
                 case "func1":
                     return (string)piece.Value;
                 case "num":
@@ -74,7 +72,12 @@ namespace Calculator
                     return $"<{components[0]}, {components[1]}, {components[2]}>";
                 case "func":
                     return ((Function)piece.Value).ToString();
+                case "const":
+                    if ((string)piece.Value == "pi")
+                        return "π";
+                    break;
             }
+            return (string)piece.Value;
         }
 
         internal static string ToString(Fraction n, bool round, bool deci)
@@ -139,8 +142,6 @@ namespace Calculator
             }
             switch (piece.Type)
             {
-                default:
-                    return (string)piece.Value;
                 case "func1":
                     if (piece.Value == "neg")
                     {
@@ -157,7 +158,12 @@ namespace Calculator
                     return $"<{components[0]}, {components[1]}, {components[2]}>";
                 case "func":
                     return ((Function)piece.Value).ToString();
+                case "const":
+                    if ((string)piece.Value == "pi")
+                        return "π";
+                    break;
             }
+            return (string)piece.Value;
         }
 
         private static string AnswerToString(Piece piece, bool final)
@@ -309,108 +315,100 @@ namespace Calculator
                         nextPiece.Type == "func" ||
                         nextPiece.Value.Equals("("))
                     {
-                        // Insert multiplication
-                        if (i + 2 < pieces.Count && pieces[i + 2].Value.Equals("^"))
-                        {
-                            // Exponent
-                            // Don't add parentheses
-                            pieces.Insert(i + 1, new Piece("*"));
-                            i++;
-                        }
-                        else
-                        {
-                            int open = i;
-                            int close = i + 2;
+                        Console.WriteLine(piece.Value + ", " + nextPiece.Value);
 
-                            // Find close pos
-                            if (nextPiece.Type == "func1")
+                        // Insert multiplication
+                        int open = i;
+                        int close = i + 2;
+
+                        // Find close pos
+                        if (nextPiece.Type == "func1" || (i + 2 < pieces.Count && pieces[i + 2].Value.Equals("^")))
+                        {
+                            // Func1 to the right
+                            // Check if it has parentheses
+                            if (i + 2 < pieces.Count && pieces[i + 2].Value.Equals("("))
                             {
-                                // Func1 to the right
-                                // Check if it has parentheses
-                                if (i + 2 < pieces.Count && pieces[i + 2].Value.Equals("("))
-                                {
-                                    // Func1 has parentheses
-                                    // Find closing parenthesis
-                                    int temp = Matching.FindClosingParenthesis(pieces, i + 2);
-                                    if (temp != -1)
-                                    {
-                                        close = temp + 1;
-                                    }
-                                }
-                                else
-                                {
-                                    // Func1 has no parentheses
-                                    // Check for other partnered terms
-                                    // Preserve other func1s and their parentheses and groups
-                                    // Search for operators to break on
-                                    bool lastWasFunc1 = false;
-                                    close--;
-                                    while (close < pieces.Count)
-                                    {
-                                        if (lastWasFunc1)
-                                        {
-                                            // This piece belongs to the func1
-                                            close++;
-                                            continue;
-                                        }
-                                        Piece piece2 = pieces[close];
-                                        if (piece2.Type == "op")
-                                        {
-                                            // Found close pos
-                                            break;
-                                        }
-                                        else if (piece2.Type == "func1")
-                                        {
-                                            lastWasFunc1 = true;
-                                        }
-                                        else if (piece2.Value.Equals("("))
-                                        {
-                                            // Find closing parenthesis
-                                            int temp = Matching.FindClosingParenthesis(pieces, close);
-                                            if (temp != -1)
-                                            {
-                                                close = temp;
-                                            }
-                                        }
-                                        close++;
-                                    }
-                                }
-                            }
-                            else if (nextPiece.Value.Equals("("))
-                            {
-                                // Not a func1 to the right
-                                // Parentheses to the right
-                                // Find close pos
-                                int temp = Matching.FindClosingParenthesis(pieces, i + 1);
+                                // Func1 has parentheses
+                                // Find closing parenthesis
+                                int temp = Matching.FindClosingParenthesis(pieces, i + 2);
                                 if (temp != -1)
                                 {
                                     close = temp + 1;
                                 }
                             }
-
-                            if (close < pieces.Count && pieces[close].Value.Equals("^"))
-                            {
-                                // Don't wrap in parentheses
-                                pieces.Insert(i + 1, new Piece("*"));
-                            }
                             else
                             {
-                                // Find open pos
-                                if (piece.Value.Equals(")"))
+                                // Func1 has no parentheses
+                                // Check for other partnered terms
+                                // Preserve other func1s and their parentheses and groups
+                                // Search for operators to break on
+                                bool lastWasFunc1 = false;
+                                close--;
+                                while (close < pieces.Count)
                                 {
-                                    // Parentheses to the left
-                                    // Find opening parenthesis
-                                    int temp = Matching.FindOpeningParenthesis(pieces, i);
-                                    if (temp != -1)
+                                    if (lastWasFunc1)
                                     {
-                                        open = temp;
+                                        // This piece belongs to the func1
+                                        close++;
+                                        continue;
                                     }
+                                    Piece piece2 = pieces[close];
+                                    if (piece2.Type == "op" && !piece2.Value.Equals("^"))
+                                    {
+                                        // Found close pos
+                                        break;
+                                    }
+                                    else if (piece2.Type == "func1")
+                                    {
+                                        lastWasFunc1 = true;
+                                    }
+                                    else if (piece2.Value.Equals("("))
+                                    {
+                                        // Find closing parenthesis
+                                        int temp = Matching.FindClosingParenthesis(pieces, close);
+                                        if (temp != -1)
+                                        {
+                                            close = temp;
+                                        }
+                                    }
+                                    close++;
                                 }
-
-                                pieces.Insert(close, new Piece(")"));
-                                pieces.Insert(i + 1, new Piece("*"));
-                                pieces.Insert(open, new Piece("("));
                             }
+                        }
+                        else if (nextPiece.Value.Equals("("))
+                        {
+                            // Not a func1 to the right
+                            // Parentheses to the right
+                            // Find close pos
+                            int temp = Matching.FindClosingParenthesis(pieces, i + 1);
+                            if (temp != -1)
+                            {
+                                close = temp + 1;
+                            }
+                        }
+
+                        if (close < pieces.Count && pieces[close].Value.Equals("^"))
+                        {
+                            // Don't wrap in parentheses
+                            pieces.Insert(i + 1, new Piece("*"));
+                        }
+                        else
+                        {
+                            // Find open pos
+                            if (piece.Value.Equals(")"))
+                            {
+                                // Parentheses to the left
+                                // Find opening parenthesis
+                                int temp = Matching.FindOpeningParenthesis(pieces, i);
+                                if (temp != -1)
+                                {
+                                    open = temp;
+                                }
+                            }
+
+                            pieces.Insert(close, new Piece(")"));
+                            pieces.Insert(i + 1, new Piece("*"));
+                            pieces.Insert(open, new Piece("("));
                         }
                     }
                 }
