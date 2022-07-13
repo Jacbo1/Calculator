@@ -315,8 +315,6 @@ namespace Calculator
                         nextPiece.Type == "func" ||
                         nextPiece.Value.Equals("("))
                     {
-                        Console.WriteLine(piece.Value + ", " + nextPiece.Value);
-
                         // Insert multiplication
                         int open = i;
                         int close = i + 2;
@@ -707,8 +705,11 @@ namespace Calculator
             return Calculate(out workOutput, false, false, false);
         }
 
-        public string Calculate(out string workOutput, bool isSub, bool final, bool minWork)
+        public string Calculate(out string workOutput, bool isSub, bool final, bool minWork) => Calculate(out workOutput, isSub, final, minWork, out Piece _);
+
+        public string Calculate(out string workOutput, bool isSub, bool final, bool minWork, out Piece answerPiece)
         {
+            answerPiece = new Piece("");
             workOutput = "";
             List<Piece> pieces;
             {
@@ -1315,6 +1316,7 @@ namespace Calculator
                 return error;
             }
 
+            answerPiece = stack.Peek();
             return AnswerToString(stack.Peek(), final);
         }
     }

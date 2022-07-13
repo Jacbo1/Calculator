@@ -18,7 +18,9 @@ namespace Calculator
         private string answer = "";
         private string work = "";
         private bool showWork = true,
-            oneInstance = false;
+            oneInstance = false,
+            scientific = false,
+            showFractions = false;
 
         public Form1()
         {
@@ -72,10 +74,14 @@ namespace Calculator
             Size = Properties.Settings.Default.Size;
             showWork = Properties.Settings.Default.ShowWork;
             input = TextInput.Text = Properties.Settings.Default.Input;
+            scientific = Properties.Settings.Default.Scientific;
+            showFractions = Properties.Settings.Default.ShowFractions;
 
             inputCounter++;
             MenuToggleWork.Checked = showWork;
             Menu1Instance.Checked = oneInstance;
+            MenuFractions.Checked = showFractions;
+            MenuScientific.Checked = scientific;
 
             //
             AnswerOutput.Click += AnswerOutput_Click;
@@ -153,7 +159,7 @@ namespace Calculator
                     workerCounter = inputCounter;
                     try
                     {
-                        answer = FormulaGroup.Calculate(input, out work);
+                        answer = FormulaGroup.Calculate(input, out work, scientific, showFractions);
                     }
                     catch (Exception error)
                     {
@@ -172,8 +178,6 @@ namespace Calculator
         private void WindowClosed(object sender, EventArgs e)
         {
             Properties.Settings.Default.Input = TextInput.Text;
-            Properties.Settings.Default.ShowWork = showWork;
-            Properties.Settings.Default.OneInstance = oneInstance;
             if (WindowState == FormWindowState.Maximized)
             {
                 Properties.Settings.Default.Pos = RestoreBounds.Location;
@@ -195,17 +199,43 @@ namespace Calculator
             Properties.Settings.Default.Save();
         }
 
+        private void MenuFractions_Click(object sender, EventArgs e)
+        {
+            showFractions = !showFractions;
+            if (showFractions && scientific)
+            {
+                scientific = false;
+                MenuScientific.Checked = false;
+                Properties.Settings.Default.Scientific = false;
+            }
+            Properties.Settings.Default.ShowFractions = showFractions;
+            MenuFractions.Checked = showFractions;
+            Properties.Settings.Default.Save();
+            inputCounter++;
+        }
+
         private void MenuButtonPressed_ShowWork(object sender, EventArgs e)
         {
             showWork = !showWork;
             Properties.Settings.Default.ShowWork = showWork;
             MenuToggleWork.Checked = showWork;
             SizeComponents();
+            Properties.Settings.Default.Save();
         }
 
-        private void menuItem2_Click(object sender, EventArgs e)
+        private void MenuScientific_Click(object sender, EventArgs e)
         {
-
+            scientific = !scientific;
+            if (showFractions && scientific)
+            {
+                showFractions = false;
+                MenuFractions.Checked = false;
+                Properties.Settings.Default.ShowFractions = false;
+            }
+            Properties.Settings.Default.Scientific = scientific;
+            MenuScientific.Checked = scientific;
+            Properties.Settings.Default.Save();
+            inputCounter++;
         }
 
         private void MenuButtonPressed_1Instance(object sender, EventArgs e)
@@ -213,7 +243,7 @@ namespace Calculator
             oneInstance = !oneInstance;
             Properties.Settings.Default.OneInstance = oneInstance;
             Menu1Instance.Checked = oneInstance;
-            SizeComponents();
+            Properties.Settings.Default.Save();
         }
     }
 }
