@@ -116,7 +116,6 @@ namespace Calculator
         private void TextInput_TextChanged(object sender, EventArgs e)
         {
             inputCounter++;
-            Font x = TextInput.Font;
             input = TextInput.Text;
         }
 

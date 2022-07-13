@@ -1317,7 +1317,7 @@ namespace Calculator
             }
 
             answerPiece = stack.Peek();
-            return AnswerToString(stack.Peek(), final);
+            return AnswerToString(answerPiece, final);
         }
     }
 }
