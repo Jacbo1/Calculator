@@ -65,6 +65,9 @@ namespace Calculator
 
                     Func<Fraction, string> convertToScientific = n =>
                     {
+                        if (n == 0)
+                            return "0.0";
+                        
                         int digits;
                         if (n.Numerator >= n.Denominator)
                         {
