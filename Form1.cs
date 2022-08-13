@@ -108,8 +108,7 @@ namespace Calculator
         {
             if (e.Control && e.KeyCode == Keys.V)
             {
-                TextInput.Text += (string)Clipboard.GetData("Text");
-                e.Handled = true;
+                Clipboard.SetText(Clipboard.GetText());
             }
         }
 

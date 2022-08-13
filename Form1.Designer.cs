@@ -37,10 +37,10 @@
             this.MenuToggleWork = new System.Windows.Forms.MenuItem();
             this.Menu1Instance = new System.Windows.Forms.MenuItem();
             this.MenuScientific = new System.Windows.Forms.MenuItem();
+            this.MenuFractions = new System.Windows.Forms.MenuItem();
             this.TextInput = new System.Windows.Forms.RichTextBox();
             this.WorkOutput = new System.Windows.Forms.RichTextBox();
             this.AnswerOutput = new System.Windows.Forms.RichTextBox();
-            this.MenuFractions = new System.Windows.Forms.MenuItem();
             this.SuspendLayout();
             // 
             // timer
@@ -83,6 +83,12 @@
             this.MenuScientific.Index = 2;
             this.MenuScientific.Text = "Scientific";
             this.MenuScientific.Click += new System.EventHandler(this.MenuScientific_Click);
+            // 
+            // MenuFractions
+            // 
+            this.MenuFractions.Index = 3;
+            this.MenuFractions.Text = "Fractions";
+            this.MenuFractions.Click += new System.EventHandler(this.MenuFractions_Click);
             // 
             // TextInput
             // 
@@ -133,12 +139,6 @@
             this.AnswerOutput.Size = new System.Drawing.Size(984, 36);
             this.AnswerOutput.TabIndex = 9;
             this.AnswerOutput.Text = "";
-            // 
-            // MenuFractions
-            // 
-            this.MenuFractions.Index = 3;
-            this.MenuFractions.Text = "Fractions";
-            this.MenuFractions.Click += new System.EventHandler(this.MenuFractions_Click);
             // 
             // Form1
             // 
