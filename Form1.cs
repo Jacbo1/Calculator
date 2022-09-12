@@ -59,6 +59,12 @@ namespace Calculator
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            {
+                var match = Matching.RE_Binary.Match("0b100");
+                Console.WriteLine(match.Success);
+                Console.WriteLine(match.Value);
+            }
+
             // Restore state
             switch (Properties.Settings.Default.State)
             {

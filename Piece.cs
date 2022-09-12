@@ -1,3 +1,4 @@
+using System;
 using System.Text.RegularExpressions;
 
 namespace Calculator
@@ -179,9 +180,8 @@ namespace Calculator
                     Precedence = 5;
                     break;
                 default:
-                    // Check if it is a number
-                    Fraction frac;
-                    if (Fraction.TryParse(piece, out frac))
+                    // Check if it is a hex/binary/number
+                    if (Fraction.TryParse(piece, out Fraction frac))
                     {
                         Type = "num";
                         Value = frac;

@@ -100,7 +100,27 @@ namespace Calculator
         // Methods
         public static Fraction Parse(string s)
         {
-            Match match = Matching.RE_Number.Match(s);
+            // Check if it is a hex number
+            Match match = Matching.RE_Hex.Match(s);
+            if (match.Success)
+            {
+                // Hex number
+                return new Fraction(
+                        Convert.ToInt64(match.Value, 16),
+                        BigInteger.One);
+            }
+
+            // Check if it is a binary number
+            match = Matching.RE_Binary.Match(s);
+            if (match.Success)
+            {
+                // Binary number
+                return new Fraction(
+                        Convert.ToInt64(match.Value, 2),
+                        BigInteger.One);
+            }
+
+            match = Matching.RE_Number.Match(s);
             if (match.Success)
             {
                 // In the form of 12.34

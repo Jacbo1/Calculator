@@ -14,10 +14,12 @@ namespace Calculator
         private const string UNSIGNED_NUM_OR_SCI   = "(" + UNSIGNED_NUMBER + "|" + UNSIGNED_SCI_NOTATION + ")";
         private const string FRACTION              = NUM_OR_SCI + @" \/ " + NUM_OR_SCI;
         private const string UNSIGNED_FRACTION     = UNSIGNED_NUM_OR_SCI + @" \/ " + NUM_OR_SCI;
-        private const string GENERIC_NUM           = "(" + NUMBER + "|" + SCI_NOTATION + "|" + FRACTION + ")";
+        private const string BINARY_NUMBER         = @"0b[01]+";
+        private const string HEX_NUMBER            = @"0x[0-9A-Fa-f]+";
+        private const string GENERIC_NUM           = "(" + HEX_NUMBER + "|" + BINARY_NUMBER + "|" + NUMBER + "|" + SCI_NOTATION + "|" + FRACTION + ")";
         private const string VECTOR                = "<" + GENERIC_NUM + ", ?" + GENERIC_NUM + ", ?" + GENERIC_NUM + ">";
         private const string VECTOR_LOOSE          = @"<[\S ]*?, ?[\S ]*?, ?[\S ]*?>";
-        private const string PIECE_REGEX_RIGHT     = VECTOR_LOOSE + "|" + UNSIGNED_FRACTION + "|" + UNSIGNED_SCI_NOTATION + "|" + UNSIGNED_NUMBER + @"|[+%*/x.^()-])";
+        private const string PIECE_REGEX_RIGHT     = VECTOR_LOOSE + "|" + HEX_NUMBER + "|" + BINARY_NUMBER + "|" + UNSIGNED_SCI_NOTATION + "|" + UNSIGNED_FRACTION + "|" + UNSIGNED_NUMBER + @"|[+%*/x.^()-])";
         private const string PIECES                = @"(sigfig4|length\(|atan2\(|prod\(|getx\(|gety\(|getz\(|clamp\(|round\(|floor|norm\(|min\(|max\(|sum\(|log\(|ceil|sign|sqrt|asin|acos|atan|sin|cos|tan|rad|deg|abs|ln\(|pi|e|" + PIECE_REGEX_RIGHT;
         
         internal static readonly Regex
@@ -29,6 +31,8 @@ namespace Calculator
             RE_Vector           = new Regex("^" + VECTOR + "$", RegexOptions.Compiled),                      // num1 = groups[1], num2 = groups[13], num3 = groups[25]
             RE_VectorLoose      = new Regex(@"^<([\S ]*?), ?([\S ]*?), ?([\S ]*?)>$", RegexOptions.Compiled),// num1 = groups[1], num2 = groups[2],  num3 = groups[3]
             RE_VectorFraction   = new Regex(@"^<(" + FRACTION + "), ?(" + FRACTION + "), ?(" + FRACTION + ")>$", RegexOptions.Compiled),  // num1 = groups[1], num2 = groups[10], num3 = groups[19]
+            RE_Binary           = new Regex(@"(?<=^0b)[01]+$", RegexOptions.Compiled),
+            RE_Hex              = new Regex(@"(?<=^0x)[0-9A-Fa-f]+$", RegexOptions.Compiled),
             RE_DefaultPieces    = new Regex(PIECES, RegexOptions.Compiled);
         
         private static readonly string[] defaultPieces = new string[] { "sigfig4", @"length\(", @"atan2\(", @"prod\(", @"getx\(", @"gety\(", @"getz\(", @"clamp\(", @"round\(", "floor", @"norm\(", @"min\(", @"max\(", @"sum\(", @"log\(", "ceil", "sign", "sqrt", "asin", "acos", "atan", "sin", "cos", "tan", "rad", "deg", "abs", @"ln\(", "pi", "e" };
