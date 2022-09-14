@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text.RegularExpressions;
 
 namespace Calculator
@@ -58,6 +59,9 @@ namespace Calculator
                                 throw new FunctionException(funcName, "Unkown function.");
                             case "min":
                             case "max":
+                            case "band":
+                            case "bor":
+                            case "bxor":
                                 foreach (string section in sections)
                                 {
                                     formulas.Add(new Formula(section, vars));
@@ -98,6 +102,7 @@ namespace Calculator
                                 }
                                 return;
                             case "round":
+                            case "bnot":
                                 // num, digits?
                                 if (sections.Count == 1)
                                 {
@@ -156,6 +161,7 @@ namespace Calculator
                                 formulas.Add(new Formula(sections[0], vars));
                                 return;
                             case "atan2":
+                            case "bshift":
                                 if (sections.Count < 2)
                                 {
                                     throw new FunctionException(funcName, "Not enough arguments.");
@@ -219,10 +225,69 @@ namespace Calculator
             return work;
         }
 
+        private static Piece OperateBigInteger(Piece a, Piece b, Func<BigInteger, BigInteger, BigInteger> op)
+        //private static Piece OperateBigInteger(Piece a, Piece b, Func< op)
+        {
+            bool isNumA = a.Type == "num";
+            bool isNumB = b.Type == "num";
+
+            if (isNumA && isNumB)
+                return new Piece(op((BigInteger)(Fraction)a.Value, (BigInteger)(Fraction)b.Value));
+
+            if (isNumA && !isNumB)
+            {
+                BigInteger a1 = (BigInteger)(Fraction)a.Value;
+                Vector b1 = (Vector)b.Value;
+                return new Piece(new Vector(op(a1, (BigInteger)b1.X), op(a1, (BigInteger)b1.Y), op(a1, (BigInteger)b1.Z)));
+            }
+
+            if (!isNumA && isNumB)
+            {
+                Vector a1 = (Vector)a.Value;
+                BigInteger b1 = (BigInteger)(Fraction)b.Value;
+                return new Piece(new Vector(op((BigInteger)a1.X, b1), op((BigInteger)a1.Y, b1), op((BigInteger)a1.Z, b1)));
+            }
+
+            {
+                Vector a1 = (Vector)a.Value;
+                Vector b1 = (Vector)b.Value;
+                return new Piece(new Vector(op((BigInteger)a1.X, (BigInteger)b1.X), op((BigInteger)a1.Y, (BigInteger)b1.Y), op((BigInteger)a1.Z, (BigInteger)b1.Z)));
+            }
+        }
+
         public Piece Calculate(out string workOutput)
         {
             try
             {
+                Func<Piece, Piece, Func<Fraction, Fraction, Fraction>, Piece> operate = (a, b, op) =>
+                {
+                    bool isNum = a.Type == "num";
+                    bool isMinNum = b.Type == "num";
+
+                    if (isNum && isMinNum)
+                        return new Piece(op((Fraction)a.Value, (Fraction)b.Value));
+
+                    if (isNum && !isMinNum)
+                    {
+                        Fraction a1 = (Fraction)a.Value;
+                        Vector b1 = (Vector)b.Value;
+                        return new Piece(new Vector(op(a1, b1.X), op(a1, b1.Y), op(a1, b1.Z)));
+                    }
+
+                    if (!isNum && isMinNum)
+                    {
+                        Vector a1 = (Vector)a.Value;
+                        Fraction b1 = (Fraction)b.Value;
+                        return new Piece(new Vector(op(a1.X, b1), op(a1.Y, b1), op(a1.Z, b1)));
+                    }
+
+                    {
+                        Vector a1 = (Vector)a.Value;
+                        Vector b1 = (Vector)b.Value;
+                        return new Piece(new Vector(op(a1.X, b1.X), op(a1.Y, b1.Y), op(a1.Z, b1.Z)));
+                    }
+                };
+
                 workOutput = "";
                 switch (funcName)
                 {
@@ -351,75 +416,75 @@ namespace Calculator
                         }
 
                     case "log":
-                    // Log
-                    // base?, num
-                    {
-                        if (formulas.Count == 1)
+                        // Log
+                        // base?, num
                         {
-                            // Calculate log base 10
-                            workOutput += CalcFormula(0, out Piece num);
+                            if (formulas.Count == 1)
+                            {
+                                // Calculate log base 10
+                                workOutput += CalcFormula(0, out Piece num);
 
-                            if (num.Type == "num")
-                            {
-                                // Number
-                                return new Piece(Math.Log10((double)(Fraction)num.Value));
+                                if (num.Type == "num")
+                                {
+                                    // Number
+                                    return new Piece(Math.Log10((double)(Fraction)num.Value));
+                                }
+                                else if (num.Type == "vec")
+                                {
+                                    // Vector
+                                    Vector numVec = (Vector)num.Value;
+                                    return new Piece(new Vector(
+                                        Math.Log10((double)numVec.X),
+                                        Math.Log10((double)numVec.Y),
+                                        Math.Log10((double)numVec.Z)));
+                                }
+                                else
+                                {
+                                    throw new FunctionException($"Tried to take log log of type {num.Type}.");
+                                }
                             }
-                            else if (num.Type == "vec")
-                            {
-                                // Vector
-                                Vector numVec = (Vector)num.Value;
-                                return new Piece(new Vector(
-                                    Math.Log10((double)numVec.X),
-                                    Math.Log10((double)numVec.Y),
-                                    Math.Log10((double)numVec.Z)));
-                            }
-                            else
-                            {
-                                throw new FunctionException($"Tried to take log log of type {num.Type}.");
-                            }
-                        }
-                        // Calculate log with base
-                        {
-                            workOutput += CalcFormula(0, out Piece newBase);
-                            workOutput += CalcFormula(1, out Piece num);
-
                             // Calculate log with base
-                            bool isNum = num.Type == "num";
-                            bool isBaseNum = newBase.Type == "num";
+                            {
+                                workOutput += CalcFormula(0, out Piece newBase);
+                                workOutput += CalcFormula(1, out Piece num);
 
-                            if (isNum && isBaseNum)
-                            {
-                                return new Piece(Math.Log(
-                                    (double)(Fraction)num.Value,
-                                    (double)(Fraction)newBase.Value));
-                            }
-                            else if (isNum && !isBaseNum)
-                            {
-                                Vector newBaseVec = (Vector)newBase.Value;
-                                return new Piece(new Vector(
-                                    Math.Log((double)(Fraction)num.Value, (double)newBaseVec.X),
-                                    Math.Log((double)(Fraction)num.Value, (double)newBaseVec.Y),
-                                    Math.Log((double)(Fraction)num.Value, (double)newBaseVec.Z)));
-                            }
-                            else if (!isNum && isBaseNum)
-                            {
-                                Vector numVec = (Vector)num.Value;
-                                return new Piece(new Vector(
-                                    Math.Log((double)numVec.X, (double)(Fraction)newBase.Value),
-                                    Math.Log((double)numVec.Y, (double)(Fraction)newBase.Value),
-                                    Math.Log((double)numVec.Z, (double)(Fraction)newBase.Value)));
-                            }
+                                // Calculate log with base
+                                bool isNum = num.Type == "num";
+                                bool isBaseNum = newBase.Type == "num";
 
-                            {
-                                Vector vec = (Vector)num.Value;
-                                Vector newBaseVec = (Vector)newBase.Value;
-                                return new Piece(new Vector(
-                                    Math.Log((double)vec.X, (double)newBaseVec.X),
-                                    Math.Log((double)vec.Y, (double)newBaseVec.Y),
-                                    Math.Log((double)vec.Z, (double)newBaseVec.Z)));
+                                if (isNum && isBaseNum)
+                                {
+                                    return new Piece(Math.Log(
+                                        (double)(Fraction)num.Value,
+                                        (double)(Fraction)newBase.Value));
+                                }
+                                else if (isNum && !isBaseNum)
+                                {
+                                    Vector newBaseVec = (Vector)newBase.Value;
+                                    return new Piece(new Vector(
+                                        Math.Log((double)(Fraction)num.Value, (double)newBaseVec.X),
+                                        Math.Log((double)(Fraction)num.Value, (double)newBaseVec.Y),
+                                        Math.Log((double)(Fraction)num.Value, (double)newBaseVec.Z)));
+                                }
+                                else if (!isNum && isBaseNum)
+                                {
+                                    Vector numVec = (Vector)num.Value;
+                                    return new Piece(new Vector(
+                                        Math.Log((double)numVec.X, (double)(Fraction)newBase.Value),
+                                        Math.Log((double)numVec.Y, (double)(Fraction)newBase.Value),
+                                        Math.Log((double)numVec.Z, (double)(Fraction)newBase.Value)));
+                                }
+
+                                {
+                                    Vector vec = (Vector)num.Value;
+                                    Vector newBaseVec = (Vector)newBase.Value;
+                                    return new Piece(new Vector(
+                                        Math.Log((double)vec.X, (double)newBaseVec.X),
+                                        Math.Log((double)vec.Y, (double)newBaseVec.Y),
+                                        Math.Log((double)vec.Z, (double)newBaseVec.Z)));
+                                }
                             }
                         }
-                    }
 
                     case "round":
                         // Round
@@ -789,7 +854,7 @@ namespace Calculator
                     case "ln":
                         {
                             workOutput += CalcFormula(0, out Piece n);
-                            
+
                             if (n.Type == "num")
                             {
                                 return new Piece(Math.Log((double)(Fraction)n.Value));
@@ -802,6 +867,229 @@ namespace Calculator
                                     Math.Log((double)v.Y),
                                     Math.Log((double)v.Z)));
                             }
+                        }
+                    case "band":
+                        {
+                            // Bitwise AND
+                            if (formulas.Count == 0)
+                            {
+                                return new Piece(0);
+                            }
+
+                            // Initialize
+                            workOutput += CalcFormula(0, out Piece result);
+
+                            for (int i = 1; i < formulas.Count; i++)
+                            {
+                                workOutput += CalcFormula(i, out Piece cur);
+
+                                bool isNum1 = cur.Type == "num";
+                                bool isNum2 = result.Type == "num";
+
+                                if (isNum1 && isNum2)
+                                {
+                                    result = new Piece((BigInteger)(Fraction)cur.Value & (BigInteger)(Fraction)result.Value);
+                                    continue;
+                                }
+                                
+                                if (isNum1 && !isNum2)
+                                {
+                                    BigInteger cur1 = (BigInteger)(Fraction)cur.Value;
+                                    Vector result1 = (Vector)result.Value;
+                                    result = new Piece(new Vector(cur1 & (BigInteger)result1.X, cur1 & (BigInteger)result1.Y, cur1 & (BigInteger)result1.Z));
+                                    continue;
+                                }
+
+                                if (!isNum1 && isNum2)
+                                {
+                                    Vector cur1 = (Vector)cur.Value;
+                                    BigInteger result1 = (BigInteger)(Fraction)result.Value;
+                                    result = new Piece(new Vector((BigInteger)cur1.X & result1, (BigInteger)cur1.Y & result1, (BigInteger)cur1.Z & result1));
+                                    continue;
+                                }
+
+                                {
+                                    Vector cur1 = (Vector)cur.Value;
+                                    Vector result1 = (Vector)result.Value;
+                                    result = new Piece(new Vector((BigInteger)cur1.X & (BigInteger)result1.X, (BigInteger)cur1.Y & (BigInteger)result1.Y, (BigInteger)cur1.Z & (BigInteger)result1.Z));
+                                }
+                            }
+
+                            return result;
+                        }
+                    case "bor":
+                        {
+                            // Bitwise OR
+                            if (formulas.Count == 0)
+                            {
+                                return new Piece(0);
+                            }
+
+                            // Initialize
+                            workOutput += CalcFormula(0, out Piece result);
+
+                            for (int i = 1; i < formulas.Count; i++)
+                            {
+                                workOutput += CalcFormula(i, out Piece cur);
+
+                                bool isNum1 = cur.Type == "num";
+                                bool isNum2 = result.Type == "num";
+
+                                if (isNum1 && isNum2)
+                                {
+                                    result = new Piece((BigInteger)(Fraction)cur.Value | ((BigInteger)(Fraction)result.Value));
+                                    continue;
+                                }
+                                
+                                if (isNum1 && !isNum2)
+                                {
+                                    BigInteger cur1 = (BigInteger)(Fraction)cur.Value;
+                                    Vector result1 = (Vector)result.Value;
+                                    result = new Piece(new Vector(cur1 | (BigInteger)result1.X, cur1 | (BigInteger)result1.Y, cur1 | (BigInteger)result1.Z));
+                                    continue;
+                                }
+
+                                if (!isNum1 && isNum2)
+                                {
+                                    Vector cur1 = (Vector)cur.Value;
+                                    BigInteger result1 = (BigInteger)(Fraction)result.Value;
+                                    result = new Piece(new Vector((BigInteger)cur1.X | result1, (BigInteger)cur1.Y | result1, (BigInteger)cur1.Z | result1));
+                                    continue;
+                                }
+
+                                {
+                                    Vector cur1 = (Vector)cur.Value;
+                                    Vector result1 = (Vector)result.Value;
+                                    result = new Piece(new Vector((BigInteger)cur1.X | (BigInteger)result1.X, (BigInteger)cur1.Y | (BigInteger)result1.Y, (BigInteger)cur1.Z | (BigInteger)result1.Z));
+                                }
+                            }
+
+                            return result;
+                        }
+                    case "bxor":
+                        {
+                            // Bitwise XOR
+                            if (formulas.Count == 0)
+                            {
+                                return new Piece(0);
+                            }
+
+                            // Initialize
+                            workOutput += CalcFormula(0, out Piece result);
+
+                            for (int i = 1; i < formulas.Count; i++)
+                            {
+                                workOutput += CalcFormula(i, out Piece cur);
+
+                                bool isNum1 = cur.Type == "num";
+                                bool isNum2 = result.Type == "num";
+
+                                if (isNum1 && isNum2)
+                                {
+                                    result = new Piece((BigInteger)(Fraction)cur.Value ^ ((BigInteger)(Fraction)result.Value));
+                                    continue;
+                                }
+                                
+                                if (isNum1 && !isNum2)
+                                {
+                                    BigInteger cur1 = (BigInteger)(Fraction)cur.Value;
+                                    Vector result1 = (Vector)result.Value;
+                                    result = new Piece(new Vector(cur1 ^ (BigInteger)result1.X, cur1 ^ (BigInteger)result1.Y, cur1 ^ (BigInteger)result1.Z));
+                                    continue;
+                                }
+
+                                if (!isNum1 && isNum2)
+                                {
+                                    Vector cur1 = (Vector)cur.Value;
+                                    BigInteger result1 = (BigInteger)(Fraction)result.Value;
+                                    result = new Piece(new Vector((BigInteger)cur1.X ^ result1, (BigInteger)cur1.Y ^ result1, (BigInteger)cur1.Z ^ result1));
+                                    continue;
+                                }
+
+                                {
+                                    Vector cur1 = (Vector)cur.Value;
+                                    Vector result1 = (Vector)result.Value;
+                                    result = new Piece(new Vector((BigInteger)cur1.X ^ (BigInteger)result1.X, (BigInteger)cur1.Y ^ (BigInteger)result1.Y, (BigInteger)cur1.Z ^ (BigInteger)result1.Z));
+                                }
+                            }
+
+                            return result;
+                        }
+                    case "bshift":
+                        {
+                            // Bitshift
+                            workOutput += CalcFormula(0, out Piece piece);
+                            workOutput += CalcFormula(1, out Piece bits);
+
+                            bool isNum1 = piece.Type == "num";
+                            bool isNum2 = bits.Type == "num";
+
+                            if (isNum1 && isNum2)
+                            {
+                                BigInteger num = (BigInteger)(Fraction)piece.Value;
+                                int shift = (int)(Fraction)bits.Value;
+
+                                return new Piece(num << shift);
+                            }
+
+                            if (isNum1 && !isNum2)
+                            {
+                                BigInteger num = (BigInteger)(Fraction)piece.Value;
+                                Vector shiftVec = (Vector)bits.Value;
+                                int shiftx = (int)shiftVec.X;
+                                int shifty = (int)shiftVec.Y;
+                                int shiftz = (int)shiftVec.Z;
+
+                                return new Piece(new Vector(num << shiftx, num << shifty, num << shiftz));
+                            }
+
+                            if (!isNum1 && isNum2)
+                            {
+                                Vector num = (Vector)piece.Value;
+                                int shift = (int)(Fraction)bits.Value;
+                                return new Piece(new Vector((BigInteger)num.X << shift, (BigInteger)num.Y << shift, (BigInteger)num.Z << shift));
+                            }
+
+                            {
+                                Vector num = (Vector)piece.Value;
+                                Vector shiftVec = (Vector)bits.Value;
+                                int shiftx = (int)shiftVec.X;
+                                int shifty = (int)shiftVec.Y;
+                                int shiftz = (int)shiftVec.Z;
+
+                                return new Piece(new Vector((BigInteger)num.X << shiftx, (BigInteger)num.Y << shifty, (BigInteger)num.Z << shiftz));
+                            }
+                        }
+                    case "bnot":
+                        {
+                            // Bitwise NOT
+                            workOutput += CalcFormula(0, out Piece piece);
+                            int? bits = null;
+
+                            if (formulas.Count == 2)
+                            {
+                                workOutput += CalcFormula(1, out Piece bitPiece);
+                                if (bitPiece.Type == "num")
+                                {
+                                    bits = (int)(Fraction)bitPiece.Value;
+                                }
+                            }
+
+                            if (piece.Type == "num")
+                            {
+                                BigInteger num = (BigInteger)(Fraction)piece.Value;
+                                return new Piece(num ^ (BigInteger.Pow(2, bits ?? (int)Math.Floor(BigInteger.Log(num, 2) + 1)) - 1));
+                            }
+
+                            Vector vec = (Vector)piece.Value;
+                            BigInteger x = (BigInteger)vec.X;
+                            BigInteger y = (BigInteger)vec.Y;
+                            BigInteger z = (BigInteger)vec.Z;
+                            return new Piece(new Vector(
+                                    x ^ (BigInteger.Pow(2, bits ?? (int)Math.Floor(BigInteger.Log(x, 2) + 1)) - 1),
+                                    y ^ (BigInteger.Pow(2, bits ?? (int)Math.Floor(BigInteger.Log(y, 2) + 1)) - 1),
+                                    z ^ (BigInteger.Pow(2, bits ?? (int)Math.Floor(BigInteger.Log(z, 2) + 1)) - 1)
+                                ));
                         }
                 }
                 return null;

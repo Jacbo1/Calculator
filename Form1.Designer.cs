@@ -36,8 +36,12 @@
             this.menuItem1 = new System.Windows.Forms.MenuItem();
             this.MenuToggleWork = new System.Windows.Forms.MenuItem();
             this.Menu1Instance = new System.Windows.Forms.MenuItem();
-            this.MenuScientific = new System.Windows.Forms.MenuItem();
-            this.MenuFractions = new System.Windows.Forms.MenuItem();
+            this.menuItem2 = new System.Windows.Forms.MenuItem();
+            this.MenuOutputDefault = new System.Windows.Forms.MenuItem();
+            this.MenuOutputScientific = new System.Windows.Forms.MenuItem();
+            this.MenuOutputFractions = new System.Windows.Forms.MenuItem();
+            this.MenuOutputBinary = new System.Windows.Forms.MenuItem();
+            this.MenuOutputHex = new System.Windows.Forms.MenuItem();
             this.TextInput = new System.Windows.Forms.RichTextBox();
             this.WorkOutput = new System.Windows.Forms.RichTextBox();
             this.AnswerOutput = new System.Windows.Forms.RichTextBox();
@@ -55,16 +59,15 @@
             // mainMenu1
             // 
             this.mainMenu1.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-            this.menuItem1});
+            this.menuItem1,
+            this.menuItem2});
             // 
             // menuItem1
             // 
             this.menuItem1.Index = 0;
             this.menuItem1.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
             this.MenuToggleWork,
-            this.Menu1Instance,
-            this.MenuScientific,
-            this.MenuFractions});
+            this.Menu1Instance});
             this.menuItem1.Text = "Settings";
             // 
             // MenuToggleWork
@@ -78,17 +81,46 @@
             this.Menu1Instance.Index = 1;
             this.Menu1Instance.Text = "Only 1 instance";
             // 
-            // MenuScientific
+            // menuItem2
             // 
-            this.MenuScientific.Index = 2;
-            this.MenuScientific.Text = "Scientific";
-            this.MenuScientific.Click += new System.EventHandler(this.MenuScientific_Click);
+            this.menuItem2.Index = 1;
+            this.menuItem2.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.MenuOutputDefault,
+            this.MenuOutputScientific,
+            this.MenuOutputFractions,
+            this.MenuOutputBinary,
+            this.MenuOutputHex});
+            this.menuItem2.Text = "Output";
             // 
-            // MenuFractions
+            // MenuOutputDefault
             // 
-            this.MenuFractions.Index = 3;
-            this.MenuFractions.Text = "Fractions";
-            this.MenuFractions.Click += new System.EventHandler(this.MenuFractions_Click);
+            this.MenuOutputDefault.Index = 0;
+            this.MenuOutputDefault.Text = "Default";
+            this.MenuOutputDefault.Click += new System.EventHandler(this.MenuOutputDefault_Click);
+            // 
+            // MenuOutputScientific
+            // 
+            this.MenuOutputScientific.Index = 1;
+            this.MenuOutputScientific.Text = "Scientific";
+            this.MenuOutputScientific.Click += new System.EventHandler(this.MenuOutputScientific_Click);
+            // 
+            // MenuOutputFractions
+            // 
+            this.MenuOutputFractions.Index = 2;
+            this.MenuOutputFractions.Text = "Fractions";
+            this.MenuOutputFractions.Click += new System.EventHandler(this.MenuOutputFractions_Click);
+            // 
+            // MenuOutputBinary
+            // 
+            this.MenuOutputBinary.Index = 3;
+            this.MenuOutputBinary.Text = "Binary";
+            this.MenuOutputBinary.Click += new System.EventHandler(this.MenuOutputBinary_Click);
+            // 
+            // MenuOutputHex
+            // 
+            this.MenuOutputHex.Index = 4;
+            this.MenuOutputHex.Text = "Hexadecimal";
+            this.MenuOutputHex.Click += new System.EventHandler(this.MenuOutputHex_Click);
             // 
             // TextInput
             // 
@@ -170,8 +202,12 @@
         private System.Windows.Forms.RichTextBox TextInput;
         private System.Windows.Forms.RichTextBox WorkOutput;
         private System.Windows.Forms.RichTextBox AnswerOutput;
-        private System.Windows.Forms.MenuItem MenuScientific;
-        private System.Windows.Forms.MenuItem MenuFractions;
+        private System.Windows.Forms.MenuItem menuItem2;
+        private System.Windows.Forms.MenuItem MenuOutputDefault;
+        private System.Windows.Forms.MenuItem MenuOutputScientific;
+        private System.Windows.Forms.MenuItem MenuOutputFractions;
+        private System.Windows.Forms.MenuItem MenuOutputBinary;
+        private System.Windows.Forms.MenuItem MenuOutputHex;
     }
 }
 

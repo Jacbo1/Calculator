@@ -695,17 +695,9 @@ namespace Calculator
             return s;
         }
 
-        public string Calculate()
-        {
-            return Calculate(out _, false, false, false);
-        }
+        public string Calculate() => Calculate(out _);
 
-        public string Calculate(out string workOutput)
-        {
-            return Calculate(out workOutput, false, false, false);
-        }
-
-        public string Calculate(out string workOutput, bool isSub, bool final, bool minWork) => Calculate(out workOutput, isSub, final, minWork, out Piece _);
+        public string Calculate(out string workOutput, bool isSub = false, bool final = false, bool minWork = false) => Calculate(out workOutput, isSub, final, minWork, out Piece _);
 
         public string Calculate(out string workOutput, bool isSub, bool final, bool minWork, out Piece answerPiece)
         {

@@ -39,16 +39,6 @@ namespace Calculator
         {
             switch (piece)
             {
-                case "sigfig4":
-                    Type = "func1";
-                    Value = "sigfig4";
-                    Precedence = 7;
-                    break;
-                case "sign":
-                    Type = "func1";
-                    Value = "sign";
-                    Precedence = 7;
-                    break;
                 case "e":
                     Type = "const";
                     Value = "e";
@@ -69,99 +59,36 @@ namespace Calculator
                     Type = "rpar";
                     Value = ")";
                     break;
+                case "sigfig4":
+                case "sign":
                 case "sin":
-                    Type = "func1";
-                    Value = "sin";
-                    Precedence = 7;
-                    break;
                 case "asin":
-                    Type = "func1";
-                    Value = "asin";
-                    Precedence = 7;
-                    break;
                 case "cos":
-                    Type = "func1";
-                    Value = "cos";
-                    Precedence = 7;
-                    break;
                 case "acos":
-                    Type = "func1";
-                    Value = "acos";
-                    Precedence = 7;
-                    break;
                 case "tan":
-                    Type = "func1";
-                    Value = "tan";
-                    Precedence = 7;
-                    break;
                 case "atan":
-                    Type = "func1";
-                    Value = "atan";
-                    Precedence = 7;
-                    break;
                 case "deg":
-                    Type = "func1";
-                    Value = "deg";
-                    Precedence = 7;
-                    break;
                 case "rad":
-                    Type = "func1";
-                    Value = "rad";
-                    Precedence = 7;
-                    break;
                 case "abs":
-                    Type = "func1";
-                    Value = "abs";
-                    Precedence = 7;
-                    break;
                 case "floor":
-                    Type = "func1";
-                    Value = "floor";
-                    Precedence = 7;
-                    break;
-                case "ceil":
-                    Type = "func1";
-                    Value = "ceil";
-                    Precedence = 7;
-                    break;
                 case "round":
-                    Type = "func1";
-                    Value = "round";
-                    Precedence = 7;
-                    break;
                 case "sqrt":
                     Type = "func1";
-                    Value = "sqrt";
+                    Value = piece;
                     Precedence = 7;
                     break;
                 case "+":
-                    Type = "op";
-                    Value = "+";
-                    Precedence = 1;
-                    break;
                 case "-":
                     Type = "op";
-                    Value = "-";
+                    Value = piece;
                     Precedence = 1;
                     break;
                 case "*":
-                    Type = "op";
-                    Value = "*";
-                    Precedence = 2;
-                    break;
                 case "/":
-                    Type = "op";
-                    Value = "/";
-                    Precedence = 2;
-                    break;
                 case "x":
-                    Type = "op";
-                    Value = "x";
-                    Precedence = 2;
-                    break;
                 case ".":
                     Type = "op";
-                    Value = ".";
+                    Value = piece;
                     Precedence = 2;
                     break;
                 case "%":

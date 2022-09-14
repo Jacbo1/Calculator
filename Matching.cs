@@ -20,7 +20,7 @@ namespace Calculator
         private const string VECTOR                = "<" + GENERIC_NUM + ", ?" + GENERIC_NUM + ", ?" + GENERIC_NUM + ">";
         private const string VECTOR_LOOSE          = @"<[\S ]*?, ?[\S ]*?, ?[\S ]*?>";
         private const string PIECE_REGEX_RIGHT     = VECTOR_LOOSE + "|" + HEX_NUMBER + "|" + BINARY_NUMBER + "|" + UNSIGNED_SCI_NOTATION + "|" + UNSIGNED_FRACTION + "|" + UNSIGNED_NUMBER + @"|[+%*/x.^()-])";
-        private const string PIECES                = @"(sigfig4|length\(|atan2\(|prod\(|getx\(|gety\(|getz\(|clamp\(|round\(|floor|norm\(|min\(|max\(|sum\(|log\(|ceil|sign|sqrt|asin|acos|atan|sin|cos|tan|rad|deg|abs|ln\(|pi|e|" + PIECE_REGEX_RIGHT;
+        private const string PIECES                = @"(band\(|bor\(|bnot\(|bxor\(|bshift\(|sigfig4|length\(|atan2\(|prod\(|getx\(|gety\(|getz\(|clamp\(|round\(|floor|norm\(|min\(|max\(|sum\(|log\(|ceil|sign|sqrt|asin|acos|atan|sin|cos|tan|rad|deg|abs|ln\(|pi|e|" + PIECE_REGEX_RIGHT;
         
         internal static readonly Regex
             RE_TrailingZeroes   = new Regex(@"(?<=\d+)(\.|(?<=\.\d+))0+($|[^\d])", RegexOptions.Compiled),
@@ -35,7 +35,7 @@ namespace Calculator
             RE_Hex              = new Regex(@"(?<=^0x)[0-9A-Fa-f]+$", RegexOptions.Compiled),
             RE_DefaultPieces    = new Regex(PIECES, RegexOptions.Compiled);
         
-        private static readonly string[] defaultPieces = new string[] { "sigfig4", @"length\(", @"atan2\(", @"prod\(", @"getx\(", @"gety\(", @"getz\(", @"clamp\(", @"round\(", "floor", @"norm\(", @"min\(", @"max\(", @"sum\(", @"log\(", "ceil", "sign", "sqrt", "asin", "acos", "atan", "sin", "cos", "tan", "rad", "deg", "abs", @"ln\(", "pi", "e" };
+        private static readonly string[] defaultPieces = MergeSort(new string[] { @"band\(", @"bor\(", @"bnot\(", @"bxor\(", @"bshift\(", "sigfig4", @"length\(", @"atan2\(", @"prod\(", @"getx\(", @"gety\(", @"getz\(", @"clamp\(", @"round\(", "floor", @"norm\(", @"min\(", @"max\(", @"sum\(", @"log\(", "ceil", "sign", "sqrt", "asin", "acos", "atan", "sin", "cos", "tan", "rad", "deg", "abs", @"ln\(", "pi", "e" });
 
         
         internal static bool IsOperator(string s)
@@ -72,6 +72,11 @@ namespace Calculator
                 case "norm(":
                 case "atan2(":
                 case "ln(":
+                case "band(":
+                case "bor(":
+                case "bxor(":
+                case "bshift(":
+                case "bnot(":
                     return true;
             }
             return false;
@@ -252,6 +257,12 @@ namespace Calculator
                 MergeSort(arr, m + 1, r);
                 Merge(arr, l, m, r);
             }
+        }
+
+        private static string[] MergeSort(string[] arr)
+        {
+            MergeSort(arr, 0, arr.Length - 1);
+            return arr;
         }
 
         internal static string Answer2Decimal(string answer)
