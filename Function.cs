@@ -4,16 +4,21 @@ using System.Numerics;
 
 namespace Calculator
 {
-    internal class Function
+    internal struct Function
     {
         public Dictionary<string, Piece> Vars;
-        public List<Formula> Formulas = new List<Formula> ();
+        public List<Formula> Formulas;
+        public string FuncName, OriginalString;
         private List<string> argVars;
-        public string FuncName = "NULL",
-            OriginalString = "";
 
         public Function(string raw, Dictionary<string, Piece> vars, out int stop)
         {
+            Formulas = new List<Formula>();
+            FuncName = "NULL";
+            OriginalString = "";
+            Vars = null;
+            argVars = null;
+
             stop = -1;
 
             List<string> sections = new List<string>();
@@ -34,9 +39,9 @@ namespace Calculator
                         continue;
                     }
                 }
-                else if(c == '<')
+                else if (c == '<')
                     openCount++;
-                else if(c == '>' || c == ')')
+                else if (c == '>' || c == ')')
                 {
                     openCount--;
                     if (openCount == 0)
@@ -188,35 +193,6 @@ namespace Calculator
         {
             try
             {
-                Func<Piece, Piece, Func<Fraction, Fraction, Fraction>, Piece> operate = (a, b, op) =>
-                {
-                    bool isNum = a.Type == "num";
-                    bool isMinNum = b.Type == "num";
-
-                    if (isNum && isMinNum)
-                        return new Piece(op((Fraction)a.Value, (Fraction)b.Value));
-
-                    if (isNum && !isMinNum)
-                    {
-                        Fraction a1 = (Fraction)a.Value;
-                        Vector b1 = (Vector)b.Value;
-                        return new Piece(new Vector(op(a1, b1.X), op(a1, b1.Y), op(a1, b1.Z)));
-                    }
-
-                    if (!isNum && isMinNum)
-                    {
-                        Vector a1 = (Vector)a.Value;
-                        Fraction b1 = (Fraction)b.Value;
-                        return new Piece(new Vector(op(a1.X, b1), op(a1.Y, b1), op(a1.Z, b1)));
-                    }
-
-                    {
-                        Vector a1 = (Vector)a.Value;
-                        Vector b1 = (Vector)b.Value;
-                        return new Piece(new Vector(op(a1.X, b1.X), op(a1.Y, b1.Y), op(a1.Z, b1.Z)));
-                    }
-                };
-
                 workOutput = "";
                 switch (FuncName)
                 {
@@ -386,7 +362,7 @@ namespace Calculator
                             if (Formulas.Count == 1)
                                 // Round to integer
                                 return num.Type == "num" ?
-                                    new Piece(Fraction.Round((Fraction)num.Value)) : 
+                                    new Piece(Fraction.Round((Fraction)num.Value)) :
                                     new Piece(Utils.Op((Vector)num.Value, Fraction.Round));
 
                             // Round to digits
@@ -410,7 +386,7 @@ namespace Calculator
                             workOutput += CalcFormula(0, out Piece min);
                             if (min.Type == "const")
                                 min = new Piece(min.ConstValue);
-                            else  if (min.Type != "num")
+                            else if (min.Type != "num")
                                 throw new FunctionException(FuncName, "Lower bound must be a number.");
 
                             workOutput += CalcFormula(1, out Piece max);
@@ -460,7 +436,7 @@ namespace Calculator
                                 {
                                     subFormulas[i].SetVar(indexVarName, newIndexPiece);
                                     string subanswer = subFormulas[i].Calculate();
-                                    
+
                                     if (Fraction.TryParse(subanswer, out Fraction? subindex))
                                         Formulas[2].formula += (int)subindex + substrings[i + 1];
                                     else
@@ -702,7 +678,7 @@ namespace Calculator
                                     result = new Piece((BigInteger)(Fraction)cur.Value & (BigInteger)(Fraction)result.Value);
                                     continue;
                                 }
-                                
+
                                 if (isNum1 && !isNum2)
                                 {
                                     BigInteger cur1 = (BigInteger)(Fraction)cur.Value;
@@ -749,7 +725,7 @@ namespace Calculator
                                     result = new Piece((BigInteger)(Fraction)cur.Value | ((BigInteger)(Fraction)result.Value));
                                     continue;
                                 }
-                                
+
                                 if (isNum1 && !isNum2)
                                 {
                                     BigInteger cur1 = (BigInteger)(Fraction)cur.Value;
@@ -796,7 +772,7 @@ namespace Calculator
                                     result = new Piece((BigInteger)(Fraction)cur.Value ^ ((BigInteger)(Fraction)result.Value));
                                     continue;
                                 }
-                                
+
                                 if (isNum1 && !isNum2)
                                 {
                                     BigInteger cur1 = (BigInteger)(Fraction)cur.Value;
@@ -921,13 +897,13 @@ namespace Calculator
                         if (openCount < 0)
                             return i - 1;
                         break;
-                    default: 
+                    default:
                         if ((!xIsVar || c != 'x') && Matching.IsOperator(c.ToString()) && openCount <= 0)
                             return i - 1;
                         break;
                 }
             }
-            
+
             return input.Length - 1;
         }
 
