@@ -1,20 +1,25 @@
-using System;
+using System.Numerics;
 using System.Text.RegularExpressions;
 
 namespace Calculator
 {
-    internal class Piece
+    internal struct Piece
     {
         public string Type;
         public object Value;
-        public int Precedence = -1;
-        public Fraction ConstValue;
-        public bool IsOperand = false;
-        public bool IsVar = false;
+        public int Precedence;
+        public Fraction? ConstValue;
+        public bool IsOperand;
+        public bool IsVar;
         public string VarName;
 
         public Piece(Fraction num)
         {
+            Precedence = -1;
+            IsVar = false;
+            ConstValue = null;
+            VarName = null;
+
             Type = "num";
             Value = num;
             IsOperand = true;
@@ -22,6 +27,11 @@ namespace Calculator
 
         public Piece(Vector vec)
         {
+            Precedence = -1;
+            IsVar = false;
+            ConstValue = null;
+            VarName = null;
+
             Type = "vec";
             Value = vec;
             IsOperand = true;
@@ -29,14 +39,24 @@ namespace Calculator
 
         public Piece(Function func)
         {
+            IsVar = false;
+            ConstValue = null;
+            VarName = null;
+
             Type = "func";
             Value = func;
-            //IsOperand = true;
+            IsOperand = false;
             Precedence = 8;
         }
 
         public Piece(string piece)
         {
+            IsVar = false;
+            ConstValue = null;
+            IsOperand = false;
+            Precedence = -1;
+            VarName = null;
+
             switch (piece)
             {
                 case "e":
@@ -108,7 +128,7 @@ namespace Calculator
                     break;
                 default:
                     // Check if it is a hex/binary/number
-                    if (Fraction.TryParse(piece, out Fraction frac))
+                    if (Fraction.TryParse(piece, out Fraction? frac))
                     {
                         Type = "num";
                         Value = frac;
@@ -122,9 +142,9 @@ namespace Calculator
                     {
                         Type = "vec";
                         Value = new Vector(
-                            Fraction.Parse(match.Groups[1].Value),
-                            Fraction.Parse(match.Groups[13].Value),
-                            Fraction.Parse(match.Groups[25].Value));
+                            (Fraction)Fraction.Parse(match.Groups[1].Value),
+                            (Fraction)Fraction.Parse(match.Groups[13].Value),
+                            (Fraction)Fraction.Parse(match.Groups[25].Value));
                         IsOperand = true;
                         return;
                     }
@@ -147,8 +167,14 @@ namespace Calculator
                     // No match
                     Type = "error";
                     Value = piece;
+                    IsOperand = false;
                     break;
             }
+        }
+
+        public Piece(Fraction? constValue) : this()
+        {
+            ConstValue = constValue;
         }
     }
 }

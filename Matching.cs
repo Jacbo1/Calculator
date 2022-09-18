@@ -20,7 +20,10 @@ namespace Calculator
         private const string VECTOR                = "<" + GENERIC_NUM + ", ?" + GENERIC_NUM + ", ?" + GENERIC_NUM + ">";
         private const string VECTOR_LOOSE          = @"<[\S ]*?, ?[\S ]*?, ?[\S ]*?>";
         private const string PIECE_REGEX_RIGHT     = VECTOR_LOOSE + "|" + HEX_NUMBER + "|" + BINARY_NUMBER + "|" + UNSIGNED_SCI_NOTATION + "|" + UNSIGNED_FRACTION + "|" + UNSIGNED_NUMBER + @"|[+%*/x.^()-])";
-        private const string PIECES                = @"(band\(|bor\(|bnot\(|bxor\(|bshift\(|sigfig4|length\(|atan2\(|prod\(|getx\(|gety\(|getz\(|clamp\(|round\(|floor|norm\(|min\(|max\(|sum\(|log\(|ceil|sign|sqrt|asin|acos|atan|sin|cos|tan|rad|deg|abs|ln\(|pi|e|" + PIECE_REGEX_RIGHT;
+
+        private static readonly string[] defaultPieces = MergeSort(new string[] { @"band\(", @"bor\(", @"bnot\(", @"bxor\(", @"bshift\(", "sigfig4", @"length\(", @"atan2\(", @"prod\(", @"getx\(", @"gety\(", @"getz\(", @"clamp\(", @"round\(", "floor", @"norm\(", @"min\(", @"max\(", @"sum\(", @"log\(", "ceil", "sign", "sqrt", "asin", "acos", "atan", "sin", "cos", "tan", "rad", "deg", "abs", @"ln\(", "pi", "e" });
+
+        private static readonly string PIECES      = "(" + string.Join("|", defaultPieces) + "|" + PIECE_REGEX_RIGHT;
         
         internal static readonly Regex
             RE_TrailingZeroes   = new Regex(@"(?<=\d+)(\.|(?<=\.\d+))0+($|[^\d])", RegexOptions.Compiled),
@@ -34,8 +37,6 @@ namespace Calculator
             RE_Binary           = new Regex(@"(?<=^0b)[01]+$", RegexOptions.Compiled),
             RE_Hex              = new Regex(@"(?<=^0x)[0-9A-Fa-f]+$", RegexOptions.Compiled),
             RE_DefaultPieces    = new Regex(PIECES, RegexOptions.Compiled);
-        
-        private static readonly string[] defaultPieces = MergeSort(new string[] { @"band\(", @"bor\(", @"bnot\(", @"bxor\(", @"bshift\(", "sigfig4", @"length\(", @"atan2\(", @"prod\(", @"getx\(", @"gety\(", @"getz\(", @"clamp\(", @"round\(", "floor", @"norm\(", @"min\(", @"max\(", @"sum\(", @"log\(", "ceil", "sign", "sqrt", "asin", "acos", "atan", "sin", "cos", "tan", "rad", "deg", "abs", @"ln\(", "pi", "e" });
 
         
         internal static bool IsOperator(string s)
@@ -102,14 +103,7 @@ namespace Calculator
                 pieces = defaultPieces;
             }
 
-            // Concatenate
-            string regex = "(";
-            foreach (string piece in pieces)
-            {
-                regex += piece + "|";
-            }
-
-            return regex + PIECE_REGEX_RIGHT;
+            return "(" + string.Join("|", pieces) + "|" + PIECE_REGEX_RIGHT;
         }
 
         internal static int FindClosingParenthesis(List<Piece> pieces, int start)
@@ -119,17 +113,12 @@ namespace Calculator
             {
                 Piece piece2 = pieces[i];
                 if (piece2.Value.Equals("("))
-                {
                     openCount++;
-                }
                 else if (piece2.Value.Equals(")"))
                 {
                     openCount--;
                     if (openCount == 0)
-                    {
-                        // Found partner parenthesis
-                        return i;
-                    }
+                        return i; // Found partner parenthesis
                 }
             }
             return -1;
@@ -143,9 +132,7 @@ namespace Calculator
             int index;
 
             if (open == -1 || close == -1)
-            {
                 return -1;
-            }
 
             if (open < close)
             {
@@ -153,23 +140,17 @@ namespace Calculator
                 openCount++;
             }
             else
-            {
                 return -1;
-            }
 
             for(; ; )
             {
                 if (open != -1 && index >= open)
-                {
                     open = raw.IndexOf('(', index + 1);
-                }
                 if (index >= close)
                 {
                     close = raw.IndexOf(')', index + 1);
                     if (close == -1)
-                    {
                         return -1;
-                    }
                 }
                 if (close < open || open == -1)
                 {
@@ -177,15 +158,10 @@ namespace Calculator
                     index = close;
                     openCount--;
                     if (openCount <= 0)
-                    {
                         return index;
-                    }
                 }
                 else
-                {
-                    // Opening
-                    openCount++;
-                }
+                    openCount++; // Opening
             }
         }
 
@@ -196,17 +172,12 @@ namespace Calculator
             {
                 Piece piece2 = pieces[i];
                 if (piece2.Value.Equals(")"))
-                {
                     openCount++;
-                }
                 else if (piece2.Value.Equals("("))
                 {
                     openCount--;
                     if (openCount == 0)
-                    {
-                        // Found partner parenthesis
-                        return i;
-                    }
+                        return i; // Found partner parenthesis
                 }
             }
             return -1;
@@ -267,18 +238,16 @@ namespace Calculator
 
         internal static string Answer2Decimal(string answer)
         {
-            if (RE_Fraction.IsMatch(answer) && Fraction.TryParse(answer, out Fraction frac))
-            {
+            if (RE_Fraction.IsMatch(answer) && Fraction.TryParse(answer, out Fraction? frac))
                 return frac.ToString();
-            }
 
             {
                 Match match = RE_VectorFraction.Match(answer);
                 if (match.Success)
                 {
-                    if (!Fraction.TryParse(match.Groups[1].Value, out Fraction x)) { return answer; }
-                    if (!Fraction.TryParse(match.Groups[10].Value, out Fraction y)) { return answer; }
-                    if (!Fraction.TryParse(match.Groups[19].Value, out Fraction z)) { return answer; }
+                    if (!Fraction.TryParse(match.Groups[1].Value, out Fraction? x)) return answer;
+                    if (!Fraction.TryParse(match.Groups[10].Value, out Fraction? y)) return answer;
+                    if (!Fraction.TryParse(match.Groups[19].Value, out Fraction? z)) return answer;
                     return $"<{x}, {y}, {z}>";
                 }
             }

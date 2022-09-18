@@ -54,13 +54,9 @@ namespace Calculator
                     }
                 }
                 if (found)
-                {
                     Close();
-                }
                 else
-                {
                     InitializeComponent();
-                }
             }
             else
             {
@@ -86,18 +82,12 @@ namespace Calculator
             Size = Properties.Settings.Default.Size;
             showWork = Properties.Settings.Default.ShowWork;
             input = TextInput.Text = Properties.Settings.Default.Input;
-            outputMode_hidden = (Enums.OutputMode)Properties.Settings.Default.OutputMode;
+            outputMode = (Enums.OutputMode)Properties.Settings.Default.OutputMode;
 
             inputCounter++;
             MenuToggleWork.Checked = showWork;
             Menu1Instance.Checked = oneInstance;
-            MenuOutputDefault.Checked = outputMode == Enums.OutputMode.Default;
-            MenuOutputFractions.Checked = outputMode == Enums.OutputMode.Fractions;
-            MenuOutputScientific.Checked = outputMode == Enums.OutputMode.Scientific;
-            MenuOutputBinary.Checked = outputMode == Enums.OutputMode.Binary;
-            MenuOutputHex.Checked = outputMode == Enums.OutputMode.Hex;
 
-            //
             AnswerOutput.Click += AnswerOutput_Click;
             TextInput.KeyDown += TextInput_KeyDown;
             TextInput.Focus();
@@ -121,9 +111,7 @@ namespace Calculator
         private void TextInput_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Control && e.KeyCode == Keys.V)
-            {
                 Clipboard.SetText(Clipboard.GetText());
-            }
         }
 
         private void TextInput_TextChanged(object sender, EventArgs e)
@@ -164,7 +152,7 @@ namespace Calculator
 
         private void Worker_DoWork(object sender, DoWorkEventArgs e)
         {
-            while (true)
+            for (; ; )
             {
                 if (inputCounter != workerCounter)
                 {
@@ -190,23 +178,25 @@ namespace Calculator
         private void WindowClosed(object sender, EventArgs e)
         {
             Properties.Settings.Default.Input = TextInput.Text;
-            if (WindowState == FormWindowState.Maximized)
+            switch (WindowState)
             {
-                Properties.Settings.Default.Pos = RestoreBounds.Location;
-                Properties.Settings.Default.Size = RestoreBounds.Size;
-                Properties.Settings.Default.State = 1;
-            }
-            else if (WindowState == FormWindowState.Normal)
-            {
-                Properties.Settings.Default.State = 0;
-                Properties.Settings.Default.Pos = Location;
-                Properties.Settings.Default.Size = Size;
-            }
-            else
-            {
-                Properties.Settings.Default.Pos = RestoreBounds.Location;
-                Properties.Settings.Default.Size = RestoreBounds.Size;
-                Properties.Settings.Default.State = 2;
+                case FormWindowState.Maximized:
+                    Properties.Settings.Default.Pos = RestoreBounds.Location;
+                    Properties.Settings.Default.Size = RestoreBounds.Size;
+                    Properties.Settings.Default.State = 1;
+                    break;
+
+                case FormWindowState.Normal:
+                    Properties.Settings.Default.State = 0;
+                    Properties.Settings.Default.Pos = Location;
+                    Properties.Settings.Default.Size = Size;
+                    break;
+
+                default:
+                    Properties.Settings.Default.Pos = RestoreBounds.Location;
+                    Properties.Settings.Default.Size = RestoreBounds.Size;
+                    Properties.Settings.Default.State = 2;
+                    break;
             }
             Properties.Settings.Default.Save();
         }

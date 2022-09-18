@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Text.RegularExpressions;
 
 namespace Calculator
 {
     internal class Function
     {
-        public Dictionary<string, Piece> vars;
-        public List<Formula> formulas = new List<Formula> ();
+        public Dictionary<string, Piece> Vars;
+        public List<Formula> Formulas = new List<Formula> ();
         private List<string> argVars;
-        public string funcName = "NULL",
-            originalString = "";
+        public string FuncName = "NULL",
+            OriginalString = "";
 
         public Function(string raw, Dictionary<string, Piece> vars, out int stop)
         {
@@ -31,15 +29,13 @@ namespace Calculator
                     if (openCount == 1)
                     {
                         // Found function name
-                        funcName = cumulative;
+                        FuncName = cumulative;
                         cumulative = "";
                         continue;
                     }
                 }
                 else if(c == '<')
-                {
                     openCount++;
-                }
                 else if(c == '>' || c == ')')
                 {
                     openCount--;
@@ -48,81 +44,59 @@ namespace Calculator
                         // Finished searching
                         stop = i + 1;
                         if (cumulative.Length > 0)
-                        {
                             sections.Add(cumulative);
-                        }
-                        originalString = raw.Substring(0, stop);
 
-                        switch (funcName)
+                        OriginalString = raw.Substring(0, stop);
+
+                        switch (FuncName)
                         {
                             default:
-                                throw new FunctionException(funcName, "Unkown function.");
+                                throw new FunctionException(FuncName, "Unkown function.");
                             case "min":
                             case "max":
                             case "band":
                             case "bor":
                             case "bxor":
                                 foreach (string section in sections)
-                                {
-                                    formulas.Add(new Formula(section, vars));
-                                }
+                                    Formulas.Add(new Formula(section, vars));
                                 return;
                             case "clamp":
                                 // num, min, max
                                 if (sections.Count < 3)
-                                {
-                                    throw new FunctionException(funcName, "Not enough arguments.");
-                                }
+                                    throw new FunctionException(FuncName, "Not enough arguments.");
                                 if (sections.Count > 3)
-                                {
-                                    throw new FunctionException(funcName, "Too many arguments.");
-                                }
-                                formulas.Add(new Formula(sections[0], vars));
-                                formulas.Add(new Formula(sections[1], vars));
-                                formulas.Add(new Formula(sections[2], vars));
+                                    throw new FunctionException(FuncName, "Too many arguments.");
+                                Formulas.Add(new Formula(sections[0], vars));
+                                Formulas.Add(new Formula(sections[1], vars));
+                                Formulas.Add(new Formula(sections[2], vars));
                                 return;
                             case "log":
                                 // base?, num
+                                if (sections.Count < 1)
+                                    throw new FunctionException(FuncName, "Not enough arguments.");
+                                if (sections.Count > 2)
+                                    throw new FunctionException(FuncName, "Too many arguments.");
                                 if (sections.Count == 1)
+                                    Formulas.Add(new Formula(sections[0], vars));
+                                else // 2
                                 {
-                                    formulas.Add(new Formula(sections[0], vars));
-                                }
-                                else if (sections.Count == 2)
-                                {
-                                    formulas.Add(new Formula(sections[0], vars));
-                                    formulas.Add(new Formula(sections[1], vars));
-                                }
-                                else if (sections.Count > 2)
-                                {
-                                    throw new FunctionException(funcName, "Too many arguments.");
-                                }
-                                else
-                                {
-                                    throw new FunctionException(funcName, "Not enough arguments.");
+                                    Formulas.Add(new Formula(sections[0], vars));
+                                    Formulas.Add(new Formula(sections[1], vars));
                                 }
                                 return;
                             case "round":
                             case "bnot":
                                 // num, digits?
+                                if (sections.Count < 1)
+                                    throw new FunctionException(FuncName, "Not enough arguments.");
+                                if (sections.Count > 2)
+                                    throw new FunctionException(FuncName, "Too many arguments.");
                                 if (sections.Count == 1)
+                                    Formulas.Add(new Formula(sections[0], vars));
+                                else // 2
                                 {
-                                    formulas.Add(new Formula(sections[0], vars));
-                                }
-                                else if (sections.Count == 2)
-                                {
-                                    formulas.Add(new Formula(sections[0], vars));
-                                    formulas.Add(new Formula(sections[1], vars));
-                                }
-                                else
-                                {
-                                    if (sections.Count < 1)
-                                    {
-                                        throw new FunctionException(funcName, "Not enough arguments.");
-                                    }
-                                    if (sections.Count > 2)
-                                    {
-                                        throw new FunctionException(funcName, "Too many arguments.");
-                                    }
+                                    Formulas.Add(new Formula(sections[0], vars));
+                                    Formulas.Add(new Formula(sections[1], vars));
                                 }
                                 return;
                             case "sum":
@@ -130,19 +104,16 @@ namespace Calculator
                                 // Summation or product notation
                                 // index of summation, lower bound, upper bound, formula
                                 if (sections.Count < 4)
-                                {
-                                    throw new FunctionException(funcName, "Not enough arguments.");
-                                }
+                                    throw new FunctionException(FuncName, "Not enough arguments.");
                                 if (sections.Count > 4)
-                                {
-                                    throw new FunctionException(funcName, "Too many arguments.");
-                                }
+                                    throw new FunctionException(FuncName, "Too many arguments.");
+
                                 argVars = new List<string> { sections[0] };
                                 CloneVars(vars);
-                                this.vars[sections[0]] = new Piece(1);
-                                formulas.Add(new Formula(sections[1], this.vars));
-                                formulas.Add(new Formula(sections[2], this.vars));
-                                formulas.Add(new Formula(sections[3], this.vars));
+                                Vars[sections[0]] = new Piece(1);
+                                Formulas.Add(new Formula(sections[1], Vars));
+                                Formulas.Add(new Formula(sections[2], Vars));
+                                Formulas.Add(new Formula(sections[3], Vars));
                                 return;
                             case "getx":
                             case "gety":
@@ -151,41 +122,34 @@ namespace Calculator
                             case "norm":
                             case "ln":
                                 if (sections.Count < 1)
-                                {
-                                    throw new FunctionException(funcName, "Not enough arguments.");
-                                }
+                                    throw new FunctionException(FuncName, "Not enough arguments.");
                                 if (sections.Count > 1)
-                                {
-                                    throw new FunctionException(funcName, "Too many arguments.");
-                                }
-                                formulas.Add(new Formula(sections[0], vars));
+                                    throw new FunctionException(FuncName, "Too many arguments.");
+
+                                Formulas.Add(new Formula(sections[0], vars));
                                 return;
                             case "atan2":
                             case "bshift":
                                 if (sections.Count < 2)
-                                {
-                                    throw new FunctionException(funcName, "Not enough arguments.");
-                                }
+                                    throw new FunctionException(FuncName, "Not enough arguments.");
                                 if (sections.Count > 2)
-                                {
-                                    throw new FunctionException(funcName, "Too many arguments.");
-                                }
-                                formulas.Add(new Formula(sections[0], vars));
-                                formulas.Add(new Formula(sections[1], vars));
+                                    throw new FunctionException(FuncName, "Too many arguments.");
+
+                                Formulas.Add(new Formula(sections[0], vars));
+                                Formulas.Add(new Formula(sections[1], vars));
                                 return;
                         }
                     }
                     else if (openCount < 0)
                     {
-                        throw new FunctionException(funcName, "No opening parenthesis.");
+                        throw new FunctionException(FuncName, "No opening parenthesis.");
                     }
                 }
                 if (c == ',' && openCount == 1)
                 {
                     if (cumulative.Length > 0)
-                    {
                         sections.Add(cumulative);
-                    }
+
                     cumulative = "";
                 }
                 else
@@ -194,65 +158,30 @@ namespace Calculator
                 }
             }
 
-            throw new FunctionException(funcName, "Unable to parse.");
+            throw new FunctionException(FuncName, "Unable to parse.");
         }
 
         private void CloneVars(Dictionary<string, Piece> vars)
         {
-            if (this.vars is null)
-            {
-                this.vars = new Dictionary<string, Piece>();
-            }
+            if (Vars is null)
+                Vars = new Dictionary<string, Piece>();
+
             foreach (KeyValuePair<string, Piece> x in vars)
-            {
-                this.vars[x.Key] = x.Value;
-            }
+                Vars[x.Key] = x.Value;
         }
 
         private string CalcFormula(int index, out Piece result)
         {
-            string answer = formulas[index].Calculate(out string work, true, false, true);
+            string answer = Formulas[index].Calculate(out string work, true, false, true);
             work = work.Trim() + '\n';
-            if (!Matching.RE_GenericNum.IsMatch(formulas[index].formula) && work.Length > 0)
-            {
+            if (!Matching.RE_GenericNum.IsMatch(Formulas[index].formula) && work.Length > 0)
                 work += Matching.Answer2Decimal(answer) + '\n';
-            }
+
             result = new Piece(answer);
             if (result.Type == "error")
-            {
-                throw new FunctionException(funcName, answer);
-            }
+                throw new FunctionException(FuncName, answer);
+
             return work;
-        }
-
-        private static Piece OperateBigInteger(Piece a, Piece b, Func<BigInteger, BigInteger, BigInteger> op)
-        //private static Piece OperateBigInteger(Piece a, Piece b, Func< op)
-        {
-            bool isNumA = a.Type == "num";
-            bool isNumB = b.Type == "num";
-
-            if (isNumA && isNumB)
-                return new Piece(op((BigInteger)(Fraction)a.Value, (BigInteger)(Fraction)b.Value));
-
-            if (isNumA && !isNumB)
-            {
-                BigInteger a1 = (BigInteger)(Fraction)a.Value;
-                Vector b1 = (Vector)b.Value;
-                return new Piece(new Vector(op(a1, (BigInteger)b1.X), op(a1, (BigInteger)b1.Y), op(a1, (BigInteger)b1.Z)));
-            }
-
-            if (!isNumA && isNumB)
-            {
-                Vector a1 = (Vector)a.Value;
-                BigInteger b1 = (BigInteger)(Fraction)b.Value;
-                return new Piece(new Vector(op((BigInteger)a1.X, b1), op((BigInteger)a1.Y, b1), op((BigInteger)a1.Z, b1)));
-            }
-
-            {
-                Vector a1 = (Vector)a.Value;
-                Vector b1 = (Vector)b.Value;
-                return new Piece(new Vector(op((BigInteger)a1.X, (BigInteger)b1.X), op((BigInteger)a1.Y, (BigInteger)b1.Y), op((BigInteger)a1.Z, (BigInteger)b1.Z)));
-            }
         }
 
         public Piece Calculate(out string workOutput)
@@ -289,21 +218,19 @@ namespace Calculator
                 };
 
                 workOutput = "";
-                switch (funcName)
+                switch (FuncName)
                 {
                     case "min":
                         // Min
                         {
-                            if (formulas.Count == 0)
-                            {
+                            if (Formulas.Count == 0)
                                 return new Piece(0);
-                            }
 
                             // Initialize
                             workOutput += CalcFormula(0, out Piece min);
 
                             // Find min
-                            for (int i = 1; i < formulas.Count; i++)
+                            for (int i = 1; i < Formulas.Count; i++)
                             {
                                 workOutput += CalcFormula(i, out Piece cur);
 
@@ -311,21 +238,13 @@ namespace Calculator
                                 bool isNum = cur.Type == "num";
                                 bool isMinNum = min.Type == "num";
                                 if (isNum && isMinNum)
-                                {
                                     min = new Piece(Fraction.Min((Fraction)cur.Value, (Fraction)min.Value));
-                                }
                                 else if (isNum && !isMinNum)
-                                {
-                                    min = new Piece(Vector.Min((Fraction)cur.Value, (Vector)min.Value));
-                                }
+                                    min = new Piece(Utils.Op((Fraction)cur.Value, (Vector)min.Value, Fraction.Min));
                                 else if (!isNum && isMinNum)
-                                {
-                                    min = new Piece(Vector.Min((Vector)cur.Value, (Fraction)min.Value));
-                                }
+                                    min = new Piece(Utils.Op((Vector)cur.Value, (Fraction)min.Value, Fraction.Min));
                                 else
-                                {
-                                    min = new Piece(Vector.Min((Vector)cur.Value, (Vector)min.Value));
-                                }
+                                    min = new Piece(Utils.Op((Vector)cur.Value, (Vector)min.Value, (Func<Fraction, Fraction, Fraction>)Fraction.Min));
                             }
                             return min;
                         }
@@ -333,16 +252,14 @@ namespace Calculator
                     case "max":
                         // Max
                         {
-                            if (formulas.Count == 0)
-                            {
+                            if (Formulas.Count == 0)
                                 return new Piece(0);
-                            }
 
                             // Initialize
                             workOutput += CalcFormula(0, out Piece max);
 
                             // Find max
-                            for (int i = 1; i < formulas.Count; i++)
+                            for (int i = 1; i < Formulas.Count; i++)
                             {
                                 workOutput += CalcFormula(i, out Piece cur);
 
@@ -350,21 +267,13 @@ namespace Calculator
                                 bool isNum = cur.Type == "num";
                                 bool isMaxNum = max.Type == "num";
                                 if (isNum && isMaxNum)
-                                {
                                     max = new Piece(Fraction.Max((Fraction)cur.Value, (Fraction)max.Value));
-                                }
                                 else if (isNum && !isMaxNum)
-                                {
-                                    max = new Piece(Vector.Max((Fraction)cur.Value, (Vector)max.Value));
-                                }
+                                    max = new Piece(Utils.Op((Fraction)cur.Value, (Vector)max.Value, Fraction.Max));
                                 else if (!isNum && isMaxNum)
-                                {
-                                    max = new Piece(Vector.Max((Vector)cur.Value, (Fraction)max.Value));
-                                }
+                                    max = new Piece(Utils.Op((Vector)cur.Value, (Fraction)max.Value, Fraction.Max));
                                 else
-                                {
-                                    max = new Piece(Vector.Max((Vector)cur.Value, (Vector)max.Value));
-                                }
+                                    max = new Piece(Utils.Op((Vector)cur.Value, (Vector)max.Value, (Func<Fraction, Fraction, Fraction>)Fraction.Max));
                             }
                             return max;
                         }
@@ -381,54 +290,38 @@ namespace Calculator
                             bool isNum1 = num.Type == "num";
                             bool isNum2 = min.Type == "num";
                             if (isNum1 && isNum2)
-                            {
                                 result = new Piece(Fraction.Max((Fraction)num.Value, (Fraction)min.Value));
-                            }
                             else if (isNum1 && !isNum2)
-                            {
-                                result = new Piece(Vector.Max((Fraction)num.Value, (Vector)min.Value));
-                            }
+                                result = new Piece(Utils.Op((Fraction)num.Value, (Vector)min.Value, Fraction.Max));
                             else if (!isNum1 && isNum2)
-                            {
-                                result = new Piece(Vector.Max((Vector)num.Value, (Fraction)min.Value));
-                            }
+                                result = new Piece(Utils.Op((Vector)num.Value, (Fraction)min.Value, Fraction.Max));
                             else
-                            {
-                                result = new Piece(Vector.Max((Vector)num.Value, (Vector)min.Value));
-                            }
+                                result = new Piece(Utils.Op((Vector)num.Value, (Vector)min.Value, (Func<Fraction, Fraction, Fraction>)Fraction.Max));
 
                             // Set min
                             isNum1 = result.Type == "num";
                             isNum2 = max.Type == "num";
                             if (isNum1 && isNum2)
-                            {
                                 return new Piece(Fraction.Max((Fraction)result.Value, (Fraction)max.Value));
-                            }
-                            else if (isNum1 && !isNum2)
-                            {
-                                return new Piece(Vector.Max((Fraction)result.Value, (Vector)max.Value));
-                            }
-                            else if (!isNum1 && isNum2)
-                            {
-                                return new Piece(Vector.Max((Vector)result.Value, (Fraction)max.Value));
-                            }
-                            return new Piece(Vector.Max((Vector)result.Value, (Vector)max.Value));
+                            if (isNum1 && !isNum2)
+                                return new Piece(Utils.Op((Fraction)result.Value, (Vector)max.Value, Fraction.Max));
+                            if (!isNum1 && isNum2)
+                                return new Piece(Utils.Op((Vector)result.Value, (Fraction)max.Value, Fraction.Max));
+                            return new Piece(Utils.Op((Vector)result.Value, (Vector)max.Value, (Func<Fraction, Fraction, Fraction>)Fraction.Max));
                         }
 
                     case "log":
                         // Log
                         // base?, num
                         {
-                            if (formulas.Count == 1)
+                            if (Formulas.Count == 1)
                             {
                                 // Calculate log base 10
                                 workOutput += CalcFormula(0, out Piece num);
 
                                 if (num.Type == "num")
-                                {
                                     // Number
                                     return new Piece(Math.Log10((double)(Fraction)num.Value));
-                                }
                                 else if (num.Type == "vec")
                                 {
                                     // Vector
@@ -453,12 +346,10 @@ namespace Calculator
                                 bool isBaseNum = newBase.Type == "num";
 
                                 if (isNum && isBaseNum)
-                                {
                                     return new Piece(Math.Log(
                                         (double)(Fraction)num.Value,
                                         (double)(Fraction)newBase.Value));
-                                }
-                                else if (isNum && !isBaseNum)
+                                if (isNum && !isBaseNum)
                                 {
                                     Vector newBaseVec = (Vector)newBase.Value;
                                     return new Piece(new Vector(
@@ -466,7 +357,7 @@ namespace Calculator
                                         Math.Log((double)(Fraction)num.Value, (double)newBaseVec.Y),
                                         Math.Log((double)(Fraction)num.Value, (double)newBaseVec.Z)));
                                 }
-                                else if (!isNum && isBaseNum)
+                                if (!isNum && isBaseNum)
                                 {
                                     Vector numVec = (Vector)num.Value;
                                     return new Piece(new Vector(
@@ -492,15 +383,11 @@ namespace Calculator
                         {
                             workOutput += CalcFormula(0, out Piece num);
 
-                            if (formulas.Count == 1)
-                            {
+                            if (Formulas.Count == 1)
                                 // Round to integer
-                                if (num.Type == "num")
-                                {
-                                    return new Piece(Fraction.Round((Fraction)num.Value));
-                                }
-                                return new Piece(Vector.Round((Vector)num.Value));
-                            }
+                                return num.Type == "num" ?
+                                    new Piece(Fraction.Round((Fraction)num.Value)) : 
+                                    new Piece(Utils.Op((Vector)num.Value, Fraction.Round));
 
                             // Round to digits
                             workOutput += CalcFormula(1, out Piece digits);
@@ -508,18 +395,12 @@ namespace Calculator
                             bool isNum = num.Type == "num";
                             bool isDigitsNum = digits.Type == "num";
                             if (isNum && isDigitsNum)
-                            {
                                 return new Piece(Fraction.Round((Fraction)num.Value, (int)(Fraction)digits.Value));
-                            }
-                            else if (isNum && !isDigitsNum)
-                            {
-                                return new Piece(Vector.Round((Fraction)num.Value, (Vector)digits.Value));
-                            }
-                            else if (!isNum && isDigitsNum)
-                            {
-                                return new Piece(Vector.Round((Vector)num.Value, (int)(Fraction)digits.Value));
-                            }
-                            return new Piece(Vector.Round((Vector)num.Value, (Vector)digits.Value));
+                            if (isNum && !isDigitsNum)
+                                return new Piece(Utils.Op((Fraction)num.Value, (Vector)digits.Value, Fraction.Round));
+                            if (!isNum && isDigitsNum)
+                                return new Piece(Utils.Op((Vector)num.Value, (int)(Fraction)digits.Value, Fraction.Round));
+                            return new Piece(Utils.Op((Vector)num.Value, (Vector)digits.Value, Fraction.Round));
                         }
 
                     case "sum":
@@ -528,49 +409,38 @@ namespace Calculator
                         {
                             workOutput += CalcFormula(0, out Piece min);
                             if (min.Type == "const")
-                            {
                                 min = new Piece(min.ConstValue);
-                            }
-                            if (min.Type != "num")
-                            {
-                                throw new FunctionException(funcName, "Lower bound must be a number.");
-                            }
+                            else  if (min.Type != "num")
+                                throw new FunctionException(FuncName, "Lower bound must be a number.");
 
                             workOutput += CalcFormula(1, out Piece max);
                             if (max.Type == "const")
-                            {
                                 max = new Piece(max.ConstValue);
-                            }
-                            if (max.Type != "num")
-                            {
-                                throw new FunctionException(funcName, "Upper bound must be a number.");
-                            }
+                            else if (max.Type != "num")
+                                throw new FunctionException(FuncName, "Upper bound must be a number.");
 
                             List<string> substrings = new List<string>();
                             List<Formula> subFormulas = new List<Formula>();
 
                             // Find sub formulas
                             {
-                                bool xIsVar = argVars[0] == "x" || formulas[2].vars.ContainsKey("x");
-                                string formula = formulas[2].formula;
+                                bool xIsVar = argVars[0] == "x" || Formulas[2].vars.ContainsKey("x");
+                                string formula = Formulas[2].formula;
                                 int start = formula.IndexOf("_");
                                 int stop = 0;
                                 while (start != -1)
                                 {
                                     substrings.Add(formula.Substring(stop, start - stop));
                                     stop = FindBreakoff(formula, start + 1, xIsVar);
-                                    subFormulas.Add(new Formula(formula.Substring(start + 1, stop - start), vars));
+                                    subFormulas.Add(new Formula(formula.Substring(start + 1, stop - start), Vars));
                                     start = formula.IndexOf("_", start + 1);
                                     stop++;
                                 }
+
                                 if (stop < formula.Length)
-                                {
                                     substrings.Add(formula.Substring(stop));
-                                }
                                 else
-                                {
                                     substrings.Add("");
-                                }
                             }
 
                             string indexVarName = argVars[0];
@@ -582,40 +452,34 @@ namespace Calculator
                             for (int index = lowerBound; index <= upperBound; index++)
                             {
                                 Piece newIndexPiece = new Piece(index);
-                                formulas[2].SetVar(indexVarName, newIndexPiece);
+                                Formulas[2].SetVar(indexVarName, newIndexPiece);
 
                                 // Replace sub formulas
-                                formulas[2].formula = substrings[0];
+                                Formulas[2].formula = substrings[0];
                                 for (int i = 0; i < subFormulas.Count; i++)
                                 {
                                     subFormulas[i].SetVar(indexVarName, newIndexPiece);
                                     string subanswer = subFormulas[i].Calculate();
-                                    if (Fraction.TryParse(subanswer, out Fraction subindex))
-                                    {
-                                        formulas[2].formula += (int)subindex + substrings[i + 1];
-                                    }
+                                    
+                                    if (Fraction.TryParse(subanswer, out Fraction? subindex))
+                                        Formulas[2].formula += (int)subindex + substrings[i + 1];
                                     else
-                                    {
-                                        throw new FunctionException(funcName, subanswer);
-                                    }
+                                        throw new FunctionException(FuncName, subanswer);
                                 }
 
                                 // Calculate
-                                string answer = formulas[2].Calculate();
+                                string answer = Formulas[2].Calculate();
                                 Piece piece = new Piece(answer);
                                 if (piece.Type == "error")
-                                {
-                                    throw new FunctionException(funcName, answer);
-                                }
+                                    throw new FunctionException(FuncName, answer);
+
                                 results[index - lowerBound] = piece;
 
                                 // Update variables
                                 string aName = "a" + index;
-                                formulas[2].SetVar(aName, piece);
+                                Formulas[2].SetVar(aName, piece);
                                 foreach (Formula subFormula in subFormulas)
-                                {
                                     subFormula.SetVar(aName, piece);
-                                }
                             }
 
                             Piece sum = new Piece(0);
@@ -624,21 +488,13 @@ namespace Calculator
                                 bool isNum1 = sum.Type == "num";
                                 bool isNum2 = piece.Type == "num";
                                 if (isNum1 && isNum2)
-                                {
                                     sum = new Piece((Fraction)sum.Value + (Fraction)piece.Value);
-                                }
                                 else if (isNum1 && !isNum2)
-                                {
                                     sum = new Piece((Fraction)sum.Value + (Vector)piece.Value);
-                                }
                                 else if (!isNum1 && isNum2)
-                                {
                                     sum = new Piece((Vector)sum.Value + (Fraction)piece.Value);
-                                }
                                 else
-                                {
                                     sum = new Piece((Vector)sum.Value + (Vector)piece.Value);
-                                }
                             }
 
                             return sum;
@@ -650,49 +506,38 @@ namespace Calculator
                         {
                             workOutput += CalcFormula(0, out Piece min);
                             if (min.Type == "const")
-                            {
                                 min = new Piece(min.ConstValue);
-                            }
-                            if (min.Type != "num")
-                            {
-                                throw new FunctionException(funcName, "Lower bound must be a number.");
-                            }
+                            else if (min.Type != "num")
+                                throw new FunctionException(FuncName, "Lower bound must be a number.");
 
                             workOutput += CalcFormula(1, out Piece max);
                             if (max.Type == "const")
-                            {
                                 max = new Piece(max.ConstValue);
-                            }
-                            if (max.Type != "num")
-                            {
-                                throw new FunctionException(funcName, "Upper bound must be a number.");
-                            }
+                            else if (max.Type != "num")
+                                throw new FunctionException(FuncName, "Upper bound must be a number.");
 
                             List<string> substrings = new List<string>();
                             List<Formula> subFormulas = new List<Formula>();
 
                             // Find sub formulas
                             {
-                                bool xIsVar = argVars[0] == "x" || formulas[2].vars.ContainsKey("x");
-                                string formula = formulas[2].formula;
+                                bool xIsVar = argVars[0] == "x" || Formulas[2].vars.ContainsKey("x");
+                                string formula = Formulas[2].formula;
                                 int start = formula.IndexOf("_");
                                 int stop = 0;
                                 while (start != -1)
                                 {
                                     substrings.Add(formula.Substring(stop, start - stop));
                                     stop = FindBreakoff(formula, start + 1, xIsVar);
-                                    subFormulas.Add(new Formula(formula.Substring(start + 1, stop - start), vars));
+                                    subFormulas.Add(new Formula(formula.Substring(start + 1, stop - start), Vars));
                                     start = formula.IndexOf("_", start + 1);
                                     stop++;
                                 }
+
                                 if (stop < formula.Length)
-                                {
                                     substrings.Add(formula.Substring(stop));
-                                }
                                 else
-                                {
                                     substrings.Add("");
-                                }
                             }
 
                             string indexVarName = argVars[0];
@@ -704,46 +549,37 @@ namespace Calculator
                             for (int index = lowerBound; index <= upperBound; index++)
                             {
                                 Piece newIndexPiece = new Piece(index);
-                                formulas[2].SetVar(indexVarName, newIndexPiece);
+                                Formulas[2].SetVar(indexVarName, newIndexPiece);
 
                                 // Replace sub formulas
-                                formulas[2].formula = substrings[0];
+                                Formulas[2].formula = substrings[0];
                                 for (int i = 0; i < subFormulas.Count; i++)
                                 {
                                     subFormulas[i].SetVar(indexVarName, newIndexPiece);
                                     string subanswer = subFormulas[i].Calculate();
-                                    if (Fraction.TryParse(subanswer, out Fraction subindex))
-                                    {
-                                        formulas[2].formula += (int)subindex + substrings[i + 1];
-                                    }
+                                    if (Fraction.TryParse(subanswer, out Fraction? subindex))
+                                        Formulas[2].formula += (int)subindex + substrings[i + 1];
                                     else
-                                    {
-                                        throw new FunctionException(funcName, subanswer);
-                                    }
+                                        throw new FunctionException(FuncName, subanswer);
                                 }
 
                                 // Calculate
-                                string answer = formulas[2].Calculate();
+                                string answer = Formulas[2].Calculate();
                                 Piece piece = new Piece(answer);
                                 if (piece.Type == "error")
-                                {
-                                    throw new FunctionException(funcName, answer);
-                                }
+                                    throw new FunctionException(FuncName, answer);
+
                                 results[index - lowerBound] = piece;
 
                                 // Update variables
                                 string aName = "a" + index;
-                                formulas[2].SetVar(aName, piece);
+                                Formulas[2].SetVar(aName, piece);
                                 foreach (Formula subFormula in subFormulas)
-                                {
                                     subFormula.SetVar(aName, piece);
-                                }
                             }
 
                             if (results.Length == 0)
-                            {
                                 return new Piece(0);
-                            }
 
                             Piece product = new Piece(1);
                             foreach (Piece piece in results)
@@ -751,21 +587,13 @@ namespace Calculator
                                 bool isNum1 = product.Type == "num";
                                 bool isNum2 = piece.Type == "num";
                                 if (isNum1 && isNum2)
-                                {
                                     product = new Piece((Fraction)product.Value * (Fraction)piece.Value);
-                                }
                                 else if (isNum1 && !isNum2)
-                                {
                                     product = new Piece((Fraction)product.Value * (Vector)piece.Value);
-                                }
                                 else if (!isNum1 && isNum2)
-                                {
                                     product = new Piece((Vector)product.Value * (Fraction)piece.Value);
-                                }
                                 else
-                                {
                                     product = new Piece((Vector)product.Value * (Vector)piece.Value);
-                                }
                             }
 
                             return product;
@@ -775,30 +603,27 @@ namespace Calculator
                         {
                             workOutput += CalcFormula(0, out Piece piece);
                             if (piece.Type == "vec")
-                            {
                                 return new Piece(((Vector)piece.Value).X);
-                            }
-                            throw new FunctionException(funcName, "Attempted to get x component of non-vector.");
+
+                            throw new FunctionException(FuncName, "Attempted to get x component of non-vector.");
                         }
 
                     case "gety":
                         {
                             workOutput += CalcFormula(0, out Piece piece);
                             if (piece.Type == "vec")
-                            {
                                 return new Piece(((Vector)piece.Value).Y);
-                            }
-                            throw new FunctionException(funcName, "Attempted to get y component of non-vector.");
+
+                            throw new FunctionException(FuncName, "Attempted to get y component of non-vector.");
                         }
 
                     case "getz":
                         {
                             workOutput += CalcFormula(0, out Piece piece);
                             if (piece.Type == "vec")
-                            {
                                 return new Piece(((Vector)piece.Value).Z);
-                            }
-                            throw new FunctionException(funcName, "Attempted to get z component of non-vector.");
+
+                            throw new FunctionException(FuncName, "Attempted to get z component of non-vector.");
                         }
 
                     case "length":
@@ -807,9 +632,9 @@ namespace Calculator
                             if (piece.Type == "vec")
                             {
                                 Vector vec = (Vector)piece.Value;
-                                return new Piece(Fraction.Pow(vec.X * vec.X + vec.Y * vec.Y + vec.Z * vec.Z, 0.5));
+                                return new Piece(Fraction.Pow(vec.X * vec.X + vec.Y * vec.Y + vec.Z * vec.Z, Fraction.Half));
                             }
-                            throw new FunctionException(funcName, "Attempted to get length of non-vector.");
+                            throw new FunctionException(FuncName, "Attempted to get length of non-vector.");
                         }
 
                     case "norm":
@@ -818,14 +643,10 @@ namespace Calculator
                             if (piece.Type == "vec")
                             {
                                 Vector vec = (Vector)piece.Value;
-                                Fraction length = Fraction.Pow(vec.X * vec.X + vec.Y * vec.Y + vec.Z * vec.Z, 0.5);
-                                if (length == 0)
-                                {
-                                    return new Piece(new Vector());
-                                }
-                                return new Piece(vec / length);
+                                Fraction length = Fraction.Pow(vec.X * vec.X + vec.Y * vec.Y + vec.Z * vec.Z, Fraction.Half);
+                                return new Piece(length == 0 ? new Vector(0, 0, 0) : vec / length);
                             }
-                            throw new FunctionException(funcName, "Attempted to normalize non-vector.");
+                            throw new FunctionException(FuncName, "Attempted to normalize non-vector.");
                         }
 
                     case "atan2":
@@ -837,18 +658,12 @@ namespace Calculator
                             bool isNum2 = x.Type == "num";
 
                             if (isNum1 && isNum2)
-                            {
                                 return new Piece(Fraction.Atan2((Fraction)y.Value, (Fraction)x.Value));
-                            }
-                            else if (isNum1 && !isNum2)
-                            {
-                                return new Piece(Vector.Atan2((Fraction)y.Value, (Vector)x.Value));
-                            }
-                            else if (!isNum1 && isNum2)
-                            {
-                                return new Piece(Vector.Atan2((Vector)y.Value, (Fraction)x.Value));
-                            }
-                            return new Piece(Vector.Atan2((Vector)y.Value, (Vector)x.Value));
+                            if (isNum1 && !isNum2)
+                                return new Piece(Utils.Op((Fraction)y.Value, (Vector)x.Value, Fraction.Atan2));
+                            if (!isNum1 && isNum2)
+                                return new Piece(Utils.Op((Vector)y.Value, (Fraction)x.Value, Fraction.Atan2));
+                            return new Piece(Utils.Op((Vector)y.Value, (Vector)x.Value, (Func<Fraction, Fraction, Fraction>)Fraction.Atan2));
                         }
 
                     case "ln":
@@ -856,9 +671,7 @@ namespace Calculator
                             workOutput += CalcFormula(0, out Piece n);
 
                             if (n.Type == "num")
-                            {
                                 return new Piece(Math.Log((double)(Fraction)n.Value));
-                            }
                             else
                             {
                                 Vector v = (Vector)n.Value;
@@ -871,15 +684,13 @@ namespace Calculator
                     case "band":
                         {
                             // Bitwise AND
-                            if (formulas.Count == 0)
-                            {
+                            if (Formulas.Count == 0)
                                 return new Piece(0);
-                            }
 
                             // Initialize
                             workOutput += CalcFormula(0, out Piece result);
 
-                            for (int i = 1; i < formulas.Count; i++)
+                            for (int i = 1; i < Formulas.Count; i++)
                             {
                                 workOutput += CalcFormula(i, out Piece cur);
 
@@ -920,15 +731,13 @@ namespace Calculator
                     case "bor":
                         {
                             // Bitwise OR
-                            if (formulas.Count == 0)
-                            {
+                            if (Formulas.Count == 0)
                                 return new Piece(0);
-                            }
 
                             // Initialize
                             workOutput += CalcFormula(0, out Piece result);
 
-                            for (int i = 1; i < formulas.Count; i++)
+                            for (int i = 1; i < Formulas.Count; i++)
                             {
                                 workOutput += CalcFormula(i, out Piece cur);
 
@@ -969,15 +778,13 @@ namespace Calculator
                     case "bxor":
                         {
                             // Bitwise XOR
-                            if (formulas.Count == 0)
-                            {
+                            if (Formulas.Count == 0)
                                 return new Piece(0);
-                            }
 
                             // Initialize
                             workOutput += CalcFormula(0, out Piece result);
 
-                            for (int i = 1; i < formulas.Count; i++)
+                            for (int i = 1; i < Formulas.Count; i++)
                             {
                                 workOutput += CalcFormula(i, out Piece cur);
 
@@ -1066,13 +873,11 @@ namespace Calculator
                             workOutput += CalcFormula(0, out Piece piece);
                             int? bits = null;
 
-                            if (formulas.Count == 2)
+                            if (Formulas.Count == 2)
                             {
                                 workOutput += CalcFormula(1, out Piece bitPiece);
                                 if (bitPiece.Type == "num")
-                                {
                                     bits = (int)(Fraction)bitPiece.Value;
-                                }
                             }
 
                             if (piece.Type == "num")
@@ -1085,18 +890,20 @@ namespace Calculator
                             BigInteger x = (BigInteger)vec.X;
                             BigInteger y = (BigInteger)vec.Y;
                             BigInteger z = (BigInteger)vec.Z;
-                            return new Piece(new Vector(
+                            return new Piece(
+                                new Vector(
                                     x ^ (BigInteger.Pow(2, bits ?? (int)Math.Floor(BigInteger.Log(x, 2) + 1)) - 1),
                                     y ^ (BigInteger.Pow(2, bits ?? (int)Math.Floor(BigInteger.Log(y, 2) + 1)) - 1),
                                     z ^ (BigInteger.Pow(2, bits ?? (int)Math.Floor(BigInteger.Log(z, 2) + 1)) - 1)
-                                ));
+                                )
+                            );
                         }
                 }
-                return null;
+                return new Piece("");
             }
             catch (FractionDoubleParsingException e)
             {
-                throw new FunctionException(funcName, e.Message);
+                throw new FunctionException(FuncName, e.Message);
             }
         }
 
@@ -1112,47 +919,27 @@ namespace Calculator
                     case ')':
                         openCount--;
                         if (openCount < 0)
-                        {
                             return i - 1;
-                        }
                         break;
                     default: 
                         if ((!xIsVar || c != 'x') && Matching.IsOperator(c.ToString()) && openCount <= 0)
-                        {
                             return i - 1;
-                        }
                         break;
                 }
             }
-            //foreach (Match match in Matching.RE_DefaultPieces.Matches(input, index))
-            //{
-            //    if (match.Value == "(")
-            //    {
-            //        openCount++;
-            //        continue;
-            //    }
-            //    if (match.Value == ")")
-            //    {
-            //        openCount--;
-            //        continue;
-            //    }
-            //    if (openCount <= 0 && Matching.IsOperator(match.Value))
-            //    {
-            //        return match.Index;
-            //    }
-            //}
+            
             return input.Length - 1;
         }
 
         public override string ToString()
         {
-            switch (funcName)
+            switch (FuncName)
             {
                 case "min":
                     {
                         string s = "min(";
                         bool first = true;
-                        foreach (Formula formula in formulas)
+                        foreach (Formula formula in Formulas)
                         {
                             if (first)
                             {
@@ -1170,7 +957,7 @@ namespace Calculator
                     {
                         string s = "max(";
                         bool first = true;
-                        foreach (Formula formula in formulas)
+                        foreach (Formula formula in Formulas)
                         {
                             if (first)
                             {
@@ -1185,23 +972,20 @@ namespace Calculator
                         return s + ')';
                     }
                 case "log":
-                    if (formulas.Count == 1)
-                    {
-                        return $"log({formulas[0].formula})";
-                    }
-                    return $"log({formulas[1].formula}, base = {formulas[0].formula})";
+                    return Formulas.Count == 1 ?
+                        $"log({Formulas[0].formula})" :
+                        $"log({Formulas[1].formula}, base = {Formulas[0].formula})";
                 case "round":
-                    if (formulas.Count == 1)
-                    {
-                        return $"round({formulas[0].formula})";
-                    }
-                    return $"round({formulas[0].formula}, digits = {formulas[1].formula})";
+                    return Formulas.Count == 1 ?
+                        $"round({Formulas[0].formula})" :
+                        $"round({Formulas[0].formula}, digits = {Formulas[1].formula})";
                 case "sum":
-                    return $"∑({argVars[0]}={formulas[0].formula} to {formulas[1].formula}, a({argVars[0]})={formulas[2].formula})";
+                    return $"∑({argVars[0]}={Formulas[0].formula} to {Formulas[1].formula}, a({argVars[0]})={Formulas[2].formula})";
                 case "prod":
-                    return $"∏({argVars[0]}={formulas[0].formula} to {formulas[1].formula}, a({argVars[0]})={formulas[2].formula})";
+                    return $"∏({argVars[0]}={Formulas[0].formula} to {Formulas[1].formula}, a({argVars[0]})={Formulas[2].formula})";
             }
-            return originalString;
+
+            return OriginalString;
         }
     }
 }

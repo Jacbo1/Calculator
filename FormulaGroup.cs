@@ -22,10 +22,8 @@ namespace Calculator
             {
                 string line = whitespace.Replace(line2, "");
                 if (line.Length > 0 && line[0] == ';')
-                {
-                    // Skip commented line
-                    continue;
-                }
+                    continue; // Skip commented line
+
                 Match match = varRegex.Match(line);
                 if (match.Success)
                 {
@@ -39,12 +37,11 @@ namespace Calculator
                         IsVar = true,
                         VarName = varName
                     };
+
                     vars[varName] = varPiece;
 
                     if (work.Length > 0 && !Matching.RE_GenericNum.IsMatch(right))
-                    {
                         workOutput += $"{work}\n{answer}\n\n";
-                    }
                 }
                 else if (line.Length > 0)
                 {
@@ -71,9 +68,7 @@ namespace Calculator
 
                             int digits;
                             if (n.Numerator >= n.Denominator)
-                            {
                                 digits = (int)Math.Floor(0.000005 + BigInteger.Log10(BigInteger.Abs(n.Numerator / n.Denominator)));
-                            }
                             else
                             {
                                 const int DIGIT_SHIFT = 1000;
@@ -86,9 +81,7 @@ namespace Calculator
                             sci = Fraction.Round(sci, DEC_DIGIT_DISPLAY);
                             string s = sci.ToString(DEC_DIGIT_DISPLAY);
                             if (s.IndexOf('.') == -1)
-                            {
                                 s += ".0";
-                            }
 
                             return s + "E" + digits;
                         };
@@ -98,7 +91,7 @@ namespace Calculator
                             case "num":
                                 return convertToScientific((Fraction)answerPiece.Value);
                             case "const":
-                                return convertToScientific(answerPiece.ConstValue);
+                                return convertToScientific((Fraction)answerPiece.ConstValue);
                             case "vec":
                                 Vector v = (Vector)answerPiece.Value;
                                 return $"<{convertToScientific(v.X)}, {convertToScientific(v.Y)}, {convertToScientific(v.Z)}>";
@@ -111,7 +104,7 @@ namespace Calculator
                             case "num":
                                 return ((Fraction)answerPiece.Value).ToFracString();
                             case "const":
-                                return answerPiece.ConstValue.ToFracString();
+                                return ((Fraction)answerPiece.ConstValue).ToFracString();
                             case "vec":
                                 Vector v = (Vector)answerPiece.Value;
                                 return $"<{v.X.ToFracString()}, {v.Y.ToFracString()}, {v.Z.ToFracString()}>";
@@ -153,10 +146,12 @@ namespace Calculator
             string str = BigInteger.Abs(bigint).ToString("X");
 
             if (str.Length % 2 == 1)
+            {
                 if (str[0] == '0')
                     str = str.Substring(1);
                 else
                     str = '0' + str;
+            }
 
             for (int i = str.Length - 2; i >= 2; i -= 2)
                 str = str.Substring(0, i) + ' ' + str.Substring(i);
@@ -180,9 +175,7 @@ namespace Calculator
 
             // Convert remaining bytes adding leading zeros.
             for (idx--; idx >= 0; idx--)
-            {
                 base2.Append(Convert.ToString(bytes[idx], 2).PadLeft(8, '0'));
-            }
 
             string str = base2.ToString();
             str = str.Substring(Math.Max(0, str.IndexOf('1')));

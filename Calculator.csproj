@@ -61,6 +61,7 @@
     <Compile Include="FractionDoubleParsingException.cs" />
     <Compile Include="Matching.cs" />
     <Compile Include="Fraction.cs" />
+    <Compile Include="Utils.cs" />
     <Compile Include="Vector.cs" />
     <Compile Include="FormulaGroup.cs" />
     <Compile Include="Piece.cs" />
