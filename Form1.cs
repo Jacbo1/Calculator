@@ -19,20 +19,7 @@ namespace Calculator
         private string work = "";
         private bool showWork = true,
             oneInstance = false;
-        private Enums.OutputMode outputMode_hidden = Enums.OutputMode.Default;
-        private Enums.OutputMode outputMode
-        {
-            get => outputMode_hidden;
-            set
-            {
-                ToggleOutputButton(outputMode_hidden, false);
-                outputMode_hidden = value;
-                ToggleOutputButton(outputMode_hidden, true);
-                Properties.Settings.Default.OutputMode = (byte)outputMode_hidden;
-                Properties.Settings.Default.Save();
-                inputCounter++;
-            }
-        }
+        private Enums.OutputMode outputMode = Enums.OutputMode.Default;
 
         public Form1()
         {
@@ -82,7 +69,7 @@ namespace Calculator
             Size = Properties.Settings.Default.Size;
             showWork = Properties.Settings.Default.ShowWork;
             input = TextInput.Text = Properties.Settings.Default.Input;
-            outputMode = (Enums.OutputMode)Properties.Settings.Default.OutputMode;
+            SetOutputMode((Enums.OutputMode)Properties.Settings.Default.OutputMode);
 
             inputCounter++;
             MenuToggleWork.Checked = showWork;
@@ -225,17 +212,27 @@ namespace Calculator
 
         private void MenuOutputDefault_Click(object sender, EventArgs e)
         {
-            outputMode = Enums.OutputMode.Default;
+            SetOutputMode(Enums.OutputMode.Default);
         }
 
         private void MenuOutputFractions_Click(object sender, EventArgs e)
         {
-            outputMode = Enums.OutputMode.Fractions;
+            SetOutputMode(Enums.OutputMode.Fractions);
         }
 
         private void MenuOutputScientific_Click(object sender, EventArgs e)
         {
-            outputMode = Enums.OutputMode.Scientific;
+            SetOutputMode(Enums.OutputMode.Scientific);
+        }
+
+        private void MenuOutputBinary_Click(object sender, EventArgs e)
+        {
+            SetOutputMode(Enums.OutputMode.Binary);
+        }
+
+        private void MenuOutputHex_Click(object sender, EventArgs e)
+        {
+            SetOutputMode(Enums.OutputMode.Hex);
         }
 
         private void MenuButtonPressed_ShowWork(object sender, EventArgs e)
@@ -247,22 +244,22 @@ namespace Calculator
             Properties.Settings.Default.Save();
         }
 
-        private void MenuOutputBinary_Click(object sender, EventArgs e)
-        {
-            outputMode = Enums.OutputMode.Binary;
-        }
-
-        private void MenuOutputHex_Click(object sender, EventArgs e)
-        {
-            outputMode = Enums.OutputMode.Hex;
-        }
-
         private void MenuButtonPressed_1Instance(object sender, EventArgs e)
         {
             oneInstance = !oneInstance;
             Properties.Settings.Default.OneInstance = oneInstance;
             Menu1Instance.Checked = oneInstance;
             Properties.Settings.Default.Save();
+        }
+
+        private void SetOutputMode(Enums.OutputMode mode)
+        {
+            ToggleOutputButton(outputMode, false);
+            outputMode = mode;
+            ToggleOutputButton(outputMode, true);
+            Properties.Settings.Default.OutputMode = (byte)outputMode;
+            Properties.Settings.Default.Save();
+            inputCounter++;
         }
     }
 }
