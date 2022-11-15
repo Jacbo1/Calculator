@@ -18,7 +18,8 @@ namespace Calculator
         private string answer = "";
         private string work = "";
         private bool showWork = true,
-            oneInstance = false;
+            oneInstance = false,
+            topmost = false;
         private Enums.OutputMode outputMode = Enums.OutputMode.Default;
 
         public Form1()
@@ -69,6 +70,7 @@ namespace Calculator
             Size = Properties.Settings.Default.Size;
             showWork = Properties.Settings.Default.ShowWork;
             input = TextInput.Text = Properties.Settings.Default.Input;
+            TopMost = topmost = MenuTopMost.Checked = Properties.Settings.Default.TopMost;
             SetOutputMode((Enums.OutputMode)Properties.Settings.Default.OutputMode);
 
             inputCounter++;
@@ -182,7 +184,7 @@ namespace Calculator
                 default:
                     Properties.Settings.Default.Pos = RestoreBounds.Location;
                     Properties.Settings.Default.Size = RestoreBounds.Size;
-                    Properties.Settings.Default.State = 2;
+                    Properties.Settings.Default.State = 0; // 2
                     break;
             }
             Properties.Settings.Default.Save();
@@ -249,6 +251,12 @@ namespace Calculator
             oneInstance = !oneInstance;
             Properties.Settings.Default.OneInstance = oneInstance;
             Menu1Instance.Checked = oneInstance;
+            Properties.Settings.Default.Save();
+        }
+
+        private void MenuTopMost_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.TopMost = MenuTopMost.Checked = TopMost = topmost = !topmost;
             Properties.Settings.Default.Save();
         }
 

@@ -310,6 +310,8 @@ namespace Calculator
             return Floor(frac * mult + Half) / mult;
         }
 
+        public static Fraction Round(Fraction frac, Fraction digits) => Round(frac, (int)digits);
+
         public static Fraction Min(Fraction a, Fraction b)
         {
             return (a < b ? a : b).Clone();

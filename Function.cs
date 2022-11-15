@@ -62,6 +62,7 @@ namespace Calculator
                             case "band":
                             case "bor":
                             case "bxor":
+                            case "avg":
                                 foreach (string section in sections)
                                     Formulas.Add(new Formula(section, vars));
                                 return;
@@ -126,6 +127,19 @@ namespace Calculator
                             case "length":
                             case "norm":
                             case "ln":
+                            case "floor":
+                            case "ceil":
+                            case "abs":
+                            case "sign":
+                            case "sqrt":
+                            case "sin":
+                            case "asin":
+                            case "cos":
+                            case "acos":
+                            case "tan":
+                            case "atan":
+                            case "rad":
+                            case "deg":
                                 if (sections.Count < 1)
                                     throw new FunctionException(FuncName, "Not enough arguments.");
                                 if (sections.Count > 1)
@@ -209,18 +223,7 @@ namespace Calculator
                             for (int i = 1; i < Formulas.Count; i++)
                             {
                                 workOutput += CalcFormula(i, out Piece cur);
-
-                                // Set min
-                                bool isNum = cur.Type == "num";
-                                bool isMinNum = min.Type == "num";
-                                if (isNum && isMinNum)
-                                    min = new Piece(Fraction.Min((Fraction)cur.Value, (Fraction)min.Value));
-                                else if (isNum && !isMinNum)
-                                    min = new Piece(Utils.Op((Fraction)cur.Value, (Vector)min.Value, Fraction.Min));
-                                else if (!isNum && isMinNum)
-                                    min = new Piece(Utils.Op((Vector)cur.Value, (Fraction)min.Value, Fraction.Min));
-                                else
-                                    min = new Piece(Utils.Op((Vector)cur.Value, (Vector)min.Value, (Func<Fraction, Fraction, Fraction>)Fraction.Min));
+                                min = Utils.Op(min, cur, Fraction.Min);
                             }
                             return min;
                         }
@@ -238,18 +241,7 @@ namespace Calculator
                             for (int i = 1; i < Formulas.Count; i++)
                             {
                                 workOutput += CalcFormula(i, out Piece cur);
-
-                                // Set max
-                                bool isNum = cur.Type == "num";
-                                bool isMaxNum = max.Type == "num";
-                                if (isNum && isMaxNum)
-                                    max = new Piece(Fraction.Max((Fraction)cur.Value, (Fraction)max.Value));
-                                else if (isNum && !isMaxNum)
-                                    max = new Piece(Utils.Op((Fraction)cur.Value, (Vector)max.Value, Fraction.Max));
-                                else if (!isNum && isMaxNum)
-                                    max = new Piece(Utils.Op((Vector)cur.Value, (Fraction)max.Value, Fraction.Max));
-                                else
-                                    max = new Piece(Utils.Op((Vector)cur.Value, (Vector)max.Value, (Func<Fraction, Fraction, Fraction>)Fraction.Max));
+                                max = Utils.Op(max, cur, Fraction.Max);
                             }
                             return max;
                         }
@@ -261,29 +253,8 @@ namespace Calculator
                             workOutput += CalcFormula(1, out Piece min);
                             workOutput += CalcFormula(2, out Piece max);
 
-                            Piece result;
-                            // Set max
-                            bool isNum1 = num.Type == "num";
-                            bool isNum2 = min.Type == "num";
-                            if (isNum1 && isNum2)
-                                result = new Piece(Fraction.Max((Fraction)num.Value, (Fraction)min.Value));
-                            else if (isNum1 && !isNum2)
-                                result = new Piece(Utils.Op((Fraction)num.Value, (Vector)min.Value, Fraction.Max));
-                            else if (!isNum1 && isNum2)
-                                result = new Piece(Utils.Op((Vector)num.Value, (Fraction)min.Value, Fraction.Max));
-                            else
-                                result = new Piece(Utils.Op((Vector)num.Value, (Vector)min.Value, (Func<Fraction, Fraction, Fraction>)Fraction.Max));
-
-                            // Set min
-                            isNum1 = result.Type == "num";
-                            isNum2 = max.Type == "num";
-                            if (isNum1 && isNum2)
-                                return new Piece(Fraction.Max((Fraction)result.Value, (Fraction)max.Value));
-                            if (isNum1 && !isNum2)
-                                return new Piece(Utils.Op((Fraction)result.Value, (Vector)max.Value, Fraction.Max));
-                            if (!isNum1 && isNum2)
-                                return new Piece(Utils.Op((Vector)result.Value, (Fraction)max.Value, Fraction.Max));
-                            return new Piece(Utils.Op((Vector)result.Value, (Vector)max.Value, (Func<Fraction, Fraction, Fraction>)Fraction.Max));
+                            Piece result = Utils.Op(num, min, Fraction.Max);
+                            return Utils.Op(result, max, Fraction.Min);
                         }
 
                     case "log":
@@ -361,22 +332,11 @@ namespace Calculator
 
                             if (Formulas.Count == 1)
                                 // Round to integer
-                                return num.Type == "num" ?
-                                    new Piece(Fraction.Round((Fraction)num.Value)) :
-                                    new Piece(Utils.Op((Vector)num.Value, Fraction.Round));
+                                return Utils.Op(num, Fraction.Round);
 
                             // Round to digits
                             workOutput += CalcFormula(1, out Piece digits);
-
-                            bool isNum = num.Type == "num";
-                            bool isDigitsNum = digits.Type == "num";
-                            if (isNum && isDigitsNum)
-                                return new Piece(Fraction.Round((Fraction)num.Value, (int)(Fraction)digits.Value));
-                            if (isNum && !isDigitsNum)
-                                return new Piece(Utils.Op((Fraction)num.Value, (Vector)digits.Value, Fraction.Round));
-                            if (!isNum && isDigitsNum)
-                                return new Piece(Utils.Op((Vector)num.Value, (int)(Fraction)digits.Value, Fraction.Round));
-                            return new Piece(Utils.Op((Vector)num.Value, (Vector)digits.Value, Fraction.Round));
+                            return Utils.Op(num, digits, Fraction.Round);
                         }
 
                     case "sum":
@@ -458,20 +418,10 @@ namespace Calculator
                                     subFormula.SetVar(aName, piece);
                             }
 
+                            Func<Fraction, Fraction, Fraction> add = (a, b) => a + b;
                             Piece sum = new Piece(0);
                             foreach (Piece piece in results)
-                            {
-                                bool isNum1 = sum.Type == "num";
-                                bool isNum2 = piece.Type == "num";
-                                if (isNum1 && isNum2)
-                                    sum = new Piece((Fraction)sum.Value + (Fraction)piece.Value);
-                                else if (isNum1 && !isNum2)
-                                    sum = new Piece((Fraction)sum.Value + (Vector)piece.Value);
-                                else if (!isNum1 && isNum2)
-                                    sum = new Piece((Vector)sum.Value + (Fraction)piece.Value);
-                                else
-                                    sum = new Piece((Vector)sum.Value + (Vector)piece.Value);
-                            }
+                                sum = Utils.Op(sum, piece, add);
 
                             return sum;
                         }
@@ -557,20 +507,10 @@ namespace Calculator
                             if (results.Length == 0)
                                 return new Piece(0);
 
+                            Func<Fraction, Fraction, Fraction> mult = (a, b) => a * b;
                             Piece product = new Piece(1);
                             foreach (Piece piece in results)
-                            {
-                                bool isNum1 = product.Type == "num";
-                                bool isNum2 = piece.Type == "num";
-                                if (isNum1 && isNum2)
-                                    product = new Piece((Fraction)product.Value * (Fraction)piece.Value);
-                                else if (isNum1 && !isNum2)
-                                    product = new Piece((Fraction)product.Value * (Vector)piece.Value);
-                                else if (!isNum1 && isNum2)
-                                    product = new Piece((Vector)product.Value * (Fraction)piece.Value);
-                                else
-                                    product = new Piece((Vector)product.Value * (Vector)piece.Value);
-                            }
+                                product = Utils.Op(product, piece, mult);
 
                             return product;
                         }
@@ -629,19 +569,85 @@ namespace Calculator
                         {
                             workOutput += CalcFormula(0, out Piece y);
                             workOutput += CalcFormula(1, out Piece x);
-
-                            bool isNum1 = y.Type == "num";
-                            bool isNum2 = x.Type == "num";
-
-                            if (isNum1 && isNum2)
-                                return new Piece(Fraction.Atan2((Fraction)y.Value, (Fraction)x.Value));
-                            if (isNum1 && !isNum2)
-                                return new Piece(Utils.Op((Fraction)y.Value, (Vector)x.Value, Fraction.Atan2));
-                            if (!isNum1 && isNum2)
-                                return new Piece(Utils.Op((Vector)y.Value, (Fraction)x.Value, Fraction.Atan2));
-                            return new Piece(Utils.Op((Vector)y.Value, (Vector)x.Value, (Func<Fraction, Fraction, Fraction>)Fraction.Atan2));
+                            return Utils.Op(y, x, Fraction.Atan2);
                         }
-
+                    case "sin":
+                        {
+                            workOutput += CalcFormula(0, out Piece p);
+                            return Utils.Op(p, Fraction.Sin);
+                        }
+                    case "asin":
+                        {
+                            workOutput += CalcFormula(0, out Piece p);
+                            return Utils.Op(p, Fraction.Asin);
+                        }
+                    case "cos":
+                        {
+                            workOutput += CalcFormula(0, out Piece p);
+                            return Utils.Op(p, Fraction.Cos);
+                        }
+                    case "acos":
+                        {
+                            workOutput += CalcFormula(0, out Piece p);
+                            return Utils.Op(p, Fraction.Acos);
+                        }
+                    case "tan":
+                        {
+                            workOutput += CalcFormula(0, out Piece p);
+                            return Utils.Op(p, Fraction.Tan);
+                        }
+                    case "atan":
+                        {
+                            workOutput += CalcFormula(0, out Piece p);
+                            return Utils.Op(p, Fraction.Atan);
+                        }
+                    case "avg":
+                        {
+                            Func<Fraction, Fraction, Fraction> add = (a, b) => a + b;
+                            Piece avg = new Piece(0);
+                            int count = Formulas.Count;
+                            for (int i = 0; i < count; i++)
+                            {
+                                workOutput += CalcFormula(i, out Piece p);
+                                avg = Utils.Op(avg, p, add);
+                            }
+                            return Utils.Op(avg, a => a / count);
+                        }
+                    case "ceil":
+                        {
+                            workOutput += CalcFormula(0, out Piece p);
+                            return Utils.Op(p, Fraction.Ceiling);
+                        }
+                    case "floor":
+                        {
+                            workOutput += CalcFormula(0, out Piece p);
+                            return Utils.Op(p, Fraction.Floor);
+                        }
+                    case "sign":
+                        {
+                            workOutput += CalcFormula(0, out Piece p);
+                            return Utils.Op(p, a => Fraction.Sign(a));
+                        }
+                    case "sqrt":
+                        {
+                            workOutput += CalcFormula(0, out Piece p);
+                            return Utils.Op(p, a => Fraction.Pow(a, 0.5));
+                        }
+                    case "rad":
+                        {
+                            workOutput += CalcFormula(0, out Piece p);
+                            return Utils.Op(p, a => a * Fraction.Frac_deg2rad);
+                        }
+                    case "deg":
+                        {
+                            workOutput += CalcFormula(0, out Piece p);
+                            return Utils.Op(p, a => a * Fraction.frac_rad2deg);
+                        }
+                    case "abs":
+                        {
+                            workOutput += CalcFormula(0, out Piece p);
+                            return Utils.Op(p, Fraction.Abs);
+                        }
                     case "ln":
                         {
                             workOutput += CalcFormula(0, out Piece n);

@@ -45,6 +45,7 @@
             this.TextInput = new System.Windows.Forms.RichTextBox();
             this.WorkOutput = new System.Windows.Forms.RichTextBox();
             this.AnswerOutput = new System.Windows.Forms.RichTextBox();
+            this.MenuTopMost = new System.Windows.Forms.MenuItem();
             this.SuspendLayout();
             // 
             // timer
@@ -67,7 +68,8 @@
             this.menuItem1.Index = 0;
             this.menuItem1.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
             this.MenuToggleWork,
-            this.Menu1Instance});
+            this.Menu1Instance,
+            this.MenuTopMost});
             this.menuItem1.Text = "Settings";
             // 
             // MenuToggleWork
@@ -172,6 +174,12 @@
             this.AnswerOutput.TabIndex = 9;
             this.AnswerOutput.Text = "";
             // 
+            // MenuTopMost
+            // 
+            this.MenuTopMost.Index = 2;
+            this.MenuTopMost.Text = "Stay On Top";
+            this.MenuTopMost.Click += new System.EventHandler(this.MenuTopMost_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -208,6 +216,7 @@
         private System.Windows.Forms.MenuItem MenuOutputFractions;
         private System.Windows.Forms.MenuItem MenuOutputBinary;
         private System.Windows.Forms.MenuItem MenuOutputHex;
+        private System.Windows.Forms.MenuItem MenuTopMost;
     }
 }
 

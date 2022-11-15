@@ -21,7 +21,7 @@ namespace Calculator
         private const string VECTOR_LOOSE          = @"<[\S ]*?, ?[\S ]*?, ?[\S ]*?>";
         private const string PIECE_REGEX_RIGHT     = VECTOR_LOOSE + "|" + HEX_NUMBER + "|" + BINARY_NUMBER + "|" + UNSIGNED_SCI_NOTATION + "|" + UNSIGNED_FRACTION + "|" + UNSIGNED_NUMBER + @"|[+%*/x.^()-])";
 
-        private static readonly string[] defaultPieces = MergeSort(new string[] { @"band\(", @"bor\(", @"bnot\(", @"bxor\(", @"bshift\(", "sigfig4", @"length\(", @"atan2\(", @"prod\(", @"getx\(", @"gety\(", @"getz\(", @"clamp\(", @"round\(", "floor", @"norm\(", @"min\(", @"max\(", @"sum\(", @"log\(", "ceil", "sign", "sqrt", "asin", "acos", "atan", "sin", "cos", "tan", "rad", "deg", "abs", @"ln\(", "pi", "e" });
+        private static readonly string[] defaultPieces = MergeSort(new string[] { @"band\(", @"bor\(", @"bnot\(", @"bxor\(", @"bshift\(", @"length\(", @"atan2\(", @"prod\(", @"getx\(", @"gety\(", @"getz\(", @"clamp\(", @"round\(", @"floor\(", @"norm\(", @"min\(", @"max\(", @"sum\(", @"avg\(", @"log\(", @"ceil\(", @"sign\(", @"sqrt\(", @"asin\(", @"acos\(", @"atan\(", @"sin\(", @"cos\(", @"tan\(", @"rad\(", @"deg\(", @"abs\(", @"avg\(", @"ln\(", "pi", "e" });
 
         private static readonly string PIECES      = "(" + string.Join("|", defaultPieces) + "|" + PIECE_REGEX_RIGHT;
         
@@ -78,6 +78,20 @@ namespace Calculator
                 case "bxor(":
                 case "bshift(":
                 case "bnot(":
+                case "avg(":
+                case "ceil(":
+                case "floor(":
+                case "sign(":
+                case "sqrt(":
+                case "asin(":
+                case "acos(":
+                case "atan(":
+                case "sin(":
+                case "cos(":
+                case "tan(":
+                case "rad(":
+                case "deg(":
+                case "abs(":
                     return true;
             }
             return false;

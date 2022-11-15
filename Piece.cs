@@ -79,24 +79,6 @@ namespace Calculator
                     Type = "rpar";
                     Value = ")";
                     break;
-                case "sigfig4":
-                case "sign":
-                case "sin":
-                case "asin":
-                case "cos":
-                case "acos":
-                case "tan":
-                case "atan":
-                case "deg":
-                case "rad":
-                case "abs":
-                case "floor":
-                case "round":
-                case "sqrt":
-                    Type = "func1";
-                    Value = piece;
-                    Precedence = 7;
-                    break;
                 case "+":
                 case "-":
                     Type = "op";
