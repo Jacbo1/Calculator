@@ -34,5 +34,3 @@ Launch_App2::
 ![Variables](Screenshots/decimal%20and%20var%205.png)
 
 ![Work toggled off](Screenshots/variables%202.png)
-  
-I give full permission to use any code from this as long as you don't claim you wrote it. Attribution is not needed.
