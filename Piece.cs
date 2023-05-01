@@ -1,4 +1,3 @@
-using System.Numerics;
 using System.Text.RegularExpressions;
 
 namespace Calculator
@@ -152,11 +151,6 @@ namespace Calculator
                     IsOperand = false;
                     break;
             }
-        }
-
-        public Piece(Fraction? constValue) : this()
-        {
-            ConstValue = constValue;
         }
     }
 }

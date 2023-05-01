@@ -345,13 +345,13 @@ namespace Calculator
                         {
                             workOutput += CalcFormula(0, out Piece min);
                             if (min.Type == "const")
-                                min = new Piece(min.ConstValue);
+                                min = new Piece((Fraction)min.ConstValue);
                             else if (min.Type != "num")
                                 throw new FunctionException(FuncName, "Lower bound must be a number.");
 
                             workOutput += CalcFormula(1, out Piece max);
                             if (max.Type == "const")
-                                max = new Piece(max.ConstValue);
+                                max = new Piece((Fraction)max.ConstValue);
                             else if (max.Type != "num")
                                 throw new FunctionException(FuncName, "Upper bound must be a number.");
 
@@ -432,13 +432,13 @@ namespace Calculator
                         {
                             workOutput += CalcFormula(0, out Piece min);
                             if (min.Type == "const")
-                                min = new Piece(min.ConstValue);
+                                min = new Piece((Fraction)min.ConstValue);
                             else if (min.Type != "num")
                                 throw new FunctionException(FuncName, "Lower bound must be a number.");
 
                             workOutput += CalcFormula(1, out Piece max);
                             if (max.Type == "const")
-                                max = new Piece(max.ConstValue);
+                                max = new Piece((Fraction)max.ConstValue);
                             else if (max.Type != "num")
                                 throw new FunctionException(FuncName, "Upper bound must be a number.");
 
