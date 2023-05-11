@@ -38,7 +38,6 @@ namespace Calculator
             RE_Hex              = new Regex(@"(?<=^0x)[0-9A-Fa-f]+$", RegexOptions.Compiled),
             RE_DefaultPieces    = new Regex(PIECES, RegexOptions.Compiled);
 
-        
         internal static bool IsOperator(string s)
         {
             switch (s)
