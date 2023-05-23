@@ -32,7 +32,7 @@ namespace Calculator
             RE_Fraction         = new Regex("^" + FRACTION + "$", RegexOptions.Compiled),                    // num1 = groups[1], num2 = groups[5]
             RE_GenericNum       = new Regex("^" + GENERIC_NUM + "$", RegexOptions.Compiled),
             RE_Vector           = new Regex("^" + VECTOR + "$", RegexOptions.Compiled),                      // num1 = groups[1], num2 = groups[13], num3 = groups[25]]
-            RE_VectorLoose      = new Regex(@"^<[\S ]*?(, ?[\S ]*?)*>$", RegexOptions.Compiled),// num1 = groups[1], num2 = groups[2],  num3 = groups[3]
+            RE_VectorLoose      = new Regex(@"^<[\S ]*?(, ?[\S ]*?)*>$", RegexOptions.Compiled),             // num1 = groups[1], num2 = groups[2],  num3 = groups[3]
             RE_VectorFraction   = new Regex(@"^<(" + FRACTION + "), ?(" + FRACTION + "), ?(" + FRACTION + ")>$", RegexOptions.Compiled),  // num1 = groups[1], num2 = groups[10], num3 = groups[19]
             RE_Binary           = new Regex(@"(?<=^0b)[01]+$", RegexOptions.Compiled),
             RE_Hex              = new Regex(@"(?<=^0x)[0-9A-Fa-f]+$", RegexOptions.Compiled),
