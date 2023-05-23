@@ -140,7 +140,6 @@ namespace Calculator
                         int last = 1;
                         int stop = FindNextVectorPartition(piece, 1);
                         string x = piece.Substring(1, stop - 1);
-                        Console.WriteLine(stop);
                         last = stop + 1;
                         if (last < piece.Length)
                         {
