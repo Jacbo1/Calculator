@@ -18,7 +18,7 @@ namespace Calculator
         private const string HEX_NUMBER            = @"0x[0-9A-Fa-f]+";
         private const string GENERIC_NUM           = "(" + HEX_NUMBER + "|" + BINARY_NUMBER + "|" + NUMBER + "|" + SCI_NOTATION + "|" + FRACTION + ")";
         private const string VECTOR                = "<" + GENERIC_NUM + ", ?" + GENERIC_NUM + ", ?" + GENERIC_NUM + ">";
-        private const string VECTOR_LOOSE          = @"<[\S ]*?, ?[\S ]*?, ?[\S ]*?>";
+        private const string VECTOR_LOOSE          = @"<[\S ]*?(, ?[\S ]*?)*>";
         private const string PIECE_REGEX_RIGHT     = VECTOR_LOOSE + "|" + HEX_NUMBER + "|" + BINARY_NUMBER + "|" + UNSIGNED_SCI_NOTATION + "|" + UNSIGNED_FRACTION + "|" + UNSIGNED_NUMBER + @"|[+%*/x.^()-])";
 
         private static readonly string[] defaultPieces = MergeSort(new string[] { @"band\(", @"bor\(", @"bnot\(", @"bxor\(", @"bshift\(", @"length\(", @"atan2\(", @"prod\(", @"getx\(", @"gety\(", @"getz\(", @"clamp\(", @"round\(", @"floor\(", @"norm\(", @"min\(", @"max\(", @"sum\(", @"avg\(", @"log\(", @"ceil\(", @"sign\(", @"sqrt\(", @"asin\(", @"acos\(", @"atan\(", @"sin\(", @"cos\(", @"tan\(", @"rad\(", @"deg\(", @"abs\(", @"avg\(", @"ln\(", "pi", "e" });
@@ -31,8 +31,8 @@ namespace Calculator
             RE_SciNotation      = new Regex("^(" + NUMBER + ")E(" + NUMBER + ")$", RegexOptions.Compiled),   // num1 = groups[1], num2 = groups[3]
             RE_Fraction         = new Regex("^" + FRACTION + "$", RegexOptions.Compiled),                    // num1 = groups[1], num2 = groups[5]
             RE_GenericNum       = new Regex("^" + GENERIC_NUM + "$", RegexOptions.Compiled),
-            RE_Vector           = new Regex("^" + VECTOR + "$", RegexOptions.Compiled),                      // num1 = groups[1], num2 = groups[13], num3 = groups[25]
-            RE_VectorLoose      = new Regex(@"^<([\S ]*?), ?([\S ]*?), ?([\S ]*?)>$", RegexOptions.Compiled),// num1 = groups[1], num2 = groups[2],  num3 = groups[3]
+            RE_Vector           = new Regex("^" + VECTOR + "$", RegexOptions.Compiled),                      // num1 = groups[1], num2 = groups[13], num3 = groups[25]]
+            RE_VectorLoose      = new Regex(@"^<[\S ]*?(, ?[\S ]*?)*>$", RegexOptions.Compiled),// num1 = groups[1], num2 = groups[2],  num3 = groups[3]
             RE_VectorFraction   = new Regex(@"^<(" + FRACTION + "), ?(" + FRACTION + "), ?(" + FRACTION + ")>$", RegexOptions.Compiled),  // num1 = groups[1], num2 = groups[10], num3 = groups[19]
             RE_Binary           = new Regex(@"(?<=^0b)[01]+$", RegexOptions.Compiled),
             RE_Hex              = new Regex(@"(?<=^0x)[0-9A-Fa-f]+$", RegexOptions.Compiled),

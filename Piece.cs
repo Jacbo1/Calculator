@@ -1,3 +1,5 @@
+using System;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace Calculator
@@ -131,16 +133,30 @@ namespace Calculator
                     }
 
                     // Check if it is an unprocessed vector
-                    match = Matching.RE_VectorLoose.Match(piece);
-                    if (match.Success)
+                    if (Matching.RE_VectorLoose.Match(piece).Success)
                     {
                         // Vector that needs parsing
                         Type = "parse vec";
-                        Value = new string[] {
-                                match.Groups[1].Value,
-                                match.Groups[2].Value,
-                                match.Groups[3].Value
-                            };
+                        int last = 1;
+                        int stop = FindNextVectorPartition(piece, 1);
+                        string x = piece.Substring(1, stop - 1);
+                        Console.WriteLine(stop);
+                        last = stop + 1;
+                        if (last < piece.Length)
+                        {
+                            stop = FindNextVectorPartition(piece, last);
+                            string y = piece.Substring(last, stop - last);
+                            last = stop + 1;
+                            if (last < piece.Length)
+                            {
+                                stop = FindNextVectorPartition(piece, last);
+                                string z = piece.Substring(last, stop - last);
+                                Value = new string[] { x, y, z};
+                            }
+                            else Value = new string[] { x, y, "0" };
+                        }
+                        else Value = new string[] { x, x, x };
+
                         IsOperand = true;
                         return;
                     }
@@ -151,6 +167,25 @@ namespace Calculator
                     IsOperand = false;
                     break;
             }
+        }
+
+        private static int FindNextVectorPartition(string input, int start)
+        {
+            int openCount = 0;
+            for (int i = start; i < input.Length; i++)
+            {
+                switch (input[i])
+                {
+                    case '(': openCount++; break;
+                    case ')': openCount--; break;
+                    case ',':
+                    case '>':
+                        if (openCount <= 0) return i;
+                        break;
+                }
+            }
+
+            return input.Length - 1;
         }
     }
 }
