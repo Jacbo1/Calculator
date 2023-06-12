@@ -137,10 +137,9 @@ namespace Calculator
                     {
                         // Vector that needs parsing
                         Type = "parse vec";
-                        int last = 1;
                         int stop = FindNextVectorPartition(piece, 1);
                         string x = piece.Substring(1, stop - 1);
-                        last = stop + 1;
+                        int last = stop + 1;
                         if (last < piece.Length)
                         {
                             stop = FindNextVectorPartition(piece, last);

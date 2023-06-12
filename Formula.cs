@@ -216,6 +216,7 @@ namespace Calculator
                     try
                     {
                         pieces.Add(new Piece(match.Value));
+                        //Console.WriteLine(pieces[pieces.Count - 1].Value);
                     }
                     catch (FractionDoubleParsingException)
                     {
@@ -230,8 +231,83 @@ namespace Calculator
                 return pieces;
             }
 
-            // Post processing
+            // Convert .x .y .z
             int i = 0;
+            Action<string, int> swapFunc = (sval, start) =>
+            {
+                string s = $"get{sval[1]}(";
+                for (int j = start; j < i; j++)
+                {
+                    Piece piece = pieces[j];
+                    switch (piece.Type)
+                    {
+                        case "num":
+                            s += ((Fraction)piece.Value).ToMinString();
+                            break;
+                        case "vec":
+                            {
+                                Vector v = (Vector)piece.Value;
+                                s += $"<{v.X.ToMinString()},{v.Y.ToMinString()},{v.Z.ToMinString()}>";
+                            }
+                            break;
+                        case "parse vec":
+                            {
+                                string[] arr = (string[])piece.Value;
+                                s += $"<{arr[0]},{arr[1]},{arr[2]}>";
+                            }
+                            break;
+                        default:
+                            s += piece.Value;
+                            break;
+
+                    }
+                }
+                s += ")";
+                pieces[start] = new Piece(new Function(s, vars, out int _));
+                for (int j = i; j > start; j--) pieces.RemoveAt(j);
+                i = start + 1;
+            };
+
+            while (i < pieces.Count)
+            {
+                Piece piece = pieces[i];
+                string sval = piece.Value as string;
+                if (sval != ".x" && sval != ".y" && sval != ".z")
+                {
+                    i++;
+                    continue;
+                }
+
+                if (i - 1 <= 0 || pieces[i - 1].Type != "rpar")
+                {
+                    swapFunc(sval, i - 1);
+                    continue;
+                }
+
+                bool inserted = false;
+                int openCount = 0;
+                for (int j = i - 1; j >= 0; j--)
+                {
+                    Piece piece2 = pieces[j];
+                    if (piece2.Type == "rpar") openCount++;
+                    if (piece2.Type == "lpar")
+                    {
+                        openCount--;
+                        if (openCount <= 0)
+                        {
+                            swapFunc(sval, j);
+                            inserted = true;
+                            break;
+                        }
+                    }
+                }
+                if (inserted) continue;
+
+                swapFunc(sval, 0);
+            }
+
+            // Post processing
+            i = 0;
             while (i < pieces.Count - 1)
             {
                 Piece piece = pieces[i];

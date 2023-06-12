@@ -21,7 +21,7 @@ namespace Calculator
         private const string VECTOR_LOOSE          = @"<[\S ]*?(, ?[\S ]*?)*>";
         private const string PIECE_REGEX_RIGHT     = VECTOR_LOOSE + "|" + HEX_NUMBER + "|" + BINARY_NUMBER + "|" + UNSIGNED_SCI_NOTATION + "|" + UNSIGNED_FRACTION + "|" + UNSIGNED_NUMBER + @"|[+%*/x.^()-])";
 
-        private static readonly string[] defaultPieces = MergeSort(new string[] { @"band\(", @"bor\(", @"bnot\(", @"bxor\(", @"bshift\(", @"length\(", @"atan2\(", @"prod\(", @"getx\(", @"gety\(", @"getz\(", @"clamp\(", @"round\(", @"floor\(", @"norm\(", @"min\(", @"max\(", @"sum\(", @"avg\(", @"log\(", @"ceil\(", @"sign\(", @"sqrt\(", @"asin\(", @"acos\(", @"atan\(", @"sin\(", @"cos\(", @"tan\(", @"rad\(", @"deg\(", @"abs\(", @"avg\(", @"ln\(", "pi", "e" });
+        private static readonly string[] defaultPieces = MergeSort(new string[] { @"\.x", @"\.y", @"\.z", @"band\(", @"bor\(", @"bnot\(", @"bxor\(", @"bshift\(", @"length\(", @"atan2\(", @"prod\(", @"getx\(", @"gety\(", @"getz\(", @"clamp\(", @"round\(", @"floor\(", @"norm\(", @"min\(", @"max\(", @"sum\(", @"avg\(", @"log\(", @"ceil\(", @"sign\(", @"sqrt\(", @"asin\(", @"acos\(", @"atan\(", @"sin\(", @"cos\(", @"tan\(", @"rad\(", @"deg\(", @"abs\(", @"avg\(", @"ln\(", "pi", "e" });
 
         private static readonly string PIECES      = "(" + string.Join("|", defaultPieces) + "|" + PIECE_REGEX_RIGHT;
         
