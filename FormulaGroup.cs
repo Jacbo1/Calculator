@@ -10,7 +10,7 @@ namespace Calculator
         private static readonly Regex varRegex = new Regex(@"(\S+)=(\S+)", RegexOptions.Compiled);
         private static readonly Regex whitespace = new Regex(@"\s", RegexOptions.Compiled);
 
-        public static string Calculate(string input, out string workOutput, Enums.OutputMode outputMode)
+        public static string Calculate(string input, out string workOutput, OutputMode outputMode)
         {
             workOutput = "";
             string answer = "";
@@ -57,11 +57,11 @@ namespace Calculator
             {
                 switch (outputMode)
                 {
-                    case Enums.OutputMode.Scientific:
+                    case OutputMode.Scientific:
                         // Output in scientific notation
                         const int DEC_DIGIT_DISPLAY = 4;
 
-                        Func<Fraction, string> convertToScientific = n =>
+                        string ConvertToScientific(Fraction n)
                         {
                             if (n == 0)
                                 return "0.0";
@@ -89,49 +89,64 @@ namespace Calculator
                         switch (answerPiece.Type)
                         {
                             case "num":
-                                return convertToScientific((Fraction)answerPiece.Value);
+                                return ConvertToScientific((Fraction)answerPiece.Value);
                             case "const":
-                                return convertToScientific((Fraction)answerPiece.ConstValue);
+                                return ConvertToScientific((Fraction)answerPiece.ConstValue);
                             case "vec":
                                 Vector v = (Vector)answerPiece.Value;
-                                return $"<{convertToScientific(v.X)}, {convertToScientific(v.Y)}, {convertToScientific(v.Z)}>";
+                                return $"<{ConvertToScientific(v.X)}, {ConvertToScientific(v.Y)}, {ConvertToScientific(v.Z)}>";
                         }
                         break;
-                    case Enums.OutputMode.Fractions:
+                    case OutputMode.Fractions:
                         // Output in fraction notation
+                        string ToFrac(Fraction f)
+                        {
+                            if (f.Denominator == 1) return f.Numerator.ToString();
+                            return $"{f.Numerator} / {f.Denominator}";
+                        }
+
                         switch (answerPiece.Type)
                         {
-                            case "num":
-                                return ((Fraction)answerPiece.Value).ToFracString();
-                            case "const":
-                                return ((Fraction)answerPiece.ConstValue).ToFracString();
+                            case "num": return ToFrac((Fraction)answerPiece.Value);
+                            case "const": return ToFrac((Fraction)answerPiece.ConstValue);
                             case "vec":
                                 Vector v = (Vector)answerPiece.Value;
-                                return $"<{v.X.ToFracString()}, {v.Y.ToFracString()}, {v.Z.ToFracString()}>";
+                                return $"<{ToFrac(v.X)}, {ToFrac(v.Y)}, {ToFrac(v.Z)}>";
                         }
                         break;
-                    case Enums.OutputMode.Binary:
+                    case OutputMode.Binary:
                         switch (answerPiece.Type)
                         {
-                            case "num":
-                                return ToBinaryString((BigInteger)(Fraction)answerPiece.Value);
-                            case "const":
-                                return ToBinaryString((BigInteger)answerPiece.ConstValue);
+                            case "num": return ToBinaryString((BigInteger)(Fraction)answerPiece.Value);
+                            case "const": return ToBinaryString((BigInteger)answerPiece.ConstValue);
                             case "vec":
                                 Vector v = (Vector)answerPiece.Value;
                                 return $"<{ToBinaryString((BigInteger)v.X)}, {ToBinaryString((BigInteger)v.Y)}, {ToBinaryString((BigInteger)v.Z)}>";
                         }
                         break;
-                    case Enums.OutputMode.Hex:
+                    case OutputMode.Hex:
                         switch (answerPiece.Type)
                         {
-                            case "num":
-                                return ToHexString((BigInteger)(Fraction)answerPiece.Value);
-                            case "const":
-                                return ToHexString((BigInteger)answerPiece.ConstValue);
+                            case "num": return ToHexString((BigInteger)(Fraction)answerPiece.Value);
+                            case "const": return ToHexString((BigInteger)answerPiece.ConstValue);
                             case "vec":
                                 Vector v = (Vector)answerPiece.Value;
                                 return $"<{ToHexString((BigInteger)v.X)}, {ToHexString((BigInteger)v.Y)}, {ToHexString((BigInteger)v.Z)}>";
+                        }
+                        break;
+                    case OutputMode.ColorHex:
+                        if (answerPiece.Type == "vec")
+                        {
+                            //return "#"
+                            string ToHex(Fraction n)
+                            {
+                                string s = BigInteger.Min(BigInteger.Max(Fraction.Round(n).Numerator, 0), 255).ToString("X2");
+                                if (s.Length > 2) return s.Substring(1, 2);
+                                return s;
+                            }
+
+                            Vector v = (Vector)answerPiece.Value;
+                            return $"#{ToHex(v.X)}{ToHex(v.Y)}{ToHex(v.Z)}";
                         }
                         break;
                 }
@@ -147,10 +162,8 @@ namespace Calculator
 
             if (str.Length % 2 == 1)
             {
-                if (str[0] == '0')
-                    str = str.Substring(1);
-                else
-                    str = '0' + str;
+                if (str[0] == '0') str = str.Substring(1);
+                else str = '0' + str;
             }
 
             for (int i = str.Length - 2; i >= 2; i -= 2)
@@ -179,8 +192,7 @@ namespace Calculator
 
             string str = base2.ToString();
             str = str.Substring(Math.Max(0, str.IndexOf('1')));
-            if (str.Length % 8 != 0)
-                str = new string('0', 8 - str.Length % 8) + str;
+            if (str.Length % 8 != 0) str = new string('0', 8 - str.Length % 8) + str;
 
             for (int i = str.Length - 4; i >= 4; i -= 4)
                 str = str.Substring(0, i) + ' ' + str.Substring(i);

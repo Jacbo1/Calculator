@@ -36,6 +36,7 @@
             this.menuItem1 = new System.Windows.Forms.MenuItem();
             this.MenuToggleWork = new System.Windows.Forms.MenuItem();
             this.Menu1Instance = new System.Windows.Forms.MenuItem();
+            this.MenuTopMost = new System.Windows.Forms.MenuItem();
             this.menuItem2 = new System.Windows.Forms.MenuItem();
             this.MenuOutputDefault = new System.Windows.Forms.MenuItem();
             this.MenuOutputScientific = new System.Windows.Forms.MenuItem();
@@ -45,7 +46,7 @@
             this.TextInput = new System.Windows.Forms.RichTextBox();
             this.WorkOutput = new System.Windows.Forms.RichTextBox();
             this.AnswerOutput = new System.Windows.Forms.RichTextBox();
-            this.MenuTopMost = new System.Windows.Forms.MenuItem();
+            this.MenuOutputColorHex = new System.Windows.Forms.MenuItem();
             this.SuspendLayout();
             // 
             // timer
@@ -83,6 +84,12 @@
             this.Menu1Instance.Index = 1;
             this.Menu1Instance.Text = "Only 1 instance";
             // 
+            // MenuTopMost
+            // 
+            this.MenuTopMost.Index = 2;
+            this.MenuTopMost.Text = "Stay On Top";
+            this.MenuTopMost.Click += new System.EventHandler(this.MenuTopMost_Click);
+            // 
             // menuItem2
             // 
             this.menuItem2.Index = 1;
@@ -91,38 +98,34 @@
             this.MenuOutputScientific,
             this.MenuOutputFractions,
             this.MenuOutputBinary,
-            this.MenuOutputHex});
+            this.MenuOutputHex,
+            this.MenuOutputColorHex});
             this.menuItem2.Text = "Output";
             // 
             // MenuOutputDefault
             // 
             this.MenuOutputDefault.Index = 0;
             this.MenuOutputDefault.Text = "Default";
-            this.MenuOutputDefault.Click += new System.EventHandler(this.MenuOutputDefault_Click);
             // 
             // MenuOutputScientific
             // 
             this.MenuOutputScientific.Index = 1;
             this.MenuOutputScientific.Text = "Scientific";
-            this.MenuOutputScientific.Click += new System.EventHandler(this.MenuOutputScientific_Click);
             // 
             // MenuOutputFractions
             // 
             this.MenuOutputFractions.Index = 2;
             this.MenuOutputFractions.Text = "Fractions";
-            this.MenuOutputFractions.Click += new System.EventHandler(this.MenuOutputFractions_Click);
             // 
             // MenuOutputBinary
             // 
             this.MenuOutputBinary.Index = 3;
             this.MenuOutputBinary.Text = "Binary";
-            this.MenuOutputBinary.Click += new System.EventHandler(this.MenuOutputBinary_Click);
             // 
             // MenuOutputHex
             // 
             this.MenuOutputHex.Index = 4;
             this.MenuOutputHex.Text = "Hexadecimal";
-            this.MenuOutputHex.Click += new System.EventHandler(this.MenuOutputHex_Click);
             // 
             // TextInput
             // 
@@ -174,11 +177,10 @@
             this.AnswerOutput.TabIndex = 9;
             this.AnswerOutput.Text = "";
             // 
-            // MenuTopMost
+            // MenuOutputColorHex
             // 
-            this.MenuTopMost.Index = 2;
-            this.MenuTopMost.Text = "Stay On Top";
-            this.MenuTopMost.Click += new System.EventHandler(this.MenuTopMost_Click);
+            this.MenuOutputColorHex.Index = 5;
+            this.MenuOutputColorHex.Text = "Color Hex";
             // 
             // Form1
             // 
@@ -217,6 +219,7 @@
         private System.Windows.Forms.MenuItem MenuOutputBinary;
         private System.Windows.Forms.MenuItem MenuOutputHex;
         private System.Windows.Forms.MenuItem MenuTopMost;
+        private System.Windows.Forms.MenuItem MenuOutputColorHex;
     }
 }
 

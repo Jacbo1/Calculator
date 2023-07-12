@@ -15,10 +15,10 @@ namespace Calculator
         private string input = "";
         private string answer = "";
         private string work = "";
-        private bool showWork = true,
-            oneInstance = false,
-            topmost = false;
-        private Enums.OutputMode outputMode = Enums.OutputMode.Default;
+        private bool showWork = true;
+        private bool oneInstance = false;
+        private bool topmost = false;
+        private OutputMode outputMode = OutputMode.Default;
 
         public Form1()
         {
@@ -39,16 +39,10 @@ namespace Calculator
                         found = true;
                     }
                 }
-                if (found)
-                    Close();
-                else
-                    InitializeComponent();
+                if (found) Close();
+                else InitializeComponent();
             }
-            else
-            {
-                // Open
-                InitializeComponent();
-            }
+            else InitializeComponent(); // Open
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -56,12 +50,8 @@ namespace Calculator
             // Restore state
             switch (Properties.Settings.Default.State)
             {
-                case 1:
-                    WindowState = FormWindowState.Maximized;
-                    break;
-                case 2:
-                    WindowState = FormWindowState.Minimized;
-                    break;
+                case 1: WindowState = FormWindowState.Maximized; break;
+                case 2: WindowState = FormWindowState.Minimized; break;
             }
             
             Location = Properties.Settings.Default.Pos;
@@ -69,7 +59,7 @@ namespace Calculator
             showWork = Properties.Settings.Default.ShowWork;
             input = TextInput.Text = Properties.Settings.Default.Input;
             TopMost = topmost = MenuTopMost.Checked = Properties.Settings.Default.TopMost;
-            SetOutputMode((Enums.OutputMode)Properties.Settings.Default.OutputMode);
+            SetOutputMode((OutputMode)Properties.Settings.Default.OutputMode);
 
             inputCounter++;
             MenuToggleWork.Checked = showWork;
@@ -88,6 +78,13 @@ namespace Calculator
             Menu1Instance.Click += MenuButtonPressed_1Instance;
 
             SizeComponents();
+
+            MenuOutputBinary.Click += (_, __) => SetOutputMode(OutputMode.Binary);
+            MenuOutputColorHex.Click += (_, __) => SetOutputMode(OutputMode.ColorHex);
+            MenuOutputDefault.Click += (_, __) => SetOutputMode(OutputMode.Default);
+            MenuOutputFractions.Click += (_, __) => SetOutputMode(OutputMode.Fractions);
+            MenuOutputHex.Click += (_, __) => SetOutputMode(OutputMode.Hex);
+            MenuOutputScientific.Click += (_, __) => SetOutputMode(OutputMode.Scientific);
         }
 
         private void AnswerOutput_Click(object sender, EventArgs e)
@@ -188,51 +185,17 @@ namespace Calculator
             Properties.Settings.Default.Save();
         }
 
-        private void ToggleOutputButton(Enums.OutputMode mode, bool state)
+        private void ToggleOutputButton(OutputMode mode, bool state)
         {
             switch (mode)
             {
-                case Enums.OutputMode.Default:
-                    MenuOutputDefault.Checked = state;
-                    break;
-                case Enums.OutputMode.Scientific:
-                    MenuOutputScientific.Checked = state;
-                    break;
-                case Enums.OutputMode.Fractions:
-                    MenuOutputFractions.Checked = state;
-                    break;
-                case Enums.OutputMode.Binary:
-                    MenuOutputBinary.Checked = state;
-                    break;
-                case Enums.OutputMode.Hex:
-                    MenuOutputHex.Checked = state;
-                    break;
+                case OutputMode.Default: MenuOutputDefault.Checked = state; break;
+                case OutputMode.Scientific: MenuOutputScientific.Checked = state; break;
+                case OutputMode.Fractions: MenuOutputFractions.Checked = state; break;
+                case OutputMode.Binary: MenuOutputBinary.Checked = state; break;
+                case OutputMode.Hex: MenuOutputHex.Checked = state; break;
+                case OutputMode.ColorHex: MenuOutputColorHex.Checked = state; break;
             }
-        }
-
-        private void MenuOutputDefault_Click(object sender, EventArgs e)
-        {
-            SetOutputMode(Enums.OutputMode.Default);
-        }
-
-        private void MenuOutputFractions_Click(object sender, EventArgs e)
-        {
-            SetOutputMode(Enums.OutputMode.Fractions);
-        }
-
-        private void MenuOutputScientific_Click(object sender, EventArgs e)
-        {
-            SetOutputMode(Enums.OutputMode.Scientific);
-        }
-
-        private void MenuOutputBinary_Click(object sender, EventArgs e)
-        {
-            SetOutputMode(Enums.OutputMode.Binary);
-        }
-
-        private void MenuOutputHex_Click(object sender, EventArgs e)
-        {
-            SetOutputMode(Enums.OutputMode.Hex);
         }
 
         private void MenuButtonPressed_ShowWork(object sender, EventArgs e)
@@ -258,7 +221,7 @@ namespace Calculator
             Properties.Settings.Default.Save();
         }
 
-        private void SetOutputMode(Enums.OutputMode mode)
+        private void SetOutputMode(OutputMode mode)
         {
             ToggleOutputButton(outputMode, false);
             outputMode = mode;

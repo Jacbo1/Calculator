@@ -1,14 +1,12 @@
 ﻿namespace Calculator
 {
-    internal static class Enums
+    public enum OutputMode
     {
-        public enum OutputMode
-        {
-            Default,
-            Scientific,
-            Fractions,
-            Binary,
-            Hex
-        }
+        Default,
+        Scientific,
+        Fractions,
+        Binary,
+        Hex,
+        ColorHex
     }
 }

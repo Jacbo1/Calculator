@@ -216,7 +216,6 @@ namespace Calculator
                     try
                     {
                         pieces.Add(new Piece(match.Value));
-                        //Console.WriteLine(pieces[pieces.Count - 1].Value);
                     }
                     catch (FractionDoubleParsingException)
                     {
