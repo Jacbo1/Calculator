@@ -21,6 +21,7 @@ namespace Calculator
                 default: throw new Exception();
             }
         }
+
         public static Piece Op(Piece a, Piece b, Func<Fraction, Fraction, Fraction> func)
         {
             switch (a.Type + b.Type)

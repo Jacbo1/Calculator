@@ -48,10 +48,9 @@ namespace Calculator
                 case "*":
                 case "/":
                 case ".":
-                case "^":
-                    return true;
+                case "^": return true;
+                default: return false;
             }
-            return false;
         }
 
         internal static bool IsFunc(string s)
@@ -90,10 +89,9 @@ namespace Calculator
                 case "tan(":
                 case "rad(":
                 case "deg(":
-                case "abs(":
-                    return true;
+                case "abs(": return true;
+                default: return false;
             }
-            return false;
         }
 
 
@@ -125,15 +123,18 @@ namespace Calculator
             for (int i = start; i < pieces.Count; i++)
             {
                 Piece piece2 = pieces[i];
-                if (piece2.Value.Equals("("))
-                    openCount++;
+                if (piece2.Value.Equals("(")) openCount++;
                 else if (piece2.Value.Equals(")"))
                 {
                     openCount--;
                     if (openCount == 0)
-                        return i; // Found partner parenthesis
+                    {
+						// Found partner parenthesis
+						return i;
+                    }
                 }
             }
+
             return -1;
         }
 
@@ -144,37 +145,28 @@ namespace Calculator
             int close = raw.IndexOf(')', start);
             int index;
 
-            if (open == -1 || close == -1)
-                return -1;
+            if (open == -1 || close == -1 || open >= close) return -1;
+			
+			index = open;
+			openCount++;
 
-            if (open < close)
+			for (; ; )
             {
-                index = open;
-                openCount++;
-            }
-            else
-                return -1;
-
-            for(; ; )
-            {
-                if (open != -1 && index >= open)
-                    open = raw.IndexOf('(', index + 1);
+                if (open != -1 && index >= open) open = raw.IndexOf('(', index + 1);
                 if (index >= close)
                 {
                     close = raw.IndexOf(')', index + 1);
-                    if (close == -1)
-                        return -1;
+                    if (close == -1) return -1;
                 }
+
                 if (close < open || open == -1)
                 {
                     // Closing
                     index = close;
                     openCount--;
-                    if (openCount <= 0)
-                        return index;
+                    if (openCount <= 0) return index;
                 }
-                else
-                    openCount++; // Opening
+                else openCount++; // Opening
             }
         }
 
@@ -184,13 +176,15 @@ namespace Calculator
             for (int i = start; i >= 0; i--)
             {
                 Piece piece2 = pieces[i];
-                if (piece2.Value.Equals(")"))
-                    openCount++;
+                if (piece2.Value.Equals(")")) openCount++;
                 else if (piece2.Value.Equals("("))
                 {
                     openCount--;
                     if (openCount == 0)
-                        return i; // Found partner parenthesis
+                    {
+						// Found partner parenthesis
+						return i;
+                    }
                 }
             }
             return -1;
@@ -213,37 +207,38 @@ namespace Calculator
                 {
                     arr[k] = rightArr[j];
                     j++;
+                    continue;
                 }
-                else if (j == rightArr.Length)
+                
+                if (j == rightArr.Length)
                 {
                     arr[k] = leftArr[i];
                     i++;
+                    continue;
                 }
-                else if (leftArr[i].Length >= rightArr[j].Length)
+                
+                if (leftArr[i].Length >= rightArr[j].Length)
                 {
                     arr[k] = leftArr[i];
                     i++;
+                    continue;
                 }
-                else
-                {
-                    arr[k] = rightArr[j];
-                    j++;
-                }
+                
+                arr[k] = rightArr[j];
+                j++;
             }
         }
 
         private static void MergeSort(string[] arr, int l, int r)
-        {
-            if (l < r)
-            {
-                int m = (l + r) / 2;
-                MergeSort(arr, l, m);
-                MergeSort(arr, m + 1, r);
-                Merge(arr, l, m, r);
-            }
-        }
+		{
+			if (l >= r) return;
+			int m = (l + r) / 2;
+			MergeSort(arr, l, m);
+			MergeSort(arr, m + 1, r);
+			Merge(arr, l, m, r);
+		}
 
-        private static string[] MergeSort(string[] arr)
+		private static string[] MergeSort(string[] arr)
         {
             MergeSort(arr, 0, arr.Length - 1);
             return arr;
@@ -252,17 +247,17 @@ namespace Calculator
         internal static string Answer2Decimal(string answer)
         {
             if (RE_Fraction.IsMatch(answer) && Fraction.TryParse(answer, out Fraction? frac))
-                return frac.ToString();
-
             {
-                Match match = RE_VectorFraction.Match(answer);
-                if (match.Success)
-                {
-                    if (!Fraction.TryParse(match.Groups[1].Value, out Fraction? x)) return answer;
-                    if (!Fraction.TryParse(match.Groups[10].Value, out Fraction? y)) return answer;
-                    if (!Fraction.TryParse(match.Groups[19].Value, out Fraction? z)) return answer;
-                    return $"<{x}, {y}, {z}>";
-                }
+                return frac.ToString();
+            }
+
+            Match match = RE_VectorFraction.Match(answer);
+            if (match.Success)
+            {
+                if (!Fraction.TryParse(match.Groups[1].Value, out Fraction? x)) return answer;
+                if (!Fraction.TryParse(match.Groups[10].Value, out Fraction? y)) return answer;
+                if (!Fraction.TryParse(match.Groups[19].Value, out Fraction? z)) return answer;
+                return $"<{x}, {y}, {z}>";
             }
 
             return answer;

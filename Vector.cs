@@ -27,74 +27,69 @@
 
         public static implicit operator Vector(Fraction n) => new Vector(n);
 
-        public static Vector operator +(Vector n1, Fraction n2) => new Vector(n1.X + n2, n1.Y + n2, n1.Z + n2);
+        public static Vector operator +(Vector v1, Fraction v2) => new Vector(v1.X + v2, v1.Y + v2, v1.Z + v2);
 
-        public static Vector operator +(Fraction n1, Vector n2) => new Vector(n1 + n2.X, n1 + n2.Y, n1 + n2.Z);
+        public static Vector operator +(Fraction v1, Vector v2) => new Vector(v1 + v2.X, v1 + v2.Y, v1 + v2.Z);
 
-        public static Vector operator +(Vector n1, Vector n2) => new Vector(n1.X + n2.X, n1.Y + n2.Y, n1.Z + n2.Z);
+        public static Vector operator +(Vector v1, Vector v2) => new Vector(v1.X + v2.X, v1.Y + v2.Y, v1.Z + v2.Z);
 
-        public static Vector operator -(Vector n1) => new Vector(-n1.X, -n1.Y, -n1.Z);
+        public static Vector operator -(Vector v1) => new Vector(-v1.X, -v1.Y, -v1.Z);
 
-        public static Vector operator -(Vector n1, Fraction n2) => new Vector(n1.X - n2, n1.Y - n2, n1.Z - n2);
+        public static Vector operator -(Vector v1, Fraction v2) => new Vector(v1.X - v2, v1.Y - v2, v1.Z - v2);
 
-        public static Vector operator -(Fraction n1, Vector n2) => new Vector(n1 - n2.X, n1 - n2.Y, n1 - n2.Z);
+        public static Vector operator -(Fraction v1, Vector v2) => new Vector(v1 - v2.X, v1 - v2.Y, v1 - v2.Z);
 
-        public static Vector operator -(Vector n1, Vector n2) => new Vector(n1.X - n2.X, n1.Y - n2.Y, n1.Z - n2.Z);
+        public static Vector operator -(Vector v1, Vector v2) => new Vector(v1.X - v2.X, v1.Y - v2.Y, v1.Z - v2.Z);
 
-        public static Vector operator *(Vector n1, Fraction n2) => new Vector(n1.X * n2, n1.Y * n2, n1.Z * n2);
+        public static Vector operator *(Vector v1, Fraction v2) => new Vector(v1.X * v2, v1.Y * v2, v1.Z * v2);
 
-        public static Vector operator *(Fraction n1, Vector n2) => new Vector(n1 * n2.X, n1 * n2.Y, n1 * n2.Z);
+        public static Vector operator *(Fraction v1, Vector v2) => new Vector(v1 * v2.X, v1 * v2.Y, v1 * v2.Z);
 
-        public static Vector operator *(Vector n1, Vector n2) => new Vector(n1.X * n2.X, n1.Y * n2.Y, n1.Z * n2.Z);
+        public static Vector operator *(Vector v1, Vector v2) => new Vector(v1.X * v2.X, v1.Y * v2.Y, v1.Z * v2.Z);
 
-        public static Vector operator /(Vector n1, Fraction n2) => new Vector(n1.X / n2, n1.Y / n2, n1.Z / n2);
+        public static Vector operator /(Vector v1, Fraction v2) => new Vector(v1.X / v2, v1.Y / v2, v1.Z / v2);
 
-        public static Vector operator /(Fraction n1, Vector n2) => new Vector(n1 / n2.X, n1 / n2.Y, n1 / n2.Z);
+        public static Vector operator /(Fraction v1, Vector v2) => new Vector(v1 / v2.X, v1 / v2.Y, v1 / v2.Z);
 
-        public static Vector operator /(Vector n1, Vector n2) => new Vector(n1.X / n2.X, n1.Y / n2.Y, n1.Z / n2.Z);
+        public static Vector operator /(Vector v1, Vector v2) => new Vector(v1.X / v2.X, v1.Y / v2.Y, v1.Z / v2.Z);
 
-        public static Vector operator %(Vector n1, Fraction n2) => new Vector(n1.X % n2, n1.Y % n2, n1.Z % n2);
+        public static Vector operator %(Vector v1, Fraction v2) => new Vector(v1.X % v2, v1.Y % v2, v1.Z % v2);
 
-        public static Vector operator %(Fraction n1, Vector n2) => new Vector(n1 % n2.X, n1 % n2.Y, n1 % n2.Z);
+        public static Vector operator %(Fraction v1, Vector v2) => new Vector(v1 % v2.X, v1 % v2.Y, v1 % v2.Z);
 
-        public static Vector operator %(Vector n1, Vector n2) => new Vector(n1.X % n2.X, n1.Y % n2.Y, n1.Z % (Fraction)n2.Z);
+        public static Vector operator %(Vector v1, Vector v2) => new Vector(v1.X % v2.X, v1.Y % v2.Y, v1.Z % (Fraction)v2.Z);
 
-        public static bool operator ==(Vector n1, Vector n2) => n1.X == n2.X && n1.Y == n2.Y && n1.Y == n2.Y;
+        public static bool operator ==(Vector v1, Vector v2) => v1.X == v2.X && v1.Y == v2.Y && v1.Y == v2.Y;
 
-        public static bool operator ==(Vector n1, object o)
+        public static bool operator ==(Vector v1, object o)
         {
-            if (o is Vector n2)
-                return n1.X == n2.X && n1.Y == n2.Y && n1.Z == n2.Z;
+            if (o is Vector v2) return v1.X == v2.X && v1.Y == v2.Y && v1.Z == v2.Z;
             return false;
         }
 
-        public static bool operator ==(object o, Vector n2)
+        public static bool operator ==(object o, Vector v2)
         {
-            if (o is Vector n1)
-                return n1.X == n2.X && n1.Y == n2.Y && n1.Z == n2.Z;
+            if (o is Vector v1) return v1.X == v2.X && v1.Y == v2.Y && v1.Z == v2.Z;
             return false;
         }
 
-        public static bool operator !=(Vector n1, Vector n2) => n1.X != n2.X || n1.Y != n2.Y || n1.Y == n2.Y;
+        public static bool operator !=(Vector v1, Vector v2) => v1.X != v2.X || v1.Y != v2.Y || v1.Y == v2.Y;
 
-        public static bool operator !=(Vector n1, object o)
+        public static bool operator !=(Vector v1, object o)
         {
-            if (o is Vector n2)
-                return n1.X != n2.X || n1.Y != n2.Y || n1.Z != n2.Z;
+            if (o is Vector v2) return v1.X != v2.X || v1.Y != v2.Y || v1.Z != v2.Z;
             return true;
         }
 
-        public static bool operator !=(object o, Vector n2)
+        public static bool operator !=(object o, Vector v2)
         {
-            if (o is Vector n1)
-                return n1.X != n2.X || n1.Y != n2.Y || n1.Z != n2.Z;
+            if (o is Vector v1) return v1.X != v2.X || v1.Y != v2.Y || v1.Z != v2.Z;
             return true;
         }
 
         public override bool Equals(object o)
         {
-            if (o is Vector n)
-                return X == n.X && Y == n.Y && Z == n.Z;
+            if (o is Vector v) return X == v.X && Y == v.Y && Z == v.Z;
             return false;
         }
 

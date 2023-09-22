@@ -21,8 +21,7 @@ namespace Calculator
             foreach (string line2 in input.Split('\n'))
             {
                 string line = whitespace.Replace(line2, "");
-                if (line.Length > 0 && line[0] == ';')
-                    continue; // Skip commented line
+                if (line.Length > 0 && line[0] == ';') continue; // Skip commented line
 
                 Match match = varRegex.Match(line);
                 if (match.Success)
@@ -41,7 +40,9 @@ namespace Calculator
                     vars[varName] = varPiece;
 
                     if (work.Length > 0 && !Matching.RE_GenericNum.IsMatch(right))
+                    {
                         workOutput += $"{work}\n{answer}\n\n";
+                    }
                 }
                 else if (line.Length > 0)
                 {
@@ -63,12 +64,10 @@ namespace Calculator
 
                         string ConvertToScientific(Fraction n)
                         {
-                            if (n == 0)
-                                return "0.0";
+                            if (n == 0) return "0.0";
 
                             int digits;
-                            if (n.Numerator >= n.Denominator)
-                                digits = (int)Math.Floor(0.000005 + BigInteger.Log10(BigInteger.Abs(n.Numerator / n.Denominator)));
+                            if (n.Numerator >= n.Denominator) digits = (int)Math.Floor(0.000005 + BigInteger.Log10(BigInteger.Abs(n.Numerator / n.Denominator)));
                             else
                             {
                                 const int DIGIT_SHIFT = 1000;
@@ -80,18 +79,14 @@ namespace Calculator
                             Fraction sci = n * Fraction.Pow(10, -digits);
                             sci = Fraction.Round(sci, DEC_DIGIT_DISPLAY);
                             string s = sci.ToString(DEC_DIGIT_DISPLAY);
-                            if (s.IndexOf('.') == -1)
-                                s += ".0";
-
+                            if (s.IndexOf('.') == -1) s += ".0";
                             return s + "E" + digits;
                         };
 
                         switch (answerPiece.Type)
                         {
-                            case "num":
-                                return ConvertToScientific((Fraction)answerPiece.Value);
-                            case "const":
-                                return ConvertToScientific((Fraction)answerPiece.ConstValue);
+                            case "num": return ConvertToScientific((Fraction)answerPiece.Value);
+                            case "const": return ConvertToScientific((Fraction)answerPiece.ConstValue);
                             case "vec":
                                 Vector v = (Vector)answerPiece.Value;
                                 return $"<{ConvertToScientific(v.X)}, {ConvertToScientific(v.Y)}, {ConvertToScientific(v.Z)}>";
@@ -167,35 +162,41 @@ namespace Calculator
             }
 
             for (int i = str.Length - 2; i >= 2; i -= 2)
+            {
                 str = str.Substring(0, i) + ' ' + str.Substring(i);
+            }
 
             return "0x" + str;
         }
 
         private static string ToBinaryString(BigInteger bigint)
         {
-            var bytes = BigInteger.Abs(bigint).ToByteArray();
-            var idx = bytes.Length - 1;
+			byte[] bytes = BigInteger.Abs(bigint).ToByteArray();
+			int idx = bytes.Length - 1;
 
-            // Create a StringBuilder having appropriate capacity.
-            var base2 = new System.Text.StringBuilder(bytes.Length * 8);
+			// Create a StringBuilder having appropriate capacity.
+			System.Text.StringBuilder base2 = new System.Text.StringBuilder(bytes.Length * 8);
 
-            // Convert first byte to binary.
-            var binary = Convert.ToString(bytes[idx], 2);
+			// Convert first byte to binary.
+			string binary = Convert.ToString(bytes[idx], 2);
 
             // Append binary string to StringBuilder.
             base2.Append(binary);
 
             // Convert remaining bytes adding leading zeros.
             for (idx--; idx >= 0; idx--)
+            {
                 base2.Append(Convert.ToString(bytes[idx], 2).PadLeft(8, '0'));
+            }
 
             string str = base2.ToString();
             str = str.Substring(Math.Max(0, str.IndexOf('1')));
             if (str.Length % 8 != 0) str = new string('0', 8 - str.Length % 8) + str;
 
             for (int i = str.Length - 4; i >= 4; i -= 4)
+            {
                 str = str.Substring(0, i) + ' ' + str.Substring(i);
+            }
 
             return "0b" + str;
         }

@@ -10,17 +10,18 @@ namespace Calculator
     {
         public BigInteger Numerator, Denominator;
 
-        private const double DEG2RAD = Math.PI / 180,
-            RAD2DEG = 180 / Math.PI;
-        private const int DEFAULT_DECIMAL_COUNT = 100,
-            POWER_STEPS = int.MaxValue,
-            POW_MAX_DIGITS = 5000;
+        private const double DEG2RAD = Math.PI / 180;
+        private const double RAD2DEG = 180 / Math.PI;
+        private const int DEFAULT_DECIMAL_COUNT = 100;
+        private const int POWER_STEPS = int.MaxValue;
+		private const int POW_MAX_DIGITS = 5000;
+
         private static readonly Fraction POW_EPSILON = new Fraction(1, BigInteger.Pow(10, 100));
-        public static readonly Fraction E = (Fraction)Parse("2.71828182845904523536028747135266249775724709369995"),
-            PI = (Fraction)Parse("3.14159265358979323846264338327950288419716939937510"),
-            Frac_deg2rad = PI / 180,
-            frac_rad2deg = 180 / PI,
-            Half = new Fraction(1, 2);
+        public static readonly Fraction E = (Fraction)Parse("2.71828182845904523536028747135266249775724709369995");
+        public static readonly Fraction PI = (Fraction)Parse("3.14159265358979323846264338327950288419716939937510");
+		public static readonly Fraction Frac_deg2rad = PI / 180;
+        public static readonly Fraction frac_rad2deg = 180 / PI;
+		public static readonly Fraction Half = new Fraction(1, 2);
 
         // Constructors
         public Fraction(long x)
@@ -59,10 +60,7 @@ namespace Calculator
                 Numerator = frac.Numerator;
                 Denominator = frac.Denominator;
             }
-            else
-            {
-                throw new FractionDoubleParsingException($"{x} is too small or large.");
-            }
+            else throw new FractionDoubleParsingException($"{x} is too small or large.");
         }
 
         public Fraction(BigInteger x)
@@ -97,8 +95,22 @@ namespace Calculator
         // Methods
         public static Fraction? Parse(string s)
         {
-            // Check if it is a hex number
-            Match match = Matching.RE_Hex.Match(s);
+			Match match = Matching.RE_Number.Match(s);
+			if (match.Success)
+			{
+				// In the form of 12.34
+				int dot = s.IndexOf('.');
+				if (dot == -1) return new Fraction(BigInteger.Parse(s), BigInteger.One);
+				else
+				{
+					BigInteger denom = BigInteger.Pow(10, s.Length - dot - 1);
+					BigInteger num = BigInteger.Parse(s.Substring(0, dot) + s.Substring(dot + 1));
+					return new Fraction(num, denom);
+				}
+			}
+
+			// Check if it is a hex number
+			match = Matching.RE_Hex.Match(s);
             if (match.Success)
             {
                 // Hex number
@@ -111,23 +123,6 @@ namespace Calculator
             {
                 // Binary number
                 return new Fraction(Convert.ToInt64(match.Value, 2), BigInteger.One);
-            }
-
-            match = Matching.RE_Number.Match(s);
-            if (match.Success)
-            {
-                // In the form of 12.34
-                int dot = s.IndexOf('.');
-                if (dot == -1)
-                {
-                    return new Fraction(BigInteger.Parse(s), BigInteger.One);
-                }
-                else
-                {
-                    BigInteger denom = BigInteger.Pow(10, s.Length - dot - 1);
-                    BigInteger num = BigInteger.Parse(s.Substring(0, dot) + s.Substring(dot + 1));
-                    return new Fraction(num, denom);
-                }
             }
 
             match = Matching.RE_SciNotation.Match(s);
@@ -153,14 +148,9 @@ namespace Calculator
             return result != null;
         }
 
-        public Fraction Clone() => new Fraction(Numerator, Denominator);
-
         public Fraction Simplify()
         {
-            if (Numerator == 0)
-            {
-                return new Fraction(0, 1);
-            }
+            if (Numerator == 0) return new Fraction(0, 1);
 
             BigInteger gcd = BigInteger.GreatestCommonDivisor(BigInteger.Abs(Numerator), Denominator);
             if (gcd > 1)
@@ -183,13 +173,11 @@ namespace Calculator
 
         public static Fraction NthRoot(BigInteger x, BigInteger n)
         {
-            if (x == 0)
-                return 0;
-            if (x < 0)
-                throw new ArithmeticException("Attempted to take a root of a negative number.");
+            if (x == 0) return 0;
+            if (x < 0) throw new ArithmeticException("Attempted to take a root of a negative number.");
 
             Fraction pre = new Fraction(BigInteger.One, BigInteger.One);
-            Fraction diff = POW_EPSILON.Clone();
+            Fraction diff = POW_EPSILON;
             Fraction result = new Fraction(BigInteger.Zero, BigInteger.One);
             BigInteger n1 = n - 1;
             Fraction n1frac = n1;
@@ -204,12 +192,8 @@ namespace Calculator
                     diff = Abs(result - pre);
                     pre = result;
                 }
-                else
-                {
-                    // Too big
-                    return Math.Pow((double)x, 1.0 / (double)n);
-                }
-            }
+                else return Math.Pow((double)x, 1.0 / (double)n); // Too big
+			}
 
             return result;
         }
@@ -217,17 +201,16 @@ namespace Calculator
         public static Fraction Pow(Fraction frac, BigInteger exponent)
         {
             // Exponent is whole number
-            if (exponent == 0)
-                // 0
-                return new Fraction(1, 1);
+            if (exponent == 0) return new Fraction(1, 1);
+
             // 2 common exponents to avoid the digit check resulting in precision loss
-            if (exponent == 2)
-                return frac * frac;
-            if (exponent == 3)
-                return frac * frac * frac;
+			if (exponent == 2) return frac * frac;
+            if (exponent == 3) return frac * frac * frac;
             if (!CheckPowDigits(frac.Numerator, exponent) || !CheckPowDigits(frac.Denominator, exponent))
+            {
                 // Too big
                 return Math.Pow((double)frac, (double)exponent);
+            }
 
             BigInteger abs = BigInteger.Abs(exponent);
             BigInteger num = BigInteger.One;
@@ -261,66 +244,51 @@ namespace Calculator
                 // Exponent is whole number
                 return Pow(frac, exponent.Numerator);
             }
-            else
+
+            // Exponent is a fraction
+            BigInteger wholePower = BigInteger.DivRem(exponent.Numerator, exponent.Denominator, out BigInteger rem);
+            if (!CheckPowDigits(frac.Numerator, rem) || !CheckPowDigits(frac.Denominator, rem))
             {
-                // Exponent is a fraction
-                BigInteger wholePower = BigInteger.DivRem(exponent.Numerator, exponent.Denominator, out BigInteger rem);
-                if (!CheckPowDigits(frac.Numerator, rem) || !CheckPowDigits(frac.Denominator, rem))
-                    // Too big
-                    return Math.Pow((double)frac, (double)exponent);
-
-                int remi = (int)BigInteger.Abs(rem);
-                BigInteger numPow = BigInteger.Pow(frac.Numerator, remi);
-                BigInteger denomPow = BigInteger.Pow(frac.Denominator, remi);
-
-                if (!CheckPowDigits(numPow, exponent.Denominator) || !CheckPowDigits(denomPow, exponent.Denominator))
-                    // Too big
-                    return Math.Pow((double)frac, (double)exponent);
-
-                Fraction numRoot = NthRoot(numPow, exponent.Denominator);
-                Fraction denomRoot = NthRoot(denomPow, exponent.Denominator);
-
-                return Pow(frac, wholePower) * (exponent.Numerator > 0 ? numRoot / denomRoot : denomRoot / numRoot);
+                // Too big
+                return Math.Pow((double)frac, (double)exponent);
             }
+
+            int remi = (int)BigInteger.Abs(rem);
+            BigInteger numPow = BigInteger.Pow(frac.Numerator, remi);
+            BigInteger denomPow = BigInteger.Pow(frac.Denominator, remi);
+
+            if (!CheckPowDigits(numPow, exponent.Denominator) || !CheckPowDigits(denomPow, exponent.Denominator))
+            {
+                // Too big
+                return Math.Pow((double)frac, (double)exponent);
+            }
+
+            Fraction numRoot = NthRoot(numPow, exponent.Denominator);
+            Fraction denomRoot = NthRoot(denomPow, exponent.Denominator);
+
+            return Pow(frac, wholePower) * (exponent.Numerator > 0 ? numRoot / denomRoot : denomRoot / numRoot);
         }
 
         public static Fraction Round(Fraction frac)
         {
-            if (frac.Denominator == 1)
-                // Whole number
-                return frac.Clone();
-            // Not whole number
-            if (frac.Numerator < 0)
-                // Negative
-                return Ceiling(frac - Half);
-            return Floor(frac + Half);
+            if (frac.Denominator == 1) return frac; // Whole number
+			if (frac.Numerator < 0) return Ceiling(frac - Half); // Negative
+			return Floor(frac + Half);
         }
 
         public static Fraction Round(Fraction frac, int digits)
         {
-            if (frac.Denominator == 1)
-                // Whole number
-                return frac.Clone();
-
-            // Not whole number
-            BigInteger mult = BigInteger.Pow(10, digits);
-            if (frac.Numerator < 0)
-                // Negative
-                return Ceiling(frac * mult - Half) / mult;
-            return Floor(frac * mult + Half) / mult;
+            if (frac.Denominator == 1) return frac; // Whole number
+			BigInteger mult = BigInteger.Pow(10, digits);
+            if (frac.Numerator < 0) return Ceiling(frac * mult - Half) / mult; // Negative
+			return Floor(frac * mult + Half) / mult;
         }
 
         public static Fraction Round(Fraction frac, Fraction digits) => Round(frac, (int)digits);
 
-        public static Fraction Min(Fraction a, Fraction b)
-        {
-            return (a < b ? a : b).Clone();
-        }
+        public static Fraction Min(Fraction a, Fraction b) => a < b ? a : b;
 
-        public static Fraction Max(Fraction a, Fraction b)
-        {
-            return (a > b ? a : b).Clone();
-        }
+        public static Fraction Max(Fraction a, Fraction b) => a > b ? a : b;
 
         public static Fraction Floor(Fraction frac)
         {
@@ -335,36 +303,30 @@ namespace Calculator
 
         public static Fraction Ceiling(Fraction frac)
         {
-            if (frac.Numerator < 0)
-                return frac.Numerator / frac.Denominator;
+            if (frac.Numerator < 0) return frac.Numerator / frac.Denominator;
 
             BigInteger floored = BigInteger.DivRem(frac.Numerator, frac.Denominator, out BigInteger rem);
             return rem == 0 ? floored : floored + 1;
         }
 
-        public static int Sign(Fraction frac)
-        {
-            return frac.Numerator.Sign;
-        }
+        public static int Sign(Fraction frac) => frac.Numerator.Sign;
 
 
         // ToString
         public string ToString(int decimalCount)
         {
-            if (Denominator == 1)
-                // Whole number
-                return Numerator.ToString();
+            if (Denominator == 1) return Numerator.ToString(); // Whole number
             if (decimalCount == 0)
+            {
                 // No decimals
                 return Matching.RE_TrailingZeroes.Replace((Numerator / Denominator).ToString(), "");
+            }
 
             // Decimal
             string s = (BigInteger.Pow(10, decimalCount) * BigInteger.Abs(Numerator) / Denominator).ToString();
-            if (s.Length <= decimalCount)
-                s = new string('0', decimalCount - s.Length + 1) + s;
+            if (s.Length <= decimalCount) s = new string('0', decimalCount - s.Length + 1) + s;
 
-            if (Numerator < 0)
-                s = '-' + s;
+            if (Numerator < 0) s = '-' + s;
             s = s.Substring(0, s.Length - decimalCount) + "." + s.Substring(s.Length - decimalCount);
 
             return Matching.RE_TrailingZeroes.Replace(s, "");
@@ -447,10 +409,8 @@ namespace Calculator
 
         public static bool operator ==(Fraction a, object b)
         {
-            if (b is int b1)
-                return a.Denominator == 1 && a.Numerator == b1;
-            if (b is long b2)
-                return a.Denominator == 1 && a.Numerator == b2;
+            if (b is int b1) return a.Denominator == 1 && a.Numerator == b1;
+            if (b is long b2) return a.Denominator == 1 && a.Numerator == b2;
             if (b is double b3)
             {
                 Fraction? frac = Parse(b3.ToString());
@@ -461,10 +421,8 @@ namespace Calculator
 
         public static bool operator ==(object a, Fraction b)
         {
-            if (a is int a1)
-                return b.Denominator == 1 && b.Numerator == a1;
-            if (a is long a2)
-                return b.Denominator == 1 && b.Numerator == a2;
+            if (a is int a1) return b.Denominator == 1 && b.Numerator == a1;
+            if (a is long a2) return b.Denominator == 1 && b.Numerator == a2;
             if (a is double a3)
             {
                 Fraction? frac = Parse(a3.ToString());
@@ -475,10 +433,8 @@ namespace Calculator
 
         public static bool operator !=(Fraction a, object b)
         {
-            if (b is int b1)
-                return a.Denominator != 1 || a.Numerator != b1;
-            if (b is long b2)
-                return a.Denominator != 1 || a.Numerator != b2;
+            if (b is int b1) return a.Denominator != 1 || a.Numerator != b1;
+            if (b is long b2) return a.Denominator != 1 || a.Numerator != b2;
             if (b is double b3)
             {
                 Fraction? frac = Parse(b3.ToString());
@@ -489,10 +445,8 @@ namespace Calculator
 
         public static bool operator !=(object a, Fraction b)
         {
-            if (a is int a1)
-                return b.Denominator != 1 || b.Numerator != a1;
-            if (a is long a2)
-                return b.Denominator != 1 || b.Numerator != a2;
+            if (a is int a1) return b.Denominator != 1 || b.Numerator != a1;
+            if (a is long a2) return b.Denominator != 1 || b.Numerator != a2;
             if (a is double a3)
             {
                 Fraction? frac = Parse(a3.ToString());
@@ -503,8 +457,7 @@ namespace Calculator
 
         public override bool Equals(object o)
         {
-            if (o is Fraction b)
-                return Numerator == b.Numerator && Denominator == b.Denominator;
+            if (o is Fraction b) return Numerator == b.Numerator && Denominator == b.Denominator;
             return false;
         }
 

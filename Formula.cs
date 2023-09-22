@@ -10,9 +10,8 @@ namespace Calculator
     {
         public string formula = "";
 
-        private static readonly Fraction
-            sciNotMinThreshold = new Fraction(1, 1000000),
-            sciNotMaxThreshold = new Fraction(1000000000000000, 1);
+        private static readonly Fraction sciNotMinThreshold = new Fraction(1, 1000000);
+		private static readonly Fraction sciNotMaxThreshold = new Fraction(1000000000000000, 1);
         internal const int DEC_DIGIT_DISPLAY = 10;
         private const double EPSILON = 0.000005;
         private static Regex pieceRegex;
@@ -55,10 +54,8 @@ namespace Calculator
         {
             switch (piece.Type)
             {
-                case "func1":
-                    return (string)piece.Value;
-                case "num":
-                    return ((Fraction)piece.Value).ToFracString();
+                case "func1": return (string)piece.Value;
+                case "num": return ((Fraction)piece.Value).ToFracString();
                 case "vec":
                     Vector vec = (Vector)piece.Value;
                     string x = vec.X.ToFracString();
@@ -68,82 +65,71 @@ namespace Calculator
                 case "parse vec":
                     string[] components = (string[])piece.Value;
                     return $"<{components[0]}, {components[1]}, {components[2]}>";
-                case "func":
-                    return ((Function)piece.Value).ToString();
+                case "func": return ((Function)piece.Value).ToString();
                 case "const":
-                    if ((string)piece.Value == "pi")
-                        return "π";
+                    if ((string)piece.Value == "pi") return "π";
                     break;
             }
             return (string)piece.Value;
         }
 
         internal static string ToString(Fraction n, bool round, bool deci)
+		{
+			if (!deci)
+			{
+				// Output fraction
+				return round ? Fraction.Round(n, DEC_DIGIT_DISPLAY).ToFracString() : n.ToFracString();
+			}
+
+			// Output decimal
+			if (n.Numerator == 0) return "0";
+
+			if (Fraction.Abs(n) >= sciNotMinThreshold && Fraction.Abs(n) < sciNotMaxThreshold)
+			{
+				// Output as is
+				return round ? Fraction.Round(n, DEC_DIGIT_DISPLAY).ToString(DEC_DIGIT_DISPLAY) : n.ToString();
+			}
+
+			// Convert to scientific notation
+			// Decimal
+			int digits;
+			if (n.Numerator >= n.Denominator) digits = (int)Math.Floor(EPSILON + BigInteger.Log10(BigInteger.Abs(n.Numerator / n.Denominator)));
+			else
+			{
+				const int DIGIT_SHIFT = 1000;
+				BigInteger mult = BigInteger.Pow(10, DIGIT_SHIFT);
+				Fraction big = n * mult;
+				digits = (int)Math.Floor(EPSILON + BigInteger.Log10(BigInteger.Abs(big.Numerator / big.Denominator))) - DIGIT_SHIFT;
+			}
+
+			Fraction sci = n * Fraction.Pow(10, -digits);
+			sci = Fraction.Round(sci, DEC_DIGIT_DISPLAY);
+			string s = sci.ToString(DEC_DIGIT_DISPLAY);
+			if (s.IndexOf('.') == -1) s += ".0";
+
+			return s + "E" + digits;
+		}
+
+		private static string ToString(Piece piece)
         {
-            if (deci)
-            {
-                // Output decimal
-                if (n.Numerator == 0)
-                    return "0";
-
-                if (Fraction.Abs(n) < sciNotMinThreshold || Fraction.Abs(n) >= sciNotMaxThreshold)
-                {
-                    // Convert to scientific notation
-                    // Decimal
-                    int digits;
-                    if (n.Numerator >= n.Denominator)
-                    {
-                        digits = (int)Math.Floor(EPSILON + BigInteger.Log10(BigInteger.Abs(n.Numerator / n.Denominator)));
-                    }
-                    else
-                    {
-                        const int DIGIT_SHIFT = 1000;
-                        BigInteger mult = BigInteger.Pow(10, DIGIT_SHIFT);
-                        Fraction big = n * mult;
-                        digits = (int)Math.Floor(EPSILON + BigInteger.Log10(BigInteger.Abs(big.Numerator / big.Denominator))) - DIGIT_SHIFT;
-                    }
-
-                    Fraction sci = n * Fraction.Pow(10, -digits);
-                    sci = Fraction.Round(sci, DEC_DIGIT_DISPLAY);
-                    string s = sci.ToString(DEC_DIGIT_DISPLAY);
-                    if (s.IndexOf('.') == -1)
-                        s += ".0";
-
-                    return s + "E" + digits;
-                }
-
-                // Output as is
-                return round ? Fraction.Round(n, DEC_DIGIT_DISPLAY).ToString(DEC_DIGIT_DISPLAY) : n.ToString();
-            }
-
-            // Output fraction
-            return round ? Fraction.Round(n, DEC_DIGIT_DISPLAY).ToFracString() : n.ToFracString();
-        }
-
-        private static string ToString(Piece piece)
-        {
-            if (piece.IsVar)
-                return piece.VarName;
+            if (piece.IsVar) return piece.VarName;
 
             switch (piece.Type)
             {
-                case "func1":
-                    return piece.Value == "neg" ? "-" : (string)piece.Value;
-                case "num":
-                    return ToString((Fraction)piece.Value, true, true);
+                case "func1": return piece.Value == "neg" ? "-" : (string)piece.Value;
+                case "num": return ToString((Fraction)piece.Value, true, true);
                 case "vec":
                     Vector vec = (Vector)piece.Value;
                     return $"<{ToString(vec.X, true, true)}, {ToString(vec.Y, true, true)}, {ToString(vec.Z, true, true)}>";
                 case "parse vec":
                     string[] components = (string[])piece.Value;
                     return $"<{components[0]}, {components[1]}, {components[2]}>";
-                case "func":
-                    return ((Function)piece.Value).ToString();
+                case "func": return ((Function)piece.Value).ToString();
                 case "const":
-                    if ((string)piece.Value == "pi")
-                        return "π";
+                    if ((string)piece.Value == "pi") return "π";
                     break;
             }
+
             return (string)piece.Value;
         }
 
@@ -151,14 +137,10 @@ namespace Calculator
         {
             switch (piece.Type)
             {
-                default:
-                    return (string)piece.Value;
-                case "func1":
-                    return piece.Value == "neg" ? "-" : (string)piece.Value;
-                case "num":
-                    return ToString((Fraction)piece.Value, final, final);
-                case "const":
-                    return ToString((Fraction)piece.ConstValue, final, final);
+                default: return (string)piece.Value;
+                case "func1": return piece.Value == "neg" ? "-" : (string)piece.Value;
+                case "num": return ToString((Fraction)piece.Value, final, final);
+                case "const": return ToString((Fraction)piece.ConstValue, final, final);
                 case "vec":
                     Vector vec = (Vector)piece.Value;
                     string x = ToString(vec.X, final, final);
@@ -168,8 +150,7 @@ namespace Calculator
                 case "parse vec":
                     string[] components = (string[])piece.Value;
                     return $"<{components[0]}, {components[1]}, {components[2]}>";
-                case "func":
-                    return ((Function)piece.Value).ToString();
+                case "func": return ((Function)piece.Value).ToString();
             }
         }
 
@@ -180,8 +161,7 @@ namespace Calculator
             int lastIndex = 0;
             foreach (Match match in pieceRegex.Matches(formula))
             {
-                if (match.Index < lastIndex)
-                    continue;
+                if (match.Index < lastIndex) continue;
 
                 if (match.Index != lastIndex)
                 {
@@ -207,10 +187,7 @@ namespace Calculator
 
                 lastIndex += match.Length;
                 string value = match.Value;
-                if (vars.ContainsKey(value))
-                {
-                    pieces.Add(vars[value]);
-                }
+                if (vars.ContainsKey(value)) pieces.Add(vars[value]);
                 else
                 {
                     try
@@ -224,6 +201,7 @@ namespace Calculator
                     }
                 }
             }
+
             if (lastIndex != formula.Length)
             {
                 error = $"Error: Unexpected term \"{formula.Substring(lastIndex)}\"";
@@ -240,27 +218,20 @@ namespace Calculator
                     Piece piece = pieces[j];
                     switch (piece.Type)
                     {
-                        case "num":
-                            s += ((Fraction)piece.Value).ToMinString();
-                            break;
+                        case "num": s += ((Fraction)piece.Value).ToMinString(); break;
                         case "vec":
-                            {
-                                Vector v = (Vector)piece.Value;
-                                s += $"<{v.X.ToMinString()},{v.Y.ToMinString()},{v.Z.ToMinString()}>";
-                            }
+                            Vector v = (Vector)piece.Value;
+                            s += $"<{v.X.ToMinString()},{v.Y.ToMinString()},{v.Z.ToMinString()}>";
                             break;
                         case "parse vec":
-                            {
-                                string[] arr = (string[])piece.Value;
-                                s += $"<{arr[0]},{arr[1]},{arr[2]}>";
-                            }
+                            string[] arr = (string[])piece.Value;
+                            s += $"<{arr[0]},{arr[1]},{arr[2]}>";
                             break;
-                        default:
-                            s += piece.Value;
-                            break;
+                        default: s += piece.Value; break;
 
                     }
                 }
+
                 s += ")";
                 pieces[start] = new Piece(new Function(s, vars, out int _));
                 for (int j = i; j > start; j--) pieces.RemoveAt(j);
@@ -286,21 +257,19 @@ namespace Calculator
                 bool inserted = false;
                 int openCount = 0;
                 for (int j = i - 1; j >= 0; j--)
-                {
-                    Piece piece2 = pieces[j];
-                    if (piece2.Type == "rpar") openCount++;
-                    if (piece2.Type == "lpar")
-                    {
-                        openCount--;
-                        if (openCount <= 0)
-                        {
-                            swapFunc(sval, j);
-                            inserted = true;
-                            break;
-                        }
-                    }
-                }
-                if (inserted) continue;
+				{
+					Piece piece2 = pieces[j];
+					if (piece2.Type == "rpar") openCount++;
+					if (piece2.Type != "lpar") continue;
+
+					openCount--;
+					if (openCount > 0) continue;
+
+					swapFunc(sval, j);
+					inserted = true;
+					break;
+				}
+				if (inserted) continue;
 
                 swapFunc(sval, 0);
             }
@@ -321,14 +290,13 @@ namespace Calculator
                     else
                     {
                         Piece last = pieces[i - 1];
-                        if (last.Type == "op" ||
-                            last.Value.Equals("(") ||
-                            last.Type == "func1")
+                        if (last.Type == "op" || last.Value.Equals("(") || last.Type == "func1")
                         {
                             pieces[i] = new Piece("neg");
                             piece = pieces[i];
                         }
                     }
+
                     if (piece.Value.Equals("neg"))
                     {
                         if (pieces[i + 1].Type == "num")
@@ -379,8 +347,7 @@ namespace Calculator
                                 // Func1 has parentheses
                                 // Find closing parenthesis
                                 int temp = Matching.FindClosingParenthesis(pieces, i + 2);
-                                if (temp != -1)
-                                    close = temp + 1;
+                                if (temp != -1) close = temp + 1;
                             }
                             else
                             {
@@ -399,16 +366,13 @@ namespace Calculator
                                         continue;
                                     }
                                     Piece piece2 = pieces[close];
-                                    if (piece2.Type == "op" && !piece2.Value.Equals("^"))
-                                        break; // Found close pos
-                                    if (piece2.Type == "func1")
-                                        lastWasFunc1 = true;
+                                    if (piece2.Type == "op" && !piece2.Value.Equals("^")) break; // Found close pos
+                                    if (piece2.Type == "func1") lastWasFunc1 = true;
                                     else if (piece2.Value.Equals("("))
                                     {
                                         // Find closing parenthesis
                                         int temp = Matching.FindClosingParenthesis(pieces, close);
-                                        if (temp != -1)
-                                            close = temp;
+                                        if (temp != -1) close = temp;
                                     }
                                     close++;
                                 }
@@ -420,8 +384,7 @@ namespace Calculator
                             // Parentheses to the right
                             // Find close pos
                             int temp = Matching.FindClosingParenthesis(pieces, i + 1);
-                            if (temp != -1)
-                                close = temp + 1;
+                            if (temp != -1) close = temp + 1;
                         }
 
                         if (close < pieces.Count && pieces[close].Value.Equals("^"))
@@ -437,8 +400,7 @@ namespace Calculator
                                 // Parentheses to the left
                                 // Find opening parenthesis
                                 int temp = Matching.FindOpeningParenthesis(pieces, i);
-                                if (temp != -1)
-                                    open = temp;
+                                if (temp != -1) open = temp;
                             }
 
                             pieces.Insert(close, new Piece(")"));
@@ -447,6 +409,7 @@ namespace Calculator
                         }
                     }
                 }
+
                 i++;
             }
 
@@ -454,22 +417,21 @@ namespace Calculator
         }
 
         private static bool IsCommunitive(Piece piece)
-        {
-            // Check if the operator is communitive
-            if (piece.Type == "op")
-            {
-                switch ((string)piece.Value)
-                {
-                    case "+":
-                    case "*":
-                    case ".":
-                        return true;
-                }
-            }
-            return false;
-        }
+		{
+			// Check if the operator is communitive
+			if (piece.Type != "op") return false;
 
-        private static List<Piece> CleanupInfix(List<Piece> pieces)
+			switch ((string)piece.Value)
+			{
+				case "+":
+				case "*":
+				case ".": return true;
+			}
+
+			return false;
+		}
+
+		private static List<Piece> CleanupInfix(List<Piece> pieces)
         {
             //Remove unnecessary parentheses
             int i = 0;
@@ -521,7 +483,10 @@ namespace Calculator
 
                                     // After
                                     if (close + 1 < pieces.Count && minPrecedence < pieces[close + 1].Precedence)
-                                        break; // Keep parentheses
+                                    {
+										// Keep parentheses
+										break;
+                                    }
                                 }
 
                                 // Remove these parentheses
@@ -537,6 +502,7 @@ namespace Calculator
                         }
                     }
                 }
+
                 i++;
             }
 
@@ -548,76 +514,78 @@ namespace Calculator
             Stack<List<Piece>> stack = new Stack<List<Piece>>();
             foreach (Piece piece in postfix)
             {
-                if (piece.Type == "op")
+                if (piece.Type != "op")
                 {
-                    if (piece.Value.Equals("neg"))
+                    // Not an operator
+                    if (piece.Type != "func1")
                     {
-                        // Negation
-                        if (stack.Count > 0)
-                        {
-                            List<Piece> pieces = new List<Piece> { piece };
-                            pieces.AddRange(stack.Pop());
-                            stack.Push(pieces);
-                        }
+                        // Not func1
+                        stack.Push(new List<Piece> { piece });
+                        continue;
                     }
-                    else if (stack.Count == 1)
-                    {
-                        List<Piece> pieces = new List<Piece>
+
+                    // func1
+                    if (stack.Count == 0) continue;
+
+                    List<Piece> pieces = new List<Piece> { new Piece("("), piece };
+                    pieces.AddRange(stack.Pop());
+                    pieces.Add(new Piece(")"));
+                    stack.Push(pieces);
+                    continue;
+                }
+
+                // Operator
+                if (piece.Value.Equals("neg"))
+                {
+                    // Negation
+                    if (stack.Count <= 0) continue;
+
+                    List<Piece> pieces = new List<Piece> { piece };
+                    pieces.AddRange(stack.Pop());
+                    stack.Push(pieces);
+                    continue;
+                }
+
+                if (stack.Count == 1)
+                {
+                    List<Piece> pieces = new List<Piece>
                         {
                             new Piece("("),
                             piece
                         };
-                        pieces.AddRange(stack.Pop());
-                        pieces.Add(new Piece(")"));
-                        stack.Push(pieces);
-                    }
-                    else if (stack.Count > 1)
-                    {
-                        List<Piece> op2 = stack.Pop();
-                        List<Piece> op1 = stack.Pop();
-
-                        List<Piece> pieces = new List<Piece> { new Piece("(") };
-                        pieces.AddRange(op1);
-                        pieces.Add(piece);
-                        pieces.AddRange(op2);
-                        pieces.Add(new Piece(")"));
-
-                        stack.Push(pieces);
-                    }
-                    else
-                    {
-                        stack.Push(new List<Piece> { piece });
-                    }
+                    pieces.AddRange(stack.Pop());
+                    pieces.Add(new Piece(")"));
+                    stack.Push(pieces);
+                    continue;
                 }
-                else if (piece.Type == "func1")
+
+                if (stack.Count > 1)
                 {
-                    if (stack.Count != 0)
-                    {
-                        List<Piece> pieces = new List<Piece> { new Piece("("), piece };
-                        pieces.AddRange(stack.Pop());
-                        pieces.Add(new Piece(")"));
+                    List<Piece> op2 = stack.Pop();
+                    List<Piece> op1 = stack.Pop();
 
-                        stack.Push(pieces);
-                    }
+                    List<Piece> pieces = new List<Piece> { new Piece("(") };
+                    pieces.AddRange(op1);
+                    pieces.Add(piece);
+                    pieces.AddRange(op2);
+                    pieces.Add(new Piece(")"));
+                    stack.Push(pieces);
+
+                    continue;
                 }
-                else
-                {
-                    stack.Push(new List<Piece> { piece });
-                }
+
+                stack.Push(new List<Piece> { piece });
             }
-            if (stack.Count == 0)
-                return "";
 
-            {
-                List<Piece> pieces = CleanupInfix(stack.Peek());
+            if (stack.Count == 0) return "";
 
-                // Convert to string
-                string s = "";
-                foreach (Piece piece in pieces)
-                    s += ToString(piece);
+            List<Piece> pieces1 = CleanupInfix(stack.Peek());
 
-                return s;
-            }
+            // Convert to string
+            string s = "";
+            foreach (Piece piece in pieces1) s += ToString(piece);
+
+            return s;
         }
 
         private static List<Piece> Infix2Postfix(List<Piece> infix, out string error)
@@ -633,14 +601,18 @@ namespace Calculator
                     // Operand
                     // Push to output
                     postfix.Add(piece);
+                    continue;
                 }
-                else if (piece.Type == "func1" || piece.Value.Equals("("))
+                
+                if (piece.Type == "func1" || piece.Value.Equals("("))
                 {
                     // Func1 or open parenthesis
                     // Push to stack
                     stack.Push(piece);
+                    continue;
                 }
-                else if (piece.Value.Equals(")"))
+                
+                if (piece.Value.Equals(")"))
                 {
                     // Close parenthesis
                     // Pop and output until (
@@ -655,20 +627,22 @@ namespace Calculator
                         }
                         postfix.Add(popped);
                     }
+
                     if (!foundOpen)
                     {
                         error = "Error: Unopened closing parenthesis";
                         return null;
                     }
+
+                    continue;
                 }
-                else if (piece.Type == "op")
+                
+                if (piece.Type == "op")
                 {
                     // Operator or func1
                     // Pop and output while >= precedence and not ( then push to stack
                     Piece peeked;
-                    while (stack.Count > 0 &&
-                        (peeked = stack.Peek()).Precedence >= piece.Precedence &&
-                        !peeked.Value.Equals("("))
+                    while (stack.Count > 0 && (peeked = stack.Peek()).Precedence >= piece.Precedence && !peeked.Value.Equals("("))
                     {
                         postfix.Add(stack.Pop());
                     }
@@ -696,10 +670,14 @@ namespace Calculator
             List<Piece> postfix = new List<Piece>();
 
             foreach (Piece piece in stack)
+            {
                 postfix.Insert(0, piece);
+            }
 
             for (int j = index; j < pieces.Count; j++)
+            {
                 postfix.Add(pieces[j]);
+            }
 
             return Postfix2Infix(postfix);
         }
@@ -709,10 +687,8 @@ namespace Calculator
             string s = "";
             foreach (Piece piece in pieces)
             {
-                if (s.Length > 0)
-                    s += $" {ToString(piece)}";
-                else
-                    s += ToString(piece);
+                if (s.Length > 0) s += " " + ToString(piece);
+                else s += ToString(piece);
             }
             return s;
         }
@@ -757,52 +733,43 @@ namespace Calculator
             // Parse vectors
             {
                 for (int i = 0; i < pieces.Count; i++)
-                {
-                    if (pieces[i].Type == "parse vec")
-                    {
-                        string[] components = (string[])pieces[i].Value;
-                        Fraction[] newComponents = new Fraction[3];
-                        for (int j = 0; j < 3; j++)
-                        {
-                            string newComponent = new Formula(components[j], vars).Calculate(out string work, true, false, true);
-                            work = work.Trim();
-                            if (work.Length > 0 && !Matching.RE_GenericNum.IsMatch(components[j]))
-                            {
-                                string pre = "";
-                                switch (j)
-                                {
-                                    case 0:
-                                        pre = "x: ";
-                                        break;
-                                    case 1:
-                                        pre = "y: ";
-                                        break;
-                                    case 2:
-                                        pre = "z: ";
-                                        break;
-                                }
+				{
+					if (pieces[i].Type != "parse vec") continue;
+					string[] components = (string[])pieces[i].Value;
+					Fraction[] newComponents = new Fraction[3];
+					for (int j = 0; j < 3; j++)
+					{
+						string newComponent = new Formula(components[j], vars).Calculate(out string work, true, false, true);
+						work = work.Trim();
+						if (work.Length > 0 && !Matching.RE_GenericNum.IsMatch(components[j]))
+						{
+							string pre = "";
+							switch (j)
+							{
+								case 0: pre = "x: "; break;
+								case 1: pre = "y: "; break;
+								case 2: pre = "z: "; break;
+							}
 
-                                work = $"{components[j]}\n{work}\n{Matching.Answer2Decimal(newComponent)}";
-                                foreach (string line in work.Split('\n'))
-                                {
-                                    if (line.Length > 0)
-                                        workOutput += pre + line + '\n';
-                                }
-                                workOutput += '\n';
-                            }
+							work = $"{components[j]}\n{work}\n{Matching.Answer2Decimal(newComponent)}";
+							foreach (string line in work.Split('\n'))
+							{
+								if (line.Length > 0) workOutput += pre + line + '\n';
+							}
+							workOutput += '\n';
+						}
 
-                            if (Fraction.TryParse(newComponent, out Fraction? num))
-                                newComponents[j] = (Fraction)num;
-                            else
-                            {
-                                workOutput += "Error: Unparsable vector component\n";
-                                return "Error: Unparsable vector component";
-                            }
-                        }
-                        pieces[i] = new Piece(new Vector(newComponents[0], newComponents[1], newComponents[2]));
-                    }
-                }
-            }
+						if (Fraction.TryParse(newComponent, out Fraction? num)) newComponents[j] = (Fraction)num;
+						else
+						{
+							workOutput += "Error: Unparsable vector component\n";
+							return "Error: Unparsable vector component";
+						}
+					}
+
+					pieces[i] = new Piece(new Vector(newComponents[0], newComponents[1], newComponents[2]));
+				}
+			}
 
             // Convert from infix to postfix
             {
@@ -815,8 +782,7 @@ namespace Calculator
             }
 
             // Display postfix
-            if (!isSub)
-                workOutput += $"Postfix: {Postfix2String(pieces)}\n";
+            if (!isSub) workOutput += $"Postfix: {Postfix2String(pieces)}\n";
 
             // Calculate
             Stack<Piece> stack = new Stack<Piece>();
@@ -831,8 +797,10 @@ namespace Calculator
                     {
                         // Operand
                         stack.Push(piece);
+                        continue;
                     }
-                    else if (piece.Type == "op")
+
+                    if (piece.Type == "op")
                     {
                         // Operator
                         workOutput += Postfix2Infix(stack, pieces, i) + '\n';
@@ -847,10 +815,8 @@ namespace Calculator
                         Piece num2 = stack.Pop();
                         Piece num1 = stack.Pop();
 
-                        if (num1.Type == "const")
-                            num1 = new Piece((Fraction)num1.ConstValue);
-                        if (num2.Type == "const")
-                            num2 = new Piece((Fraction)num2.ConstValue);
+                        if (num1.Type == "const") num1 = new Piece((Fraction)num1.ConstValue);
+                        if (num2.Type == "const") num2 = new Piece((Fraction)num2.ConstValue);
 
                         bool isNum1 = num1.Type == "num";
                         bool isNum2 = num2.Type == "num";
@@ -861,6 +827,7 @@ namespace Calculator
                             workOutput += error + '\n';
                             return error;
                         }
+
                         if (!isNum2 && num2.Type != "vec")
                         {
                             string error = $"Error: Cannot perform arithmetic on {ToString(num2)}";
@@ -871,34 +838,22 @@ namespace Calculator
                         switch ((string)piece.Value)
                         {
                             case "+":
-                                if (isNum1 && isNum2)
-                                    stack.Push(new Piece((Fraction)num1.Value + (Fraction)num2.Value));
-                                else if (isNum1 && !isNum2)
-                                    stack.Push(new Piece((Fraction)num1.Value + (Vector)num2.Value));
-                                else if (!isNum1 && isNum2)
-                                    stack.Push(new Piece((Vector)num1.Value + (Fraction)num2.Value));
-                                else
-                                    stack.Push(new Piece((Vector)num1.Value + (Vector)num2.Value));
+                                if (isNum1 && isNum2) stack.Push(new Piece((Fraction)num1.Value + (Fraction)num2.Value));
+                                else if (isNum1 && !isNum2) stack.Push(new Piece((Fraction)num1.Value + (Vector)num2.Value));
+                                else if (!isNum1 && isNum2) stack.Push(new Piece((Vector)num1.Value + (Fraction)num2.Value));
+                                else stack.Push(new Piece((Vector)num1.Value + (Vector)num2.Value));
                                 break;
                             case "-":
-                                if (isNum1 && isNum2)
-                                    stack.Push(new Piece((Fraction)num1.Value - (Fraction)num2.Value));
-                                else if (isNum1 && !isNum2)
-                                    stack.Push(new Piece((Fraction)num1.Value - (Vector)num2.Value));
-                                else if (!isNum1 && isNum2)
-                                    stack.Push(new Piece((Vector)num1.Value - (Fraction)num2.Value));
-                                else
-                                    stack.Push(new Piece((Vector)num1.Value - (Vector)num2.Value));
+                                if (isNum1 && isNum2) stack.Push(new Piece((Fraction)num1.Value - (Fraction)num2.Value));
+                                else if (isNum1 && !isNum2) stack.Push(new Piece((Fraction)num1.Value - (Vector)num2.Value));
+                                else if (!isNum1 && isNum2) stack.Push(new Piece((Vector)num1.Value - (Fraction)num2.Value));
+                                else stack.Push(new Piece((Vector)num1.Value - (Vector)num2.Value));
                                 break;
                             case "*":
-                                if (isNum1 && isNum2)
-                                    stack.Push(new Piece((Fraction)num1.Value * (Fraction)num2.Value));
-                                else if (isNum1 && !isNum2)
-                                    stack.Push(new Piece((Fraction)num1.Value * (Vector)num2.Value));
-                                else if (!isNum1 && isNum2)
-                                    stack.Push(new Piece((Vector)num1.Value * (Fraction)num2.Value));
-                                else
-                                    stack.Push(new Piece((Vector)num1.Value * (Vector)num2.Value));
+                                if (isNum1 && isNum2) stack.Push(new Piece((Fraction)num1.Value * (Fraction)num2.Value));
+                                else if (isNum1 && !isNum2) stack.Push(new Piece((Fraction)num1.Value * (Vector)num2.Value));
+                                else if (!isNum1 && isNum2) stack.Push(new Piece((Vector)num1.Value * (Fraction)num2.Value));
+                                else stack.Push(new Piece((Vector)num1.Value * (Vector)num2.Value));
                                 break;
                             case "/":
                                 if (isNum2)
@@ -920,18 +875,14 @@ namespace Calculator
                                         return error;
                                     }
                                 }
-                                if (isNum1 && isNum2)
-                                    stack.Push(new Piece((Fraction)num1.Value / (Fraction)num2.Value));
-                                else if (isNum1 && !isNum2)
-                                    stack.Push(new Piece((Fraction)num1.Value / (Vector)num2.Value));
-                                else if (!isNum1 && isNum2)
-                                    stack.Push(new Piece((Vector)num1.Value / (Fraction)num2.Value));
-                                else
-                                    stack.Push(new Piece((Vector)num1.Value / (Vector)num2.Value));
+
+                                if (isNum1 && isNum2) stack.Push(new Piece((Fraction)num1.Value / (Fraction)num2.Value));
+                                else if (isNum1 && !isNum2) stack.Push(new Piece((Fraction)num1.Value / (Vector)num2.Value));
+                                else if (!isNum1 && isNum2) stack.Push(new Piece((Vector)num1.Value / (Fraction)num2.Value));
+                                else stack.Push(new Piece((Vector)num1.Value / (Vector)num2.Value));
                                 break;
                             case "x":
-                                if (!isNum1 && !isNum2)
-                                    stack.Push(new Piece(((Vector)num1.Value).Cross((Vector)num2.Value)));
+                                if (!isNum1 && !isNum2) stack.Push(new Piece(((Vector)num1.Value).Cross((Vector)num2.Value)));
                                 else
                                 {
                                     string error = $"Error: Cannot get cross product of {ToString(num1)} and {ToString(num2)}";
@@ -940,8 +891,7 @@ namespace Calculator
                                 }
                                 break;
                             case ".":
-                                if (!isNum1 && !isNum2)
-                                    stack.Push(new Piece(((Vector)num1.Value).Dot((Vector)num2.Value)));
+                                if (!isNum1 && !isNum2) stack.Push(new Piece(((Vector)num1.Value).Dot((Vector)num2.Value)));
                                 else
                                 {
                                     string error = $"Error: Cannot get dot product of {ToString(num1)} and {ToString(num2)}";
@@ -950,26 +900,18 @@ namespace Calculator
                                 }
                                 break;
                             case "%":
-                                if (isNum1 && isNum2)
-                                    stack.Push(new Piece((Fraction)num1.Value % (Fraction)num2.Value));
-                                else if (isNum1 && !isNum2)
-                                    stack.Push(new Piece((Fraction)num1.Value % (Vector)num2.Value));
-                                else if (!isNum1 && isNum2)
-                                    stack.Push(new Piece((Vector)num1.Value % (Fraction)num2.Value));
-                                else
-                                    stack.Push(new Piece((Vector)num1.Value % (Vector)num2.Value));
+                                if (isNum1 && isNum2) stack.Push(new Piece((Fraction)num1.Value % (Fraction)num2.Value));
+                                else if (isNum1 && !isNum2) stack.Push(new Piece((Fraction)num1.Value % (Vector)num2.Value));
+                                else if (!isNum1 && isNum2) stack.Push(new Piece((Vector)num1.Value % (Fraction)num2.Value));
+                                else stack.Push(new Piece((Vector)num1.Value % (Vector)num2.Value));
                                 break;
                             case "^":
                                 try
                                 {
-                                    if (isNum1 && isNum2)
-                                        stack.Push(new Piece(Fraction.Pow((Fraction)num1.Value, (Fraction)num2.Value)));
-                                    else if (isNum1 && !isNum2)
-                                        stack.Push(new Piece(Utils.Op((Fraction)num1.Value, (Vector)num2.Value, Fraction.Pow)));
-                                    else if (!isNum1 && isNum2)
-                                        stack.Push(new Piece(Utils.Op((Vector)num1.Value, (Fraction)num2.Value, Fraction.Pow)));
-                                    else
-                                        stack.Push(new Piece(Utils.Op((Vector)num1.Value, (Vector)num2.Value, (Func<Fraction, Fraction, Fraction>)Fraction.Pow)));
+                                    if (isNum1 && isNum2) stack.Push(new Piece(Fraction.Pow((Fraction)num1.Value, (Fraction)num2.Value)));
+                                    else if (isNum1 && !isNum2) stack.Push(new Piece(Utils.Op((Fraction)num1.Value, (Vector)num2.Value, Fraction.Pow)));
+                                    else if (!isNum1 && isNum2) stack.Push(new Piece(Utils.Op((Vector)num1.Value, (Fraction)num2.Value, Fraction.Pow)));
+                                    else stack.Push(new Piece(Utils.Op((Vector)num1.Value, (Vector)num2.Value, (Func<Fraction, Fraction, Fraction>)Fraction.Pow)));
                                 }
                                 catch
                                 {
@@ -979,8 +921,11 @@ namespace Calculator
                                 }
                                 break;
                         }
+
+                        continue;
                     }
-                    else if (piece.Type == "func1")
+                    
+                    if (piece.Type == "func1")
                     {
                         // Func1
                         if (firstLine)
@@ -988,22 +933,17 @@ namespace Calculator
                             firstLine = false;
                             workOutput += Postfix2Infix(stack, pieces, i);
                         }
-                        else
-                        {
-                            workOutput += Postfix2Infix(stack, pieces, i) + '\n';
-                        }
+                        else workOutput += Postfix2Infix(stack, pieces, i) + '\n';
 
                         if (stack.Count == 0)
                         {
                             string error = $"Error: Not enough operands for {ToString(piece)}";
-
                             workOutput += error + '\n';
                             return error;
                         }
 
                         Piece num = stack.Pop();
-                        if (num.Type == "const")
-                            num = new Piece((Fraction)num.ConstValue);
+                        if (num.Type == "const") num = new Piece((Fraction)num.ConstValue);
 
                         bool isNum = num.Type == "num";
 
@@ -1017,21 +957,21 @@ namespace Calculator
                         if ((string)piece.Value == "neg")
                         {
                             // Negate
-                            if (isNum)
-                                stack.Push(new Piece(-(Fraction)num.Value));
-                            else
-                                stack.Push(new Piece(-(Vector)num.Value));
+                            if (isNum) stack.Push(new Piece(-(Fraction)num.Value));
+                            else stack.Push(new Piece(-(Vector)num.Value));
                         }
+
+                        continue;
                     }
-                    else if (piece.Type == "func")
+                    
+                    if (piece.Type == "func")
                     {
                         // Function
                         try
                         {
                             stack.Push(((Function)piece.Value).Calculate(out string work));
                             work = work.Trim();
-                            if (work.Length > 0)
-                                workOutput += work.Trim() + '\n';
+                            if (work.Length > 0) workOutput += work.Trim() + '\n';
                         }
                         catch (FunctionException e)
                         {
